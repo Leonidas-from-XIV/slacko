@@ -7,6 +7,11 @@ let info =
   Cmdliner.Term.info "slack-notify" ~doc
 
 let execute token =
+  let open Lwt in
+  Slacko.api_test () >>= (fun c ->
+    return (print_endline c))
+  |> ignore;
+
   "Your token is " ^ token ^ "."
   |> print_endline
 

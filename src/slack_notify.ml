@@ -14,6 +14,8 @@ let execute token =
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
     return (print_endline c)) >>
   Slacko.auth_test token >>= (fun c ->
+    return (print_endline c)) >>
+  Slacko.chat_post_message token "#geloet" "Test bot" >>= (fun c ->
     return (print_endline c))
   |> Lwt_main.run
 

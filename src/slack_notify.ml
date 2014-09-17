@@ -11,7 +11,7 @@ let execute token =
   |> print_endline;
 
   let open Lwt in
-  Slacko.api_test () >>= (fun c ->
+  Slacko.api_test ~foo:"whatever" () >>= (fun c ->
     return (print_endline c))
   |> Lwt_main.run
 

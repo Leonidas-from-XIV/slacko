@@ -12,6 +12,8 @@ let execute token =
 
   let open Lwt in
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
+    return (print_endline c)) >>
+  Slacko.auth_test token >>= (fun c ->
     return (print_endline c))
   |> Lwt_main.run
 

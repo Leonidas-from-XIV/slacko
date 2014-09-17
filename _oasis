@@ -14,5 +14,5 @@ Library slacko
 Executable "slack-notify"
   Path:       src
   BuildTools: ocamlbuild
-  MainIs:     slack-notify.ml
+  MainIs:     slack_notify.ml
   

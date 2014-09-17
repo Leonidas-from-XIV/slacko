@@ -1,0 +1,18 @@
+OASISFormat: 0.4
+Name:        slacko
+Version:     0.0.1
+Synopsis:    Binding to the Slack API
+Authors:     Marek Kubica
+License:     PROP
+Plugins:     META (0.4), StdFiles (0.4)
+
+Library slacko
+  Path:       src
+  BuildTools: ocamlbuild
+  Modules:    Slacko
+  
+Executable "slack-notify"
+  Path:       src
+  BuildTools: ocamlbuild
+  MainIs:     slack-notify.ml
+  

@@ -7,12 +7,14 @@ License:     PROP
 Plugins:     META (0.4), StdFiles (0.4)
 
 Library slacko
-  Path:       src
-  BuildTools: ocamlbuild
-  Modules:    Slacko
+  Path:         src
+  BuildTools:   ocamlbuild
+  BuildDepends: cohttp
+  Modules:      Slacko
   
 Executable "slack-notify"
-  Path:       src
-  BuildTools: ocamlbuild
-  MainIs:     slack_notify.ml
+  Path:         src
+  BuildTools:   ocamlbuild
+  BuildDepends: cmdliner
+  MainIs:       slack_notify.ml
   

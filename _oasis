@@ -3,8 +3,8 @@ Name:        slacko
 Version:     0.0.1
 Synopsis:    Binding to the Slack API
 Authors:     Marek Kubica
-License:     PROP
-Plugins:     META (0.4), StdFiles (0.4)
+License:     LGPL-3 with OCaml linking exception
+Plugins:     META (0.4), DevFiles (0.4)
 
 Library slacko
   Path:         src

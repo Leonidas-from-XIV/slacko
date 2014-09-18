@@ -12,10 +12,11 @@ let execute token =
 
   let open Lwt in
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
-    return (print_endline c)) >>
+    return (print_endline @@ Yojson.Basic.pretty_to_string c)) >>
   Slacko.auth_test token >>= (fun c ->
     return (print_endline c)) >>
-  Slacko.chat_post_message token "#geloet" "Test bot" >>= (fun c ->
+  Slacko.chat_post_message token "#geloetnotexist" "Test bot"
+  >>= (fun c ->
     return (print_endline c))
   |> Lwt_main.run
 

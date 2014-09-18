@@ -9,12 +9,12 @@ Plugins:     META (0.4), StdFiles (0.4)
 Library slacko
   Path:         src
   BuildTools:   ocamlbuild
-  BuildDepends: cohttp.lwt, lwt.syntax
+  BuildDepends: cohttp.lwt, lwt.syntax, yojson
   Modules:      Slacko
   
 Executable "slack-notify"
   Path:         src
   BuildTools:   ocamlbuild
-  BuildDepends: cohttp.lwt, cmdliner
+  BuildDepends: cohttp.lwt, cmdliner, yojson
   MainIs:       slack_notify.ml
   

@@ -13,7 +13,8 @@ let api_test ?foo () =
     | None -> base
     | Some value -> Uri.add_query_param' base ("foo", value) in
   lwt (response, body) = Cohttp_unix.Client.get uri in
-  Cohttp_body.to_string body
+  lwt content = Cohttp_body.to_string body in
+  Lwt.return @@ Yojson.Basic.from_string content
 
 let auth_test token =
   let base = endpoint "auth.test" in

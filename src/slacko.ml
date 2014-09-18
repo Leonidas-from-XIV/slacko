@@ -1,6 +1,8 @@
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
+type result = Success of Yojson.Basic.json | Error
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -12,6 +14,8 @@ let add_optionally key value uri = match value with
   | None -> uri
   | Some value -> Uri.add_query_param' uri (key, value)
 
+let yup value = Success value
+
 let api_test ?foo ?error () =
   let uri = endpoint "api.test"
     |> add_optionally "foo" foo
@@ -19,7 +23,8 @@ let api_test ?foo ?error () =
   in
   lwt (response, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
-  Lwt.return @@ Yojson.Basic.from_string content
+  let json = Yojson.Basic.from_string content in
+  Lwt.return @@ yup @@ json
 
 let auth_test token =
   let base = endpoint "auth.test" in

@@ -10,9 +10,14 @@ let execute token =
   "Your token is " ^ token ^ "."
   |> print_endline;
 
+  let string_or_bust = function
+    | Slacko.Success json -> Yojson.Basic.pretty_to_string json
+    | _ -> ""
+  in
+
   let open Lwt in
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
-    return (print_endline @@ Yojson.Basic.pretty_to_string c)) >>
+    return (print_endline @@ string_or_bust c)) >>
   Slacko.auth_test token >>= (fun c ->
     return (print_endline c)) >>
   Slacko.chat_post_message token "#geloetnotexist" "Test bot"

@@ -7,11 +7,16 @@ let endpoint e =
   base_url ^ e
   |> Uri.of_string
 
-let api_test ?foo () =
-  let base = endpoint "api.test" in
-  let uri = match foo with
-    | None -> base
-    | Some value -> Uri.add_query_param' base ("foo", value) in
+(* internal *)
+let add_optionally key value uri = match value with
+  | None -> uri
+  | Some value -> Uri.add_query_param' uri (key, value)
+
+let api_test ?foo ?error () =
+  let uri = endpoint "api.test"
+    |> add_optionally "foo" foo
+    |> add_optionally "error" error
+  in
   lwt (response, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
   Lwt.return @@ Yojson.Basic.from_string content
@@ -21,11 +26,6 @@ let auth_test token =
   let uri = Uri.add_query_param' base ("token", token) in
   lwt (response, body) = Cohttp_unix.Client.get uri in
   Cohttp_body.to_string body
-
-(* internal *)
-let add_optionally key value uri = match value with
-  | None -> uri
-  | Some value -> Uri.add_query_param' uri (key, value)
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =

@@ -27,25 +27,24 @@ let validate json =
       | `String "rate_limited" -> `Rate_limited
       | _ -> `Error
 
-let api_test ?foo ?error () =
-  let uri = endpoint "api.test"
-    |> add_optionally "foo" foo
-    |> add_optionally "error" error
-  in
-  lwt (response, body) = Cohttp_unix.Client.get uri in
+let query uri =
+  lwt (_, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
     |> Lwt.return
 
+let api_test ?foo ?error () =
+  let uri = endpoint "api.test"
+    |> add_optionally "foo" foo
+    |> add_optionally "error" error
+  in
+  query uri
+
 let auth_test token =
   let base = endpoint "auth.test" in
   let uri = Uri.add_query_param' base ("token", token) in
-  lwt (response, body) = Cohttp_unix.Client.get uri in
-  lwt content = Cohttp_body.to_string body in
-  Yojson.Basic.from_string content
-    |> validate
-    |> Lwt.return
+  query uri
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
@@ -60,8 +59,4 @@ let chat_post_message token channel
     |> add_optionally "icon_url" icon_url
     |> add_optionally "icon_emoji" icon_emoji
   in
-  lwt (response, body) = Cohttp_unix.Client.get uri in
-  lwt content = Cohttp_body.to_string body in
-  Yojson.Basic.from_string content
-    |> validate
-    |> Lwt.return
+  query uri

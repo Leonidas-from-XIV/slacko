@@ -11,18 +11,23 @@ let execute token =
   |> print_endline;
 
   let string_or_bust = function
-    | Slacko.Success json -> Yojson.Basic.pretty_to_string json
-    | _ -> ""
+    | `Success json -> Yojson.Basic.pretty_to_string json
+    | `Invalid_auth -> "Invalid token"
+    | `Channel_not_found -> "Channel unknown"
+    | `Is_archived -> "Channel is archived"
+    | `Msg_too_long -> "Message too long"
+    | `Rate_limited -> "Rate limit active"
+    | _ -> "Unknown error"
   in
 
   let open Lwt in
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
     return (print_endline @@ string_or_bust c)) >>
   Slacko.auth_test token >>= (fun c ->
-    return (print_endline c)) >>
+    return (print_endline @@ string_or_bust c)) >>
   Slacko.chat_post_message token "#geloetnotexist" "Test bot"
   >>= (fun c ->
-    return (print_endline c))
+    return (print_endline @@ string_or_bust c))
   |> Lwt_main.run
 
 let execute_t = Cmdliner.Term.(pure execute $ token)

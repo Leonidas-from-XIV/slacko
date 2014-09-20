@@ -1,8 +1,6 @@
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
-type result = Success of Yojson.Basic.json | Error
-
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -14,7 +12,20 @@ let add_optionally key value uri = match value with
   | None -> uri
   | Some value -> Uri.add_query_param' uri (key, value)
 
-let yup value = Success value
+let validate json =
+  let open Yojson.Basic.Util in
+  match json |> member "ok" |> to_bool with
+    | true -> `Success json
+    | false -> let error = json |> member "error" in
+      match error with
+      | `String "not_authed" -> `Not_authed
+      | `String "invalid_auth" -> `Invalid_auth
+      | `String "account_inactive" -> `Account_inactive
+      | `String "channel_not_found" -> `Channel_not_found
+      | `String "is_archived" -> `Is_archived
+      | `String "msg_too_long" -> `Msg_too_long
+      | `String "rate_limited" -> `Rate_limited
+      | _ -> `Error
 
 let api_test ?foo ?error () =
   let uri = endpoint "api.test"
@@ -23,14 +34,18 @@ let api_test ?foo ?error () =
   in
   lwt (response, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
-  let json = Yojson.Basic.from_string content in
-  Lwt.return @@ yup @@ json
+  Yojson.Basic.from_string content
+    |> validate
+    |> Lwt.return
 
 let auth_test token =
   let base = endpoint "auth.test" in
   let uri = Uri.add_query_param' base ("token", token) in
   lwt (response, body) = Cohttp_unix.Client.get uri in
-  Cohttp_body.to_string body
+  lwt content = Cohttp_body.to_string body in
+  Yojson.Basic.from_string content
+    |> validate
+    |> Lwt.return
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
@@ -46,4 +61,7 @@ let chat_post_message token channel
     |> add_optionally "icon_emoji" icon_emoji
   in
   lwt (response, body) = Cohttp_unix.Client.get uri in
-  Cohttp_body.to_string body
+  lwt content = Cohttp_body.to_string body in
+  Yojson.Basic.from_string content
+    |> validate
+    |> Lwt.return

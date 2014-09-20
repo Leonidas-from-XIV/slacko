@@ -1,0 +1,8 @@
+*.byte
+/_build/
+_tags
+META
+myocamlbuild.ml
+setup.*
+*.mldylib
+*.mllib

@@ -27,6 +27,12 @@ let execute token =
     return (print_endline @@ string_or_bust c)) >>
   Slacko.chat_post_message token "#geloetnotexist" "Test bot"
   >>= (fun c ->
+    return (print_endline @@ string_or_bust c)) >>
+  Slacko.channels_list token
+  >>= (fun c ->
+    return (print_endline @@ string_or_bust c)) >>
+  Slacko.channels_history token "C02LFT2FJ"
+  >>= (fun c ->
     return (print_endline @@ string_or_bust c))
   |> Lwt_main.run
 

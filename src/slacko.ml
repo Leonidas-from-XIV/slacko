@@ -12,6 +12,8 @@ let add_optionally key value uri = match value with
   | None -> uri
   | Some value -> Uri.add_query_param' uri (key, value)
 
+let add_definitely key value = add_optionally key (Some value)
+
 let validate json =
   let open Yojson.Basic.Util in
   match json |> member "ok" |> to_bool with
@@ -34,6 +36,8 @@ let query uri =
     |> validate
     |> Lwt.return
 
+(* Slack API begins here *)
+
 let api_test ?foo ?error () =
   let uri = endpoint "api.test"
     |> add_optionally "foo" foo
@@ -45,6 +49,22 @@ let auth_test token =
   let base = endpoint "auth.test" in
   let uri = Uri.add_query_param' base ("token", token) in
   query uri
+
+let channels_history token
+  ?latest ?oldest ?count channel =
+  let uri = endpoint "channels.history"
+    |> add_definitely "token" token
+    |> add_definitely "channel" channel
+    |> add_optionally "latest" latest
+    |> add_optionally "oldest" oldest
+    |> add_optionally "count" count
+  in query uri
+
+let channels_list ?exclude_archived token =
+  let uri = endpoint "channels.list"
+    |> add_definitely "token" token
+    |> add_optionally "exclude_archived" exclude_archived
+  in query uri
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =

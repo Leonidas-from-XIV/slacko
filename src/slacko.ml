@@ -27,6 +27,8 @@ let validate json =
       | `String "is_archived" -> `Is_archived
       | `String "msg_too_long" -> `Msg_too_long
       | `String "rate_limited" -> `Rate_limited
+      | `String "invalid_ts_latest" -> `Invalid_ts_latest
+      | `String "invalid_ts_oldest" -> `Invalid_ts_oldest
       | _ -> `Error
 
 let query uri =
@@ -42,13 +44,12 @@ let api_test ?foo ?error () =
   let uri = endpoint "api.test"
     |> add_optionally "foo" foo
     |> add_optionally "error" error
-  in
-  query uri
+  in query uri
 
 let auth_test token =
-  let base = endpoint "auth.test" in
-  let uri = Uri.add_query_param' base ("token", token) in
-  query uri
+  let uri = endpoint "auth.test"
+    |> add_definitely "token" token
+  in query uri
 
 let channels_history token
   ?latest ?oldest ?count channel =
@@ -78,5 +79,4 @@ let chat_post_message token channel
     |> add_optionally "parse" parse
     |> add_optionally "icon_url" icon_url
     |> add_optionally "icon_emoji" icon_emoji
-  in
-  query uri
+  in query uri

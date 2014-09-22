@@ -31,11 +31,18 @@ let validate json =
       | `String "invalid_ts_oldest" -> `Invalid_ts_oldest
       | _ -> `Error
 
+(* filter out "ok" and "error" keys *)
+let filter_useless = function
+  | `Success `Assoc items -> `Success (
+      `Assoc (List.filter (fun (k, _) -> k <> "ok" && k <> "error") items))
+  | otherwise -> otherwise
+
 let query uri =
   lwt (_, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
+    |> filter_useless
     |> Lwt.return
 
 (* Slack API begins here *)

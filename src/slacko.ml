@@ -8,11 +8,11 @@ let endpoint e =
   |> Uri.of_string
 
 (* internal *)
-let add_optionally key value uri = match value with
+let optionally_add key value uri = match value with
   | None -> uri
   | Some value -> Uri.add_query_param' uri (key, value)
 
-let add_definitely key value = add_optionally key (Some value)
+let definitely_add key value = optionally_add key (Some value)
 
 let validate json =
   let open Yojson.Basic.Util in
@@ -49,29 +49,29 @@ let query uri =
 
 let api_test ?foo ?error () =
   let uri = endpoint "api.test"
-    |> add_optionally "foo" foo
-    |> add_optionally "error" error
+    |> optionally_add "foo" foo
+    |> optionally_add "error" error
   in query uri
 
 let auth_test token =
   let uri = endpoint "auth.test"
-    |> add_definitely "token" token
+    |> definitely_add "token" token
   in query uri
 
 let channels_history token
   ?latest ?oldest ?count channel =
   let uri = endpoint "channels.history"
-    |> add_definitely "token" token
-    |> add_definitely "channel" channel
-    |> add_optionally "latest" latest
-    |> add_optionally "oldest" oldest
-    |> add_optionally "count" count
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> optionally_add "latest" latest
+    |> optionally_add "oldest" oldest
+    |> optionally_add "count" count
   in query uri
 
 let channels_list ?exclude_archived token =
   let uri = endpoint "channels.list"
-    |> add_definitely "token" token
-    |> add_optionally "exclude_archived" exclude_archived
+    |> definitely_add "token" token
+    |> optionally_add "exclude_archived" exclude_archived
   in query uri
 
 let chat_post_message token channel
@@ -82,8 +82,8 @@ let chat_post_message token channel
      ("channel", channel);
      ("text", text)] in
   let uri = required
-    |> add_optionally "username" username
-    |> add_optionally "parse" parse
-    |> add_optionally "icon_url" icon_url
-    |> add_optionally "icon_emoji" icon_emoji
+    |> optionally_add "username" username
+    |> optionally_add "parse" parse
+    |> optionally_add "icon_url" icon_url
+    |> optionally_add "icon_emoji" icon_emoji
   in query uri

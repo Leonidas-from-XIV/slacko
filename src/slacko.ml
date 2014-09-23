@@ -29,6 +29,14 @@ let validate json =
       | `String "rate_limited" -> `Rate_limited
       | `String "invalid_ts_latest" -> `Invalid_ts_latest
       | `String "invalid_ts_oldest" -> `Invalid_ts_oldest
+      | `String "user_not_found" -> `User_not_found
+      | `String "cant_invite_self" -> `Cant_invite_self
+      | `String "not_in_channel" -> `Not_in_channels
+      | `String "already_in_channel" -> `Already_in_channel
+      | `String "cant_invite" -> `Cant_invite
+      | `String "name_taken" -> `Name_taken
+      (* can't really happen *)
+      | `String "no_channel" -> `No_channel
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -72,6 +80,19 @@ let channels_info token channel =
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
+  in query uri
+
+let channels_invite token channel user =
+  let uri = endpoint "channels.info"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "user" user
+  in query uri
+
+let channels_join token name =
+  let uri = endpoint "channels.join"
+    |> definitely_add "token" token
+    |> definitely_add "name" name
   in query uri
 
 let channels_list ?exclude_archived token =

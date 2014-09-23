@@ -37,6 +37,10 @@ let validate json =
       | `String "name_taken" -> `Name_taken
       (* can't really happen *)
       | `String "no_channel" -> `No_channel
+      | `String "cant_kick_self" -> `Cant_kick_self
+      | `String "cant_kick_from_general" -> `Cant_kick_from_general
+      | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
+      | `String "restricted_action" -> `Restricted_action
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -93,6 +97,13 @@ let channels_join token name =
   let uri = endpoint "channels.join"
     |> definitely_add "token" token
     |> definitely_add "name" name
+  in query uri
+
+let channels_kick token channel user =
+  let uri = endpoint "channels.kick"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "user" user
   in query uri
 
 let channels_list ?exclude_archived token =

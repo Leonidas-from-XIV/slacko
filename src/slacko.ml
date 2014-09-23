@@ -50,6 +50,9 @@ let validate json =
       | `String "no_text" -> `No_text
       | `String "file_not_found" -> `File_not_found
       | `String "file_deleted" -> `File_deleted
+      | `String "unknown_type" -> `Unknown_type
+      | `String "no_channel" -> `No_channel
+      | `String "name_taken" -> `Name_taken
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -174,6 +177,25 @@ let files_info token ?count ?page file =
     |> definitely_add "file" file
     |> optionally_add "count" count
     |> optionally_add "page" page
+  in query uri
+
+let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
+  let uri = endpoint "files.list"
+    |> definitely_add "token" token
+    |> optionally_add "user" user
+    |> optionally_add "ts_from" ts_from
+    |> optionally_add "ts_to" ts_to
+    |> optionally_add "types" types
+    |> optionally_add "count" count
+    |> optionally_add "page" page
+  in query uri
+
+(* files_upload comes later *)
+
+let groups_create token name =
+  let uri = endpoint "groups.create"
+    |> definitely_add "token" token
+    |> definitely_add "name" name
   in query uri
 
 let chat_post_message token channel

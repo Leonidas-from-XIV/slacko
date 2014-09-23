@@ -42,6 +42,7 @@ let validate json =
       | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
       | `String "restricted_action" -> `Restricted_action
       | `String "cant_leave_general" -> `Cant_leave_general
+      | `String "too_long" -> `Too_long
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -124,6 +125,13 @@ let channels_mark token channel ts =
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "ts" ts
+  in query uri
+
+let channels_set_purpose token channel purpose =
+  let uri = endpoint "channels.setPurpose"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "purpose" purpose
   in query uri
 
 let chat_post_message token channel

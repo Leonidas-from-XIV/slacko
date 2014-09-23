@@ -51,6 +51,8 @@ let validate json =
       | `String "file_not_found" -> `File_not_found
       | `String "file_deleted" -> `File_deleted
       | `String "unknown_type" -> `Unknown_type
+      | `String "cant_leave_last_channel" -> `Cant_leave_last_channel
+      | `String "last_member" -> `Last_member
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -223,4 +225,24 @@ let groups_history token ?latest ?oldest ?count channel =
     |> optionally_add "latest" latest
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
+  in query uri
+
+let groups_invite token channel user =
+  let uri = endpoint "groups.invite"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "user" user
+  in query uri
+
+let groups_kick token channel user =
+  let uri = endpoint "groups.kick"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "user" user
+  in query uri
+
+let groups_leave token channel =
+  let uri = endpoint "groups.leave"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
   in query uri

@@ -43,6 +43,8 @@ let validate json =
       | `String "restricted_action" -> `Restricted_action
       | `String "cant_leave_general" -> `Cant_leave_general
       | `String "too_long" -> `Too_long
+      | `String "message_not_found" -> `Message_not_found
+      | `String "cant_delete_message" -> `Cant_delete_message
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -139,6 +141,13 @@ let channels_set_topic token channel topic =
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
+  in query uri
+
+let chat_delete token ts channel =
+  let uri = endpoint "chat.delete"
+    |> definitely_add "token" token
+    |> definitely_add "ts" ts
+    |> definitely_add "channel" channel
   in query uri
 
 let chat_post_message token channel

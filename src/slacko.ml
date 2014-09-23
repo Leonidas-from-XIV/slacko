@@ -51,8 +51,6 @@ let validate json =
       | `String "file_not_found" -> `File_not_found
       | `String "file_deleted" -> `File_deleted
       | `String "unknown_type" -> `Unknown_type
-      | `String "no_channel" -> `No_channel
-      | `String "name_taken" -> `Name_taken
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -216,4 +214,13 @@ let groups_create_child token channel =
   let uri = endpoint "groups.createChild"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
+  in query uri
+
+let groups_history token ?latest ?oldest ?count channel =
+  let uri = endpoint "groups.history"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> optionally_add "latest" latest
+    |> optionally_add "oldest" oldest
+    |> optionally_add "count" count
   in query uri

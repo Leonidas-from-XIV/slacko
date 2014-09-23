@@ -48,6 +48,8 @@ let validate json =
       | `String "cant_update_message" -> `Cant_update_message
       | `String "edit_window_closed" -> `Edit_window_closed
       | `String "no_text" -> `No_text
+      | `String "file_not_found" -> `File_not_found
+      | `String "file_deleted" -> `File_deleted
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -159,6 +161,19 @@ let chat_update token ts channel text =
     |> definitely_add "ts" ts
     |> definitely_add "channel" channel
     |> definitely_add "text" text
+  in query uri
+
+let emoji_list token =
+  let uri = endpoint "emoji.list"
+    |> definitely_add "token" token
+  in query uri
+
+let files_info token ?count ?page file =
+  let uri = endpoint "files.info"
+    |> definitely_add "token" token
+    |> definitely_add "file" file
+    |> optionally_add "count" count
+    |> optionally_add "page" page
   in query uri
 
 let chat_post_message token channel

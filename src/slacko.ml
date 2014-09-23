@@ -246,3 +246,30 @@ let groups_leave token channel =
     |> definitely_add "token" token
     |> definitely_add "channel" channel
   in query uri
+
+let groups_list ?exclude_archived token =
+  let uri = endpoint "groups.list"
+    |> definitely_add "token" token
+    |> optionally_add "exclude_archived" exclude_archived
+  in query uri
+
+let groups_mark token channel ts =
+  let uri = endpoint "groups.mark"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "ts" ts
+  in query uri
+
+let groups_set_purpose token channel purpose =
+  let uri = endpoint "groups.setPurpose"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "purpose" purpose
+  in query uri
+
+let groups_set_topic token channel topic =
+  let uri = endpoint "groups.setTopic"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "topic" topic
+  in query uri

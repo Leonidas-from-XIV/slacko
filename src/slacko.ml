@@ -158,6 +158,20 @@ let chat_delete token ts channel =
     |> definitely_add "channel" channel
   in query uri
 
+let chat_post_message token channel
+  ?username ?parse ?icon_url ?icon_emoji text =
+  let base = endpoint "chat.postMessage" in
+  let required = Uri.add_query_params' base
+    [("token", token);
+     ("channel", channel);
+     ("text", text)] in
+  let uri = required
+    |> optionally_add "username" username
+    |> optionally_add "parse" parse
+    |> optionally_add "icon_url" icon_url
+    |> optionally_add "icon_emoji" icon_emoji
+  in query uri
+
 let chat_update token ts channel text =
   let uri = endpoint "chat.update"
     |> definitely_add "token" token
@@ -198,16 +212,8 @@ let groups_create token name =
     |> definitely_add "name" name
   in query uri
 
-let chat_post_message token channel
-  ?username ?parse ?icon_url ?icon_emoji text =
-  let base = endpoint "chat.postMessage" in
-  let required = Uri.add_query_params' base
-    [("token", token);
-     ("channel", channel);
-     ("text", text)] in
-  let uri = required
-    |> optionally_add "username" username
-    |> optionally_add "parse" parse
-    |> optionally_add "icon_url" icon_url
-    |> optionally_add "icon_emoji" icon_emoji
+let groups_create_child token channel =
+  let uri = endpoint "groups.createChild"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
   in query uri

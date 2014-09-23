@@ -119,6 +119,13 @@ let channels_list ?exclude_archived token =
     |> optionally_add "exclude_archived" exclude_archived
   in query uri
 
+let channels_mark token channel ts =
+  let uri = endpoint "channels.mark"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "ts" ts
+  in query uri
+
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
   let base = endpoint "chat.postMessage" in

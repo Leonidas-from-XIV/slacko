@@ -45,6 +45,9 @@ let validate json =
       | `String "too_long" -> `Too_long
       | `String "message_not_found" -> `Message_not_found
       | `String "cant_delete_message" -> `Cant_delete_message
+      | `String "cant_update_message" -> `Cant_update_message
+      | `String "edit_window_closed" -> `Edit_window_closed
+      | `String "no_text" -> `No_text
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -148,6 +151,14 @@ let chat_delete token ts channel =
     |> definitely_add "token" token
     |> definitely_add "ts" ts
     |> definitely_add "channel" channel
+  in query uri
+
+let chat_update token ts channel text =
+  let uri = endpoint "chat.update"
+    |> definitely_add "token" token
+    |> definitely_add "ts" ts
+    |> definitely_add "channel" channel
+    |> definitely_add "text" text
   in query uri
 
 let chat_post_message token channel

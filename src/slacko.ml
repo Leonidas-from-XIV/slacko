@@ -68,6 +68,12 @@ let channels_history token
     |> optionally_add "count" count
   in query uri
 
+let channels_info token channel =
+  let uri = endpoint "channels.info"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+  in query uri
+
 let channels_list ?exclude_archived token =
   let uri = endpoint "channels.list"
     |> definitely_add "token" token

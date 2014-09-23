@@ -41,6 +41,7 @@ let validate json =
       | `String "cant_kick_from_general" -> `Cant_kick_from_general
       | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
       | `String "restricted_action" -> `Restricted_action
+      | `String "cant_leave_general" -> `Cant_leave_general
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -104,6 +105,12 @@ let channels_kick token channel user =
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "user" user
+  in query uri
+
+let channels_leave token channel =
+  let uri = endpoint "channels.leave"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
   in query uri
 
 let channels_list ?exclude_archived token =

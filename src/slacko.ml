@@ -134,6 +134,13 @@ let channels_set_purpose token channel purpose =
     |> definitely_add "purpose" purpose
   in query uri
 
+let channels_set_topic token channel topic =
+  let uri = endpoint "channels.setTopic"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "topic" topic
+  in query uri
+
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
   let base = endpoint "chat.postMessage" in

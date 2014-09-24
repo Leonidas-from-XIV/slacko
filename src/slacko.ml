@@ -57,6 +57,7 @@ let validate json =
       | `String "bad_client_secret" -> `Bad_client_secret
       | `String "invalid_code" -> `Invalid_code
       | `String "bad_redirect_uri" -> `Bad_redirect_uri
+      | `String "invalid_presence" -> `Invalid_presence
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -305,4 +306,10 @@ let oauth_access client_id client_secret ?redirect_url code =
     |> definitely_add "client_secret" client_secret
     |> definitely_add "code" code
     |> optionally_add "redirect_url" redirect_url
+  in query uri
+
+let presence_set token presence =
+  let uri = endpoint "presence.set"
+    |> definitely_add "token" token
+    |> definitely_add "presence" presence
   in query uri

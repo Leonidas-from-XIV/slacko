@@ -313,3 +313,36 @@ let presence_set token presence =
     |> definitely_add "token" token
     |> definitely_add "presence" presence
   in query uri
+
+let search_all token ?sort ?sort_dir ?highlight ?count ?page query_ =
+  let uri = endpoint "search.all"
+    |> definitely_add "token" token
+    |> definitely_add "query" query_
+    |> optionally_add "sort" sort
+    |> optionally_add "sort_dir" sort_dir
+    |> optionally_add "highlight" highlight
+    |> optionally_add "count" count
+    |> optionally_add "page" page
+  in query uri
+
+let search_files token ?sort ?sort_dir ?highlight ?count ?page query_ =
+  let uri = endpoint "search.files"
+    |> definitely_add "token" token
+    |> definitely_add "query" query_
+    |> optionally_add "sort" sort
+    |> optionally_add "sort_dir" sort_dir
+    |> optionally_add "highlight" highlight
+    |> optionally_add "count" count
+    |> optionally_add "page" page
+  in query uri
+
+let search_messages token ?sort ?sort_dir ?highlight ?count ?page query_ =
+  let uri = endpoint "search.files"
+    |> definitely_add "token" token
+    |> definitely_add "query" query_
+    |> optionally_add "sort" sort
+    |> optionally_add "sort_dir" sort_dir
+    |> optionally_add "highlight" highlight
+    |> optionally_add "count" count
+    |> optionally_add "page" page
+  in query uri

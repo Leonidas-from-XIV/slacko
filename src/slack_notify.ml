@@ -39,6 +39,9 @@ let execute token =
     return (print_endline @@ string_or_bust c)) >>
   Slacko.emoji_list token
   >>= (fun c ->
+    return (print_endline @@ string_or_bust c)) >>
+  Slacko.im_list token
+  >>= (fun c ->
     return (print_endline @@ string_or_bust c))
   |> Lwt_main.run
 

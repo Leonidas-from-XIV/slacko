@@ -273,3 +273,24 @@ let groups_set_topic token channel topic =
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
   in query uri
+
+let im_history token ?latest ?oldest ?count channel =
+  let uri = endpoint "im.history"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> optionally_add "latest" latest
+    |> optionally_add "oldest" oldest
+    |> optionally_add "count" count
+  in query uri
+
+let im_list token =
+  let uri = endpoint "im.list"
+    |> definitely_add "token" token
+  in query uri
+
+let im_mark token channel ts =
+  let uri = endpoint "im.mark"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+    |> definitely_add "ts" ts
+  in query uri

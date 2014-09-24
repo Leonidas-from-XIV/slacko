@@ -53,6 +53,10 @@ let validate json =
       | `String "unknown_type" -> `Unknown_type
       | `String "cant_leave_last_channel" -> `Cant_leave_last_channel
       | `String "last_member" -> `Last_member
+      | `String "invalid_client_id" -> `Invalid_client_id
+      | `String "bad_client_secret" -> `Bad_client_secret
+      | `String "invalid_code" -> `Invalid_code
+      | `String "bad_redirect_uri" -> `Bad_redirect_uri
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -293,4 +297,12 @@ let im_mark token channel ts =
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "ts" ts
+  in query uri
+
+let oauth_access client_id client_secret ?redirect_url code =
+  let uri = endpoint "oauth.access"
+    |> definitely_add "client_id" client_id
+    |> definitely_add "client_secret" client_secret
+    |> definitely_add "code" code
+    |> optionally_add "redirect_url" redirect_url
   in query uri

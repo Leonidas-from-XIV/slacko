@@ -346,3 +346,11 @@ let search_messages token ?sort ?sort_dir ?highlight ?count ?page query_ =
     |> optionally_add "count" count
     |> optionally_add "page" page
   in query uri
+
+let stars_list ?user ?count ?page token =
+  let uri = endpoint "stars.list"
+    |> definitely_add "token" token
+    |> optionally_add "user" user
+    |> optionally_add "count" count
+    |> optionally_add "page" page
+  in query uri

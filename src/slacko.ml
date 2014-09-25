@@ -354,3 +354,8 @@ let stars_list ?user ?count ?page token =
     |> optionally_add "count" count
     |> optionally_add "page" page
   in query uri
+
+let users_list token =
+  let uri = endpoint "users.list"
+    |> definitely_add "token" token
+  in query uri

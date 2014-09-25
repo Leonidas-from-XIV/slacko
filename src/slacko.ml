@@ -359,3 +359,8 @@ let users_list token =
   let uri = endpoint "users.list"
     |> definitely_add "token" token
   in query uri
+
+let users_set_active token =
+  let uri = endpoint "users.setActive"
+    |> definitely_add "token" token
+  in query uri

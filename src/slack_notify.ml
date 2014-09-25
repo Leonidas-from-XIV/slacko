@@ -48,6 +48,9 @@ let execute token =
     return (print_endline @@ string_or_bust c)) >>
   Slacko.users_list token
   >>= (fun c ->
+    return (print_endline @@ string_or_bust c)) >>
+  Slacko.users_set_active token
+  >>= (fun c ->
     return (print_endline @@ string_or_bust c))
   |> Lwt_main.run
 

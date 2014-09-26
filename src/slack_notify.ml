@@ -24,16 +24,20 @@ let token =
 
 let channel =
   let doc = "Name of the channel to post to" in
-  Cmdliner.Arg.(required & opt (some string) None & info ["c"; "channel"] ~docv:"CHANNEL" ~doc)
+  Cmdliner.Arg.(required & pos 0 (some string) None & info [] ~docv:"CHANNEL" ~doc)
+
+let message =
+  let doc = "Message to send" in
+  Cmdliner.Arg.(required & pos 1 (some string) None & info [] ~docv:"MSG" ~doc)
 
 let info =
   let doc = "Writes messages to slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
-let execute token channel =
-  "Your token is " ^ token ^ "."
-  |> print_endline;
-  print_endline channel;
+let execute token channel msg =
+  "Your token is " ^ token ^ ", the channel is " ^ channel
+    ^ " and the message is " ^ msg
+    |> print_endline;
 
   let string_or_bust = function
     | `Success json -> Yojson.Basic.pretty_to_string json
@@ -81,7 +85,7 @@ let execute token channel =
   *)
   |> Lwt_main.run
 
-let execute_t = Cmdliner.Term.(pure execute $ token $ channel)
+let execute_t = Cmdliner.Term.(pure execute $ token $ channel $ message)
 
 let () =
   match Cmdliner.Term.eval (execute_t, info) with

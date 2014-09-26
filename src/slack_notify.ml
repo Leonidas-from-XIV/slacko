@@ -20,15 +20,20 @@
 
 let token =
   let doc = "The Slack API access token" in
-  Cmdliner.Arg.(value & opt string "" & info ["t"; "token"] ~docv:"TOKEN" ~doc)
+  Cmdliner.Arg.(required & opt (some string) None & info ["t"; "token"] ~docv:"TOKEN" ~doc)
+
+let channel =
+  let doc = "Name of the channel to post to" in
+  Cmdliner.Arg.(required & opt (some string) None & info ["c"; "channel"] ~docv:"CHANNEL" ~doc)
 
 let info =
   let doc = "Writes messages to slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
-let execute token =
+let execute token channel =
   "Your token is " ^ token ^ "."
   |> print_endline;
+  print_endline channel;
 
   let string_or_bust = function
     | `Success json -> Yojson.Basic.pretty_to_string json
@@ -41,12 +46,13 @@ let execute token =
   in
 
   let open Lwt in
+  Slacko.chat_post_message token "#geloetnotexist" "Test bot"
+  >>= (fun c ->
+    return (print_endline @@ string_or_bust c))
+  (*
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
     return (print_endline @@ string_or_bust c)) >>
   Slacko.auth_test token >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.chat_post_message token "#geloetnotexist" "Test bot"
-  >>= (fun c ->
     return (print_endline @@ string_or_bust c)) >>
   Slacko.channels_list token
   >>= (fun c ->
@@ -72,9 +78,10 @@ let execute token =
   Slacko.users_set_active token
   >>= (fun c ->
     return (print_endline @@ string_or_bust c))
+  *)
   |> Lwt_main.run
 
-let execute_t = Cmdliner.Term.(pure execute $ token)
+let execute_t = Cmdliner.Term.(pure execute $ token $ channel)
 
 let () =
   match Cmdliner.Term.eval (execute_t, info) with

@@ -22,6 +22,10 @@ let token =
   let doc = "The Slack API access token" in
   Cmdliner.Arg.(required & opt (some string) None & info ["t"; "token"] ~docv:"TOKEN" ~doc)
 
+let username =
+  let doc = "Name of the bot in the chat" in
+  Cmdliner.Arg.(value & opt (some string) None & info ["u"; "username"] ~docv:"USERNAME" ~doc)
+
 let channel =
   let doc = "Name of the channel to post to" in
   Cmdliner.Arg.(required & pos 0 (some string) None & info [] ~docv:"CHANNEL" ~doc)
@@ -34,9 +38,9 @@ let info =
   let doc = "Writes messages to slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
-let execute token channel msg =
+let execute token username channel msg =
   "Your token is " ^ token ^ ", the channel is " ^ channel
-    ^ " and the message is " ^ msg
+    ^ " and the message is '" ^ msg ^ "'."
     |> print_endline;
 
   let string_or_bust = function
@@ -50,7 +54,9 @@ let execute token channel msg =
   in
 
   let open Lwt in
-  Slacko.chat_post_message token channel msg
+  Slacko.chat_post_message token channel
+    ?username:(username)
+    msg
   >>= (fun c ->
     return (print_endline @@ string_or_bust c))
   (*
@@ -85,7 +91,7 @@ let execute token channel msg =
   *)
   |> Lwt_main.run
 
-let execute_t = Cmdliner.Term.(pure execute $ token $ channel $ message)
+let execute_t = Cmdliner.Term.(pure execute $ token $ username $ channel $ message)
 
 let () =
   match Cmdliner.Term.eval (execute_t, info) with

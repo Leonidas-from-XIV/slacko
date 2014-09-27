@@ -86,8 +86,18 @@ let filter_useless = function
       `Assoc (List.filter (fun (k, _) -> k <> "ok" && k <> "error") items))
   | otherwise -> otherwise
 
+
 let query uri =
   lwt (_, body) = Cohttp_unix.Client.get uri in
+  lwt content = Cohttp_body.to_string body in
+  Yojson.Basic.from_string content
+    |> validate
+    |> filter_useless
+    |> Lwt.return
+
+(* do a POST request *)
+let query_post uri body =
+  lwt (_, body) = Cohttp_unix.Client.post ~body uri in
   lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
@@ -229,7 +239,16 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
     |> optionally_add "page" page
   in query uri
 
-(* files_upload comes later *)
+let files_upload token
+  ?filetype ?filename ?title ?initial_comment ?channels content =
+  let uri = endpoint "files.upload"
+    |> definitely_add "token" token
+    |> optionally_add "filetype" filetype
+    |> optionally_add "filename" filename
+    |> optionally_add "title" title
+    |> optionally_add "initial_comment" initial_comment
+    |> optionally_add "channels" channels
+  in query_post uri
 
 let groups_create token name =
   let uri = endpoint "groups.create"

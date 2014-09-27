@@ -50,7 +50,7 @@ let execute token channel msg =
   in
 
   let open Lwt in
-  Slacko.chat_post_message token "#geloetnotexist" "Test bot"
+  Slacko.chat_post_message token channel msg
   >>= (fun c ->
     return (print_endline @@ string_or_bust c))
   (*

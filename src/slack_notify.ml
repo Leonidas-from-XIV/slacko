@@ -1,5 +1,5 @@
 (*
-* Slacko - Binding to the Slack API
+* slack-notify - Posts messages to Slack channels
 * Copyright (C) 2014 Marek Kubica <marek@xivilization.net>
 *
 * This library is free software; you can redistribute it and/or
@@ -26,6 +26,14 @@ let username =
   let doc = "Name of the bot in the chat" in
   Cmdliner.Arg.(value & opt (some string) None & info ["u"; "username"] ~docv:"USERNAME" ~doc)
 
+let icon_url =
+  let doc = "URL to an image to use as the icon for this message" in
+  Cmdliner.Arg.(value & opt (some string) None & info ["icon-url"] ~docv:"URL" ~doc)
+
+let icon_emoji =
+  let doc = "emoji to use as the icon for this message. Overrides icon-url" in
+  Cmdliner.Arg.(value & opt (some string) None & info ["icon-emoji"] ~docv:"EMOJI" ~doc)
+
 let channel =
   let doc = "Name of the channel to post to" in
   Cmdliner.Arg.(required & pos 0 (some string) None & info [] ~docv:"CHANNEL" ~doc)
@@ -38,7 +46,7 @@ let info =
   let doc = "Writes messages to slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
-let execute token username channel msg =
+let execute token username channel icon_url icon_emoji msg =
   "Your token is " ^ token ^ ", the channel is " ^ channel
     ^ " and the message is '" ^ msg ^ "'."
     |> print_endline;
@@ -56,6 +64,8 @@ let execute token username channel msg =
   let open Lwt in
   Slacko.chat_post_message token channel
     ?username:(username)
+    ?icon_emoji:(icon_emoji)
+    ?icon_url:(icon_url)
     msg
   >>= (fun c ->
     return (print_endline @@ string_or_bust c))
@@ -91,7 +101,7 @@ let execute token username channel msg =
   *)
   |> Lwt_main.run
 
-let execute_t = Cmdliner.Term.(pure execute $ token $ username $ channel $ message)
+let execute_t = Cmdliner.Term.(pure execute $ token $ username $ channel $ icon_url $ icon_emoji $ message)
 
 let () =
   match Cmdliner.Term.eval (execute_t, info) with

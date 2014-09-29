@@ -1,17 +1,15 @@
-![Slacko logo](slacko.png)
-
-A neat interface for [Slack](https://slack.com/)
-
 Slacko
 ======
 
-Your company got you [Slack](https://slack.com/) and you're all like "yeah, and
-now I am forced to use a browser or what?". Fear no more, because as it turns
-out Slack has a REST API that can be accessed.
+![Slacko logo](slacko.png) A neat interface for [Slack](https://slack.com/)
+
+Your company got you Slack and you're all like "yeah, and now I am forced to
+use a browser or what?". Fear no more, because as it turns out Slack has a REST
+API that can be accessed.
 
 Yeah, scripting Slack via `curl` sucks, so let's do something that sucks less.
 Maybe a bit? How about using an existing
-[integration](https://api.slack.com/community)? They are incomplete and for
+[integration](https://api.slack.com/community)? They are incomplete or for
 sucky languages? Glad you asked, because I have *just the right thing* for you:
 a neat interface to Slack via [OCaml](https://ocaml.org/)!
 
@@ -25,10 +23,10 @@ Huzzah, I got you interested? Lucky you, Slacko can easily be installed via
 [OCaml Package Manager (OPAM)](https://opam.ocaml.org/), so you just write
 
 ```sh
-$ opam install slacko
+$ opam install lwt slacko
 ```
 
-Now wasn't this easy? Bet your ass it was! And you know what? It even get's
+Now wasn't this easy? Bet your ass it was! And you know what? It even gets
 better: it also installed you a nifty little executable called `slack-notify`
 which you can use to post directly to Slack *from your shell*, no programming
 required at all. Actually, once compiled, not even OCaml is required anymore,

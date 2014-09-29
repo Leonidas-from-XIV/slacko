@@ -21,6 +21,47 @@
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
+type apierror =
+           [ `Account_inactive
+            | `Already_in_channel
+            | `Bad_client_secret
+            | `Bad_redirect_uri
+            | `Cant_delete_message
+            | `Cant_invite
+            | `Cant_invite_self
+            | `Cant_kick_from_general
+            | `Cant_kick_from_last_channel
+            | `Cant_kick_self
+            | `Cant_leave_general
+            | `Cant_leave_last_channel
+            | `Cant_update_message
+            | `Channel_not_found
+            | `Edit_window_closed
+            | `Error
+            | `File_deleted
+            | `File_not_found
+            | `Invalid_auth
+            | `Invalid_client_id
+            | `Invalid_code
+            | `Invalid_presence
+            | `Invalid_ts_latest
+            | `Invalid_ts_oldest
+            | `Is_archived
+            | `Last_member
+            | `Message_not_found
+            | `Msg_too_long
+            | `Name_taken
+            | `No_channel
+            | `No_text
+            | `Not_authed
+            | `Not_in_channels
+            | `Rate_limited
+            | `Restricted_action
+            | `Success of Yojson.Basic.json
+            | `Too_long
+            | `Unknown_type
+            | `User_not_found ]
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =

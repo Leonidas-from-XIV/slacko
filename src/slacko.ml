@@ -417,7 +417,7 @@ let search_files token ?sort ?sort_dir ?highlight ?count ?page query_ =
   in query uri
 
 let search_messages token ?sort ?sort_dir ?highlight ?count ?page query_ =
-  let uri = endpoint "search.files"
+  let uri = endpoint "search.messages"
     |> definitely_add "token" token
     |> definitely_add "query" query_
     |> optionally_add "sort" sort

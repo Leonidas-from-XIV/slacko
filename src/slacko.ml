@@ -289,7 +289,7 @@ let files_upload token
     |> optionally_add "title" title
     |> optionally_add "initial_comment" initial_comment
     |> optionally_add "channels" channels
-  in query_post uri
+  in query_post uri content
 
 let groups_create token name =
   let uri = endpoint "groups.create"

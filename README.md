@@ -23,7 +23,7 @@ Huzzah, I got you interested? Lucky you, Slacko can easily be installed via
 [OCaml Package Manager (OPAM)](https://opam.ocaml.org/), so you just write
 
 ```sh
-$ opam install lwt slacko
+$ opam install slacko
 ```
 
 Now wasn't this easy? Bet your ass it was! And you know what? It even gets
@@ -31,6 +31,23 @@ better: it also installed you a nifty little executable called `slack-notify`
 which you can use to post directly to Slack *from your shell*, no programming
 required at all. Actually, once compiled, not even OCaml is required anymore,
 everything is self-contained.
+
+In case you want to manually install it, you can, too. There's a number of
+dependencies that you have to take care of yourself:
+
+  * [OCaml](http://ocaml.org/) (Well, that is obvious)
+  * [camlp4](https://github.com/ocaml/camlp4)
+  * [Lwt](https://ocsigen.org/lwt/)
+  * [Cmdliner](http://erratique.ch/software/cmdliner)
+  * [Yojson](http://mjambon.com/yojson.html)
+
+Then you can build Slacko by yourself:
+
+```sh
+$ ocaml setup.ml -configure
+$ ocaml setup.ml -build
+$ ocaml setup.ml -install
+```
 
 Ready, set, go!
 ---------------

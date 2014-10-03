@@ -54,7 +54,7 @@ type apierror =
             | `No_channel
             | `No_text
             | `Not_authed
-            | `Not_in_channels
+            | `Not_in_channel
             | `Rate_limited
             | `Restricted_action
             | `Success of Yojson.Basic.json
@@ -82,44 +82,45 @@ let validate json =
     | true -> `Success json
     | false -> let error = json |> member "error" in
       match error with
-      | `String "not_authed" -> `Not_authed
-      | `String "invalid_auth" -> `Invalid_auth
       | `String "account_inactive" -> `Account_inactive
+      | `String "already_in_channel" -> `Already_in_channel
+      | `String "bad_client_secret" -> `Bad_client_secret
+      | `String "bad_redirect_uri" -> `Bad_redirect_uri
+      | `String "cant_invite" -> `Cant_invite
+      | `String "cant_invite_self" -> `Cant_invite_self
+      | `String "cant_delete_message" -> `Cant_delete_message
+      | `String "cant_kick_from_general" -> `Cant_kick_from_general
+      | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
+      | `String "cant_kick_self" -> `Cant_kick_self
+      | `String "cant_leave_general" -> `Cant_leave_general
+      | `String "cant_leave_last_channel" -> `Cant_leave_last_channel
+      | `String "cant_update_message" -> `Cant_update_message
       | `String "channel_not_found" -> `Channel_not_found
-      | `String "is_archived" -> `Is_archived
-      | `String "msg_too_long" -> `Msg_too_long
-      | `String "rate_limited" -> `Rate_limited
+      | `String "edit_window_closed" -> `Edit_window_closed
+      | `String "file_deleted" -> `File_deleted
+      | `String "file_not_found" -> `File_not_found
+      | `String "invalid_auth" -> `Invalid_auth
+      | `String "invalid_client_id" -> `Invalid_client_id
+      | `String "invalid_code" -> `Invalid_code
+      | `String "invalid_presence" -> `Invalid_presence
       | `String "invalid_ts_latest" -> `Invalid_ts_latest
       | `String "invalid_ts_oldest" -> `Invalid_ts_oldest
-      | `String "user_not_found" -> `User_not_found
-      | `String "cant_invite_self" -> `Cant_invite_self
-      | `String "not_in_channel" -> `Not_in_channels
-      | `String "already_in_channel" -> `Already_in_channel
-      | `String "cant_invite" -> `Cant_invite
+      | `String "is_archived" -> `Is_archived
+      | `String "last_member" -> `Last_member
+      | `String "message_not_found" -> `Message_not_found
+      | `String "msg_too_long" -> `Msg_too_long
       | `String "name_taken" -> `Name_taken
       (* can't really happen *)
       | `String "no_channel" -> `No_channel
-      | `String "cant_kick_self" -> `Cant_kick_self
-      | `String "cant_kick_from_general" -> `Cant_kick_from_general
-      | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
-      | `String "restricted_action" -> `Restricted_action
-      | `String "cant_leave_general" -> `Cant_leave_general
-      | `String "too_long" -> `Too_long
-      | `String "message_not_found" -> `Message_not_found
-      | `String "cant_delete_message" -> `Cant_delete_message
-      | `String "cant_update_message" -> `Cant_update_message
-      | `String "edit_window_closed" -> `Edit_window_closed
+      (* can't really happen either *)
       | `String "no_text" -> `No_text
-      | `String "file_not_found" -> `File_not_found
-      | `String "file_deleted" -> `File_deleted
+      | `String "not_authed" -> `Not_authed
+      | `String "not_in_channel" -> `Not_in_channel
+      | `String "rate_limited" -> `Rate_limited
+      | `String "restricted_action" -> `Restricted_action
+      | `String "too_long" -> `Too_long
       | `String "unknown_type" -> `Unknown_type
-      | `String "cant_leave_last_channel" -> `Cant_leave_last_channel
-      | `String "last_member" -> `Last_member
-      | `String "invalid_client_id" -> `Invalid_client_id
-      | `String "bad_client_secret" -> `Bad_client_secret
-      | `String "invalid_code" -> `Invalid_code
-      | `String "bad_redirect_uri" -> `Bad_redirect_uri
-      | `String "invalid_presence" -> `Invalid_presence
+      | `String "user_not_found" -> `User_not_found
       | `String "user_not_visible" -> `User_not_visible
       | _ -> `Error
 

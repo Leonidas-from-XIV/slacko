@@ -54,7 +54,7 @@ type apierror =
             | `No_channel
             | `No_text
             | `Not_authed
-            | `Not_in_channels
+            | `Not_in_channel
             | `Rate_limited
             | `Restricted_action
             | `Success of Yojson.Basic.json

@@ -60,7 +60,8 @@ type apierror =
             | `Success of Yojson.Basic.json
             | `Too_long
             | `Unknown_type
-            | `User_not_found ]
+            | `User_not_found
+            | `User_not_visible ]
 
 (** Checks API calling code. *)
 val api_test: ?foo:string -> ?error:string -> unit -> apierror Lwt.t
@@ -175,6 +176,9 @@ val search_messages: string -> ?sort:string -> ?sort_dir:string -> ?highlight:st
 
 (** Lists stars for a user. *)
 val stars_list: ?user:string -> ?count:string -> ?page:string -> string -> apierror Lwt.t
+
+(** Gets information about a user. *)
+val users_info: string -> string -> apierror Lwt.t
 
 (** Lists all users in a Slack team. *)
 val users_list: string -> apierror Lwt.t

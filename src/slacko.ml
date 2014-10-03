@@ -60,7 +60,8 @@ type apierror =
             | `Success of Yojson.Basic.json
             | `Too_long
             | `Unknown_type
-            | `User_not_found ]
+            | `User_not_found
+            | `User_not_visible ]
 
 let base_url = "https://slack.com/api/"
 
@@ -119,6 +120,7 @@ let validate json =
       | `String "invalid_code" -> `Invalid_code
       | `String "bad_redirect_uri" -> `Bad_redirect_uri
       | `String "invalid_presence" -> `Invalid_presence
+      | `String "user_not_visible" -> `User_not_visible
       | _ -> `Error
 
 (* filter out "ok" and "error" keys *)
@@ -415,6 +417,12 @@ let stars_list ?user ?count ?page token =
     |> optionally_add "user" user
     |> optionally_add "count" count
     |> optionally_add "page" page
+  in query uri
+
+let users_info token user =
+  let uri = endpoint "users.info"
+    |> definitely_add "token" token
+    |> definitely_add "user" user
   in query uri
 
 let users_list token =

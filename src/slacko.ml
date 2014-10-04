@@ -21,47 +21,159 @@
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
-type apierror =
-           [ `Account_inactive
-            | `Already_in_channel
-            | `Bad_client_secret
-            | `Bad_redirect_uri
-            | `Cant_delete_message
-            | `Cant_invite
-            | `Cant_invite_self
-            | `Cant_kick_from_general
-            | `Cant_kick_from_last_channel
-            | `Cant_kick_self
-            | `Cant_leave_general
-            | `Cant_leave_last_channel
-            | `Cant_update_message
-            | `Channel_not_found
-            | `Edit_window_closed
-            | `Error
-            | `File_deleted
-            | `File_not_found
-            | `Invalid_auth
-            | `Invalid_client_id
-            | `Invalid_code
-            | `Invalid_presence
-            | `Invalid_ts_latest
-            | `Invalid_ts_oldest
-            | `Is_archived
-            | `Last_member
-            | `Message_not_found
-            | `Msg_too_long
-            | `Name_taken
-            | `No_channel
-            | `No_text
-            | `Not_authed
-            | `Not_in_channel
-            | `Rate_limited
-            | `Restricted_action
-            | `Success of Yojson.Basic.json
-            | `Too_long
-            | `Unknown_type
-            | `User_not_found
-            | `User_not_visible ]
+type auth_error = [
+  | `Not_authed
+  | `Invalid_auth
+  | `Account_inactive
+]
+
+type timestamp_error = [
+  | `Invalid_ts_latest
+  | `Invalid_ts_oldest
+]
+
+type channel_error = [
+  | `Channel_not_found
+]
+
+type user_error = [
+  | `User_not_found
+]
+
+type invite_error = [
+  | `Cant_invite_self
+  | `Cant_invite
+]
+
+type not_in_channel_error = [
+  | `Not_in_channel
+]
+
+type already_in_channel_error = [
+  | `Already_in_channel
+]
+
+type archive_error = [
+  | `Is_archived
+]
+
+type name_error = [
+  | `Name_taken
+]
+
+type kick_error = [
+  | `Cant_kick_self
+]
+
+type channel_kick_error = [
+  | kick_error
+  | `Cant_kick_from_general
+  | `Cant_kick_from_last_channel
+]
+
+type restriction_error = [
+  | `Restricted_action
+]
+
+type leave_general_error = [
+  | `Cant_leave_general
+]
+
+type topic_error = [
+  | `Too_long
+]
+
+type message_error = [
+  | `Cant_delete_message
+  | `Message_not_found
+]
+
+type message_length_error = [
+  | `Msg_too_long
+]
+
+type rate_error = [
+  | `Rate_limited
+]
+
+type message_update_error = [
+  | `Message_not_found
+  | `Cant_update_message
+  | `Edit_window_closed
+]
+
+type file_error = [
+  | `File_not_found
+  | `File_deleted
+]
+
+type unknown_type_error = [
+  | `Unknown_type
+]
+
+type already_archived_error = [
+  | `Already_archived
+]
+
+type not_in_group_error = [
+  | `Not_in_group
+]
+
+type leave_last_channel_error = [
+  | `Cant_leave_last_channel
+]
+
+type last_member_error = [
+  | `Last_member
+]
+
+type oauth_error = [
+  | `Invalid_client_id
+  | `Bad_client_secret
+  | `Invalid_code
+  | `Bad_redirect_uri
+]
+
+type presence_error = [
+  | `Invalid_presence
+]
+
+type user_visibility_error = [
+  | `User_not_visible
+]
+
+type apierror = [
+  | auth_error
+  | timestamp_error
+  | channel_error
+  | not_in_channel_error
+  | already_archived_error
+  | already_in_channel_error
+  | oauth_error
+  | message_error
+  | invite_error
+  | channel_kick_error
+  | leave_general_error
+  | leave_last_channel_error
+  | message_update_error
+  | `Unknown_Error
+  | file_error
+  | presence_error
+  | archive_error
+  | last_member_error
+  | message_length_error
+  | name_error
+  | `No_channel
+  | `No_text
+  | not_in_group_error
+  | rate_error
+  | restriction_error
+  | `Success of Yojson.Basic.json
+  | topic_error
+  | unknown_type_error
+  | user_error
+  | user_visibility_error
+]
 
 let base_url = "https://slack.com/api/"
 
@@ -83,6 +195,7 @@ let validate json =
     | false -> let error = json |> member "error" in
       match error with
       | `String "account_inactive" -> `Account_inactive
+      | `String "already_archived" -> `Already_archived
       | `String "already_in_channel" -> `Already_in_channel
       | `String "bad_client_secret" -> `Bad_client_secret
       | `String "bad_redirect_uri" -> `Bad_redirect_uri
@@ -122,7 +235,7 @@ let validate json =
       | `String "unknown_type" -> `Unknown_type
       | `String "user_not_found" -> `User_not_found
       | `String "user_not_visible" -> `User_not_visible
-      | _ -> `Error
+      | _ -> `Unknown_error
 
 (* filter out "ok" and "error" keys *)
 let filter_useless = function
@@ -131,21 +244,23 @@ let filter_useless = function
   | otherwise -> otherwise
 
 
-let query uri =
+let query uri return_value_fn =
   lwt (_, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
     |> filter_useless
+    |> return_value_fn
     |> Lwt.return
 
 (* do a POST request *)
-let query_post uri body =
+let query_post uri body return_value_fn =
   lwt (_, body) = Cohttp_unix.Client.post ~body uri in
   lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
     |> filter_useless
+    |> return_value_fn
     |> Lwt.return
 
 (* Slack API begins here *)
@@ -154,12 +269,17 @@ let api_test ?foo ?error () =
   let uri = endpoint "api.test"
     |> optionally_add "foo" foo
     |> optionally_add "error" error
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | other -> `Unknown_error)
 
 let auth_test token =
   let uri = endpoint "auth.test"
     |> definitely_add "token" token
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_history token
   ?latest ?oldest ?count channel =
@@ -169,73 +289,139 @@ let channels_history token
     |> optionally_add "latest" latest
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | #timestamp_error as err -> err
+    | #channel_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_info token channel =
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | #channel_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_invite token channel user =
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "user" user
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | #channel_error as err -> err
+    | #user_error as err -> err
+    | #invite_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #already_in_channel_error as err -> err
+    | #archive_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_join token name =
   let uri = endpoint "channels.join"
     |> definitely_add "token" token
     |> definitely_add "name" name
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #name_error as err -> err
+    | #archive_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_kick token channel user =
   let uri = endpoint "channels.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "user" user
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #user_error as err -> err
+    | #channel_kick_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #restriction_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_leave token channel =
   let uri = endpoint "channels.leave"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #leave_general_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_list ?exclude_archived token =
   let uri = endpoint "channels.list"
     |> definitely_add "token" token
     |> optionally_add "exclude_archived" exclude_archived
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_mark token channel ts =
   let uri = endpoint "channels.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "ts" ts
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_set_purpose token channel purpose =
   let uri = endpoint "channels.setPurpose"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "purpose" purpose
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #topic_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let channels_set_topic token channel topic =
   let uri = endpoint "channels.setTopic"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #topic_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let chat_delete token ts channel =
   let uri = endpoint "chat.delete"
     |> definitely_add "token" token
     |> definitely_add "ts" ts
     |> definitely_add "channel" channel
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #message_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
@@ -249,7 +435,14 @@ let chat_post_message token channel
     |> optionally_add "parse" parse
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #message_length_error as err -> err
+    | #rate_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let chat_update token ts channel text =
   let uri = endpoint "chat.update"
@@ -257,12 +450,21 @@ let chat_update token ts channel text =
     |> definitely_add "ts" ts
     |> definitely_add "channel" channel
     |> definitely_add "text" text
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #message_update_error as err -> err
+    | #message_length_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let emoji_list token =
   let uri = endpoint "emoji.list"
     |> definitely_add "token" token
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let files_info token ?count ?page file =
   let uri = endpoint "files.info"
@@ -270,7 +472,11 @@ let files_info token ?count ?page file =
     |> definitely_add "file" file
     |> optionally_add "count" count
     |> optionally_add "page" page
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #file_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
   let uri = endpoint "files.list"
@@ -281,7 +487,12 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
     |> optionally_add "types" types
     |> optionally_add "count" count
     |> optionally_add "page" page
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #user_error as err -> err
+    | #unknown_type_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let files_upload token
   ?filetype ?filename ?title ?initial_comment ?channels content =
@@ -292,19 +503,33 @@ let files_upload token
     |> optionally_add "title" title
     |> optionally_add "initial_comment" initial_comment
     |> optionally_add "channels" channels
-  in query_post uri content
+  in query_post uri content (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_create token name =
   let uri = endpoint "groups.create"
     |> definitely_add "token" token
     |> definitely_add "name" name
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #name_error as err -> err
+    | #restriction_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_create_child token channel =
   let uri = endpoint "groups.createChild"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #already_archived_error as err -> err
+    | #restriction_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_history token ?latest ?oldest ?count channel =
   let uri = endpoint "groups.history"
@@ -313,55 +538,107 @@ let groups_history token ?latest ?oldest ?count channel =
     |> optionally_add "latest" latest
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #timestamp_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_invite token channel user =
   let uri = endpoint "groups.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "user" user
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #user_error as err -> err
+    | #invite_error as err -> err
+    | #archive_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_kick token channel user =
   let uri = endpoint "groups.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "user" user
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #user_error as err -> err
+    | #kick_error as err -> err
+    | #not_in_group_error as err -> err
+    | #restriction_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_leave token channel =
   let uri = endpoint "groups.leave"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #leave_last_channel_error as err -> err
+    | #last_member_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_list ?exclude_archived token =
   let uri = endpoint "groups.list"
     |> definitely_add "token" token
     |> optionally_add "exclude_archived" exclude_archived
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_mark token channel ts =
   let uri = endpoint "groups.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "ts" ts
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let groups_set_purpose token channel purpose =
   let uri = endpoint "groups.setPurpose"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "purpose" purpose
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #topic_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
+(* TODO: join all set_topic/purpose types into one *)
 let groups_set_topic token channel topic =
   let uri = endpoint "groups.setTopic"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #archive_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #topic_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
+(* TODO: join all history types *)
 let im_history token ?latest ?oldest ?count channel =
   let uri = endpoint "im.history"
     |> definitely_add "token" token
@@ -369,19 +646,32 @@ let im_history token ?latest ?oldest ?count channel =
     |> optionally_add "latest" latest
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #timestamp_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let im_list token =
   let uri = endpoint "im.list"
     |> definitely_add "token" token
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let im_mark token channel ts =
   let uri = endpoint "im.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "ts" ts
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #channel_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let oauth_access client_id client_secret ?redirect_url code =
   let uri = endpoint "oauth.access"
@@ -389,13 +679,20 @@ let oauth_access client_id client_secret ?redirect_url code =
     |> definitely_add "client_secret" client_secret
     |> definitely_add "code" code
     |> optionally_add "redirect_url" redirect_url
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #oauth_error as err -> err
+    | other -> `Unknown_error)
 
 let presence_set token presence =
   let uri = endpoint "presence.set"
     |> definitely_add "token" token
     |> definitely_add "presence" presence
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #presence_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
   let uri = base
@@ -406,7 +703,10 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
     |> optionally_add "highlight" highlight
     |> optionally_add "count" count
     |> optionally_add "page" page
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let search_all = search @@ endpoint "search.all"
 let search_files = search @@ endpoint "search.files"
@@ -418,20 +718,35 @@ let stars_list ?user ?count ?page token =
     |> optionally_add "user" user
     |> optionally_add "count" count
     |> optionally_add "page" page
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #user_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let users_info token user =
   let uri = endpoint "users.info"
     |> definitely_add "token" token
     |> definitely_add "user" user
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #user_error as err -> err
+    | #user_visibility_error as err -> err
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let users_list token =
   let uri = endpoint "users.list"
     |> definitely_add "token" token
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)
 
 let users_set_active token =
   let uri = endpoint "users.setActive"
     |> definitely_add "token" token
-  in query uri
+  in query uri (function
+    | `Success v -> `Success v
+    | #auth_error as err -> err
+    | other -> `Unknown_error)

@@ -1,6 +1,6 @@
 OASISFormat: 0.4
 Name:        slacko
-Version:     0.9.0
+Version:     0.9.1
 Synopsis:    Binding to the Slack API
 Authors:     Marek Kubica
 License:     LGPL-3 with OCaml linking exception

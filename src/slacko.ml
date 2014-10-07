@@ -147,37 +147,9 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
-type apierror = [
-  | auth_error
-  | timestamp_error
-  | channel_error
-  | not_in_channel_error
-  | already_archived_error
-  | already_in_channel_error
-  | oauth_error
-  | message_error
-  | invite_error
-  | channel_kick_error
-  | leave_general_error
-  | leave_last_channel_error
-  | message_update_error
-  | api_result
-  | file_error
-  | presence_error
-  | archive_error
-  | last_member_error
-  | message_length_error
-  | name_error
-  | `No_channel
-  | `No_text
-  | not_in_group_error
-  | rate_error
-  | restriction_error
-  | topic_error
-  | unknown_type_error
-  | user_error
-  | user_visibility_error
-]
+type timestamp = float
+
+type token = string
 
 let base_url = "https://slack.com/api/"
 
@@ -266,6 +238,13 @@ let query_post uri body return_value_fn =
     |> filter_useless
     |> return_value_fn
     |> Lwt.return
+
+(* like string_of_float, but doesn't truncate numbers to end with '.',
+ * e.g. '42.' *)
+let string_of_timestamp = Printf.sprintf "%.f"
+
+(* Slacko API helper methods *)
+let token_of_string x = x
 
 (* Slack API begins here *)
 

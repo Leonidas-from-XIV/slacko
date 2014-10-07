@@ -147,37 +147,15 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
-type apierror = [
-  | auth_error
-  | timestamp_error
-  | channel_error
-  | not_in_channel_error
-  | already_archived_error
-  | already_in_channel_error
-  | oauth_error
-  | message_error
-  | invite_error
-  | channel_kick_error
-  | leave_general_error
-  | leave_last_channel_error
-  | message_update_error
-  | api_result
-  | file_error
-  | presence_error
-  | archive_error
-  | last_member_error
-  | message_length_error
-  | name_error
-  | `No_channel
-  | `No_text
-  | not_in_group_error
-  | rate_error
-  | restriction_error
-  | topic_error
-  | unknown_type_error
-  | user_error
-  | user_visibility_error
-]
+(** Timestamps are usually represented as floats in OCaml, following suit *)
+type timestamp = float
+
+(** Tokens are of a special type, use token_of_string to turn a string into a
+    token *)
+type token
+
+(** Converts a string into a token *)
+val token_of_string: string -> token
 
 (** Checks API calling code. *)
 val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t

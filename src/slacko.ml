@@ -151,6 +151,10 @@ type timestamp = float
 
 type token = string
 
+type topic = string
+
+type message = string
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -244,7 +248,9 @@ let query_post uri body return_value_fn =
 let string_of_timestamp = Printf.sprintf "%.f"
 
 (* Slacko API helper methods *)
-let token_of_string x = x
+let token_of_string = identity
+let message_of_string = identity
+let topic_of_string = identity
 
 (* Slack API begins here *)
 

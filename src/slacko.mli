@@ -154,6 +154,12 @@ type timestamp = float
     token *)
 type token
 
+(** The topic type represents a topic or a purpose message *)
+type topic
+
+(** The message represents a message to be posted *)
+type message
+
 (** Converts a string into a token *)
 val token_of_string: string -> token
 

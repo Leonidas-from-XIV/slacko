@@ -147,6 +147,15 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
+type purpose_result = [
+  | api_result
+  | channel_error
+  | archive_error
+  | not_in_channel_error
+  | topic_error
+  | auth_error
+]
+
 type timestamp = float
 
 type token = string
@@ -246,6 +255,7 @@ let query_post uri body return_value_fn =
 (* like string_of_float, but doesn't truncate numbers to end with '.',
  * e.g. '42.' *)
 let string_of_timestamp = Printf.sprintf "%.f"
+let identity x = x
 
 (* Slacko API helper methods *)
 let token_of_string = identity
@@ -378,12 +388,7 @@ let channels_set_purpose token channel purpose =
     |> definitely_add "channel" channel
     |> definitely_add "purpose" purpose
   in query uri (function
-    | #api_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #topic_error as err -> err
-    | #auth_error as err -> err
+    | #purpose_result as res -> res
     | other -> `Unknown_error)
 
 let channels_set_topic token channel topic =
@@ -392,12 +397,7 @@ let channels_set_topic token channel topic =
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
   in query uri (function
-    | #api_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #topic_error as err -> err
-    | #auth_error as err -> err
+    | #purpose_result as res -> res
     | other -> `Unknown_error)
 
 let chat_delete token ts channel =
@@ -604,27 +604,16 @@ let groups_set_purpose token channel purpose =
     |> definitely_add "channel" channel
     |> definitely_add "purpose" purpose
   in query uri (function
-    | #api_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #topic_error as err -> err
-    | #auth_error as err -> err
+    | #purpose_result as res -> res
     | other -> `Unknown_error)
 
-(* TODO: join all set_topic/purpose types into one *)
 let groups_set_topic token channel topic =
   let uri = endpoint "groups.setTopic"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
   in query uri (function
-    | #api_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #topic_error as err -> err
-    | #auth_error as err -> err
+    | #purpose_result as res -> res
     | other -> `Unknown_error)
 
 (* TODO: join all history types *)

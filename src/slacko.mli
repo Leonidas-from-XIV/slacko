@@ -147,6 +147,15 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
+type purpose_result = [
+  | api_result
+  | channel_error
+  | archive_error
+  | not_in_channel_error
+  | topic_error
+  | auth_error
+]
+
 (** Timestamps are usually represented as floats in OCaml, following suit *)
 type timestamp = float
 
@@ -194,10 +203,10 @@ val channels_list: ?exclude_archived:string -> string -> [> api_result | auth_er
 val channels_mark: string -> string -> string -> [> api_result | channel_error | archive_error | not_in_channel_error | auth_error ] Lwt.t
 
 (** Sets the purpose for a channel. *)
-val channels_set_purpose: string -> string -> string -> [> api_result | channel_error | archive_error | not_in_channel_error | topic_error | auth_error ] Lwt.t
+val channels_set_purpose: string -> string -> string -> [> purpose_result ] Lwt.t
 
 (** Sets the topic for a channel. *)
-val channels_set_topic: string -> string -> string -> [> api_result | channel_error | archive_error | not_in_channel_error | topic_error | auth_error ] Lwt.t
+val channels_set_topic: string -> string -> string -> [> purpose_result ] Lwt.t
 
 (** Deletes a message. *)
 val chat_delete: string -> string -> string -> [> api_result | channel_error | message_error | auth_error ] Lwt.t
@@ -245,10 +254,10 @@ val groups_list: ?exclude_archived:string -> string -> [> api_result | auth_erro
 val groups_mark: string -> string -> string -> [> api_result | channel_error | archive_error | not_in_channel_error | auth_error ] Lwt.t
 
 (** Sets the purpose for a private group. *)
-val groups_set_purpose: string -> string -> string -> [> api_result | channel_error | archive_error | not_in_channel_error | topic_error | auth_error ] Lwt.t
+val groups_set_purpose: string -> string -> string -> [> purpose_result ] Lwt.t
 
 (** Sets the topic for a private group. *)
-val groups_set_topic: string -> string -> string -> [> api_result | channel_error | archive_error | not_in_channel_error | topic_error | auth_error ] Lwt.t
+val groups_set_topic: string -> string -> string -> [> purpose_result ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
 val im_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> api_result | channel_error | timestamp_error | auth_error ] Lwt.t

@@ -156,6 +156,13 @@ type purpose_result = [
   | auth_error
 ]
 
+type history_result = [
+  | api_result
+  | channel_error
+  | timestamp_error
+  | auth_error
+]
+
 type timestamp = float
 
 type token = string
@@ -289,10 +296,7 @@ let channels_history token
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
   in query uri (function
-    | #api_result as res -> res
-    | #auth_error as err -> err
-    | #timestamp_error as err -> err
-    | #channel_error as err -> err
+    | #history_result as res -> res
     | other -> `Unknown_error)
 
 let channels_info token channel =
@@ -528,10 +532,7 @@ let groups_history token ?latest ?oldest ?count channel =
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
   in query uri (function
-    | #api_result as res -> res
-    | #channel_error as err -> err
-    | #timestamp_error as err -> err
-    | #auth_error as err -> err
+    | #history_result as res -> res
     | other -> `Unknown_error)
 
 let groups_invite token channel user =
@@ -616,7 +617,6 @@ let groups_set_topic token channel topic =
     | #purpose_result as res -> res
     | other -> `Unknown_error)
 
-(* TODO: join all history types *)
 let im_history token ?latest ?oldest ?count channel =
   let uri = endpoint "im.history"
     |> definitely_add "token" token
@@ -625,10 +625,7 @@ let im_history token ?latest ?oldest ?count channel =
     |> optionally_add "oldest" oldest
     |> optionally_add "count" count
   in query uri (function
-    | #api_result as res -> res
-    | #channel_error as err -> err
-    | #timestamp_error as err -> err
-    | #auth_error as err -> err
+    | #history_result as res -> res
     | other -> `Unknown_error)
 
 let im_list token =

@@ -156,6 +156,13 @@ type purpose_result = [
   | auth_error
 ]
 
+type history_result = [
+  | api_result
+  | channel_error
+  | timestamp_error
+  | auth_error
+]
+
 (** Timestamps are usually represented as floats in OCaml, following suit *)
 type timestamp = float
 
@@ -179,7 +186,7 @@ val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t
 val auth_test: string -> [> api_result | auth_error ] Lwt.t
 
 (** Fetches history of messages and events from a channel. *)
-val channels_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> api_result | auth_error | channel_error | timestamp_error ] Lwt.t
+val channels_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> history_result ] Lwt.t
 
 (** Gets information about a channel. *)
 val channels_info: string -> string -> [> api_result | channel_error | auth_error ] Lwt.t
@@ -236,7 +243,7 @@ val groups_create: string -> string -> [> api_result | name_error | restriction_
 val groups_create_child: string -> string -> [> api_result | channel_error | already_archived_error | restriction_error | auth_error ] Lwt.t
 
 (** Fetches history of messages and events from a private group. *)
-val groups_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> api_result | channel_error | timestamp_error | auth_error ] Lwt.t
+val groups_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> history_result ] Lwt.t
 
 (** Invites a user to a private group. *)
 val groups_invite: string -> string -> string -> [> api_result | channel_error | user_error | invite_error | archive_error | auth_error ] Lwt.t
@@ -260,7 +267,7 @@ val groups_set_purpose: string -> string -> string -> [> purpose_result ] Lwt.t
 val groups_set_topic: string -> string -> string -> [> purpose_result ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
-val im_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> api_result | channel_error | timestamp_error | auth_error ] Lwt.t
+val im_history: string -> ?latest:string -> ?oldest:string -> ?count:string -> string -> [> history_result ] Lwt.t
 
 (** Lists direct message channels for the calling user. *)
 val im_list: string -> [> api_result | auth_error ] Lwt.t

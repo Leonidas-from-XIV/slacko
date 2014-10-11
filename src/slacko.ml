@@ -174,6 +174,10 @@ type topic = string
 
 type message = string
 
+type channel = ChannelId of string | ChannelName of string
+
+type user = UserId of string | UserName of string
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -272,8 +276,15 @@ let only_auth_can_fail = function
 
 (* Slacko API helper methods *)
 let token_of_string = identity
+(* TODO: should this do validation of the mesages? Length limits? *)
 let message_of_string = identity
 let topic_of_string = identity
+
+let channel_of_string s =
+  if s.[0] = 'C' then ChannelId s else ChannelName s
+
+let user_of_string s =
+  if s.[0] = 'U' then UserId s else UserName s
 
 (* Slack API begins here *)
 

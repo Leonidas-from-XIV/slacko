@@ -179,8 +179,26 @@ type topic
 (** The message represents a message to be posted *)
 type message
 
+(** A channel type, can be either a channel name (startingwith a #) or a
+    channel id. *)
+type channel
+
+(** An user, represented by either a user name or a user id. *)
+type user
+
 (** Converts a string into a token *)
 val token_of_string: string -> token
+
+val message_of_string: string -> message
+
+val topic_of_string: string -> topic
+
+(** Converts a string into a user. Can be either a username or an user id. *)
+val user_of_string: string -> user
+
+(** Converts a string int a channel. Can be either a channel name or a
+    channel id. *)
+val channel_of_string: string -> user
 
 (** Checks API calling code. *)
 val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t

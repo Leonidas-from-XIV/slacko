@@ -242,7 +242,6 @@ let filter_useless = function
       `Assoc (List.filter (fun (k, _) -> k <> "ok" && k <> "error") items))
   | otherwise -> otherwise
 
-
 let query uri return_value_fn =
   lwt (_, body) = Cohttp_unix.Client.get uri in
   lwt content = Cohttp_body.to_string body in
@@ -266,6 +265,10 @@ let query_post uri body return_value_fn =
  * e.g. '42.' *)
 let string_of_timestamp = Printf.sprintf "%.f"
 let identity x = x
+(* Many functions can only succeed or fail due to an auth error *)
+let only_auth_can_fail = function
+  | #authed_result as res -> res
+  | other -> `Unknown_error
 
 (* Slacko API helper methods *)
 let token_of_string = identity
@@ -285,9 +288,7 @@ let api_test ?foo ?error () =
 let auth_test token =
   let uri = endpoint "auth.test"
     |> definitely_add "token" token
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let channels_history token
   ?latest ?oldest ?count channel =
@@ -365,9 +366,7 @@ let channels_list ?exclude_archived token =
   let uri = endpoint "channels.list"
     |> definitely_add "token" token
     |> optionally_add "exclude_archived" exclude_archived
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let channels_mark token channel ts =
   let uri = endpoint "channels.mark"
@@ -446,9 +445,7 @@ let chat_update token ts channel text =
 let emoji_list token =
   let uri = endpoint "emoji.list"
     |> definitely_add "token" token
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let files_info token ?count ?page file =
   let uri = endpoint "files.info"
@@ -485,9 +482,7 @@ let files_upload token
     |> optionally_add "title" title
     |> optionally_add "initial_comment" initial_comment
     |> optionally_add "channels" channels
-  in query_post uri content (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query_post uri content only_auth_can_fail
 
 let groups_create token name =
   let uri = endpoint "groups.create"
@@ -564,9 +559,7 @@ let groups_list ?exclude_archived token =
   let uri = endpoint "groups.list"
     |> definitely_add "token" token
     |> optionally_add "exclude_archived" exclude_archived
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let groups_mark token channel ts =
   let uri = endpoint "groups.mark"
@@ -612,9 +605,7 @@ let im_history token ?latest ?oldest ?count channel =
 let im_list token =
   let uri = endpoint "im.list"
     |> definitely_add "token" token
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let im_mark token channel ts =
   let uri = endpoint "im.mark"
@@ -656,9 +647,7 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
     |> optionally_add "highlight" highlight
     |> optionally_add "count" count
     |> optionally_add "page" page
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let search_all = search @@ endpoint "search.all"
 let search_files = search @@ endpoint "search.files"
@@ -688,13 +677,9 @@ let users_info token user =
 let users_list token =
   let uri = endpoint "users.list"
     |> definitely_add "token" token
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail
 
 let users_set_active token =
   let uri = endpoint "users.setActive"
     |> definitely_add "token" token
-  in query uri (function
-    | #authed_result as res -> res
-    | other -> `Unknown_error)
+  in query uri only_auth_can_fail

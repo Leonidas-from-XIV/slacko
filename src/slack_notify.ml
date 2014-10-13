@@ -62,6 +62,9 @@ let execute token username channel icon_url icon_emoji msg =
   in
 
   let open Lwt in
+  let token = Slacko.token_of_string token in
+  let channel = Slacko.channel_of_string channel in
+  let msg = Slacko.message_of_string msg in
   Slacko.chat_post_message token channel
     ?username:(username)
     ?icon_emoji:(icon_emoji)

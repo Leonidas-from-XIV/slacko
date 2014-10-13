@@ -271,11 +271,34 @@ let query_post uri body return_value_fn =
 (* like string_of_float, but doesn't truncate numbers to end with '.',
  * e.g. '42.' *)
 let string_of_timestamp = Printf.sprintf "%.f"
+
 let identity x = x
 (* Many functions can only succeed or fail due to an auth error *)
 let only_auth_can_fail = function
   | #authed_result as res -> res
   | other -> `Unknown_error
+
+(* TODO: channel resolution *)
+let id_of_channel = function
+  | ChannelId id -> id
+  | ChannelName name -> failwith "ChannelName not supported yet"
+
+(* like id_of_channel but does not resolve names to ids *)
+let string_of_channel = function
+  | ChannelId id -> id
+  | ChannelName name -> name
+
+let id_of_user = function
+  | UserId id -> id
+  | UserName name -> failwith "UserName not supported yet"
+
+let string_of_bool = function
+  | true -> "1"
+  | false -> "0"
+
+let maybe fn = function
+  | Some v -> Some (fn v)
+  | None -> None
 
 (* Slacko API helper methods *)
 let token_of_string = identity
@@ -309,10 +332,10 @@ let channels_history token
   ?latest ?oldest ?count channel =
   let uri = endpoint "channels.history"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
-    |> optionally_add "latest" latest
-    |> optionally_add "oldest" oldest
-    |> optionally_add "count" count
+    |> definitely_add "channel" @@ id_of_channel channel
+    |> optionally_add "latest" @@ maybe string_of_timestamp @@ latest
+    |> optionally_add "oldest" @@ maybe string_of_timestamp @@ oldest
+    |> optionally_add "count" @@ maybe string_of_int @@ count
   in query uri (function
     | #history_result as res -> res
     | other -> `Unknown_error)
@@ -320,7 +343,7 @@ let channels_history token
 let channels_info token channel =
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_channel channel
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -329,8 +352,8 @@ let channels_info token channel =
 let channels_invite token channel user =
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
-    |> definitely_add "user" user
+    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -344,7 +367,7 @@ let channels_invite token channel user =
 let channels_join token name =
   let uri = endpoint "channels.join"
     |> definitely_add "token" token
-    |> definitely_add "name" name
+    |> definitely_add "name" @@ string_of_channel name
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -355,8 +378,8 @@ let channels_join token name =
 let channels_kick token channel user =
   let uri = endpoint "channels.kick"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
-    |> definitely_add "user" user
+    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -369,7 +392,7 @@ let channels_kick token channel user =
 let channels_leave token channel =
   let uri = endpoint "channels.leave"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_channel channel
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -380,14 +403,14 @@ let channels_leave token channel =
 let channels_list ?exclude_archived token =
   let uri = endpoint "channels.list"
     |> definitely_add "token" token
-    |> optionally_add "exclude_archived" exclude_archived
+    |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
   in query uri only_auth_can_fail
 
 let channels_mark token channel ts =
   let uri = endpoint "channels.mark"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
-    |> definitely_add "ts" ts
+    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -398,7 +421,7 @@ let channels_mark token channel ts =
 let channels_set_purpose token channel purpose =
   let uri = endpoint "channels.setPurpose"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_channel channel
     |> definitely_add "purpose" purpose
   in query uri (function
     | #purpose_result as res -> res
@@ -407,7 +430,7 @@ let channels_set_purpose token channel purpose =
 let channels_set_topic token channel topic =
   let uri = endpoint "channels.setTopic"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_channel channel
     |> definitely_add "topic" topic
   in query uri (function
     | #purpose_result as res -> res
@@ -416,8 +439,8 @@ let channels_set_topic token channel topic =
 let chat_delete token ts channel =
   let uri = endpoint "chat.delete"
     |> definitely_add "token" token
-    |> definitely_add "ts" ts
-    |> definitely_add "channel" channel
+    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "channel" @@ id_of_channel channel
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -426,12 +449,10 @@ let chat_delete token ts channel =
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
-  let base = endpoint "chat.postMessage" in
-  let required = Uri.add_query_params' base
-    [("token", token);
-     ("channel", channel);
-     ("text", text)] in
-  let uri = required
+  let uri = endpoint "chat.postMessage"
+    |> definitely_add "token" token
+    |> definitely_add "channel" @@ string_of_channel channel
+    |> definitely_add "text" text
     |> optionally_add "username" username
     |> optionally_add "parse" parse
     |> optionally_add "icon_url" icon_url
@@ -447,8 +468,8 @@ let chat_post_message token channel
 let chat_update token ts channel text =
   let uri = endpoint "chat.update"
     |> definitely_add "token" token
-    |> definitely_add "ts" ts
-    |> definitely_add "channel" channel
+    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "channel" @@ id_of_channel channel
     |> definitely_add "text" text
   in query uri (function
     | #authed_result as res -> res
@@ -466,8 +487,8 @@ let files_info token ?count ?page file =
   let uri = endpoint "files.info"
     |> definitely_add "token" token
     |> definitely_add "file" file
-    |> optionally_add "count" count
-    |> optionally_add "page" page
+    |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
     | #authed_result as res -> res
     | #file_error as err -> err
@@ -476,12 +497,12 @@ let files_info token ?count ?page file =
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
   let uri = endpoint "files.list"
     |> definitely_add "token" token
-    |> optionally_add "user" user
-    |> optionally_add "ts_from" ts_from
-    |> optionally_add "ts_to" ts_to
+    |> optionally_add "user" @@ maybe id_of_user user
+    |> optionally_add "ts_from" @@ maybe string_of_timestamp ts_from
+    |> optionally_add "ts_to" @@ maybe string_of_timestamp ts_to
     |> optionally_add "types" types
-    |> optionally_add "count" count
-    |> optionally_add "page" page
+    |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
     | #authed_result as res -> res
     | #user_error as err -> err
@@ -524,9 +545,9 @@ let groups_history token ?latest ?oldest ?count channel =
   let uri = endpoint "groups.history"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-    |> optionally_add "latest" latest
-    |> optionally_add "oldest" oldest
-    |> optionally_add "count" count
+    |> optionally_add "latest" @@ maybe string_of_timestamp latest
+    |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
+    |> optionally_add "count" @@ maybe string_of_int count
   in query uri (function
     | #history_result as res -> res
     | other -> `Unknown_error)
@@ -535,7 +556,7 @@ let groups_invite token channel user =
   let uri = endpoint "groups.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-    |> definitely_add "user" user
+    |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -548,7 +569,7 @@ let groups_kick token channel user =
   let uri = endpoint "groups.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-    |> definitely_add "user" user
+    |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -573,14 +594,14 @@ let groups_leave token channel =
 let groups_list ?exclude_archived token =
   let uri = endpoint "groups.list"
     |> definitely_add "token" token
-    |> optionally_add "exclude_archived" exclude_archived
+    |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
   in query uri only_auth_can_fail
 
 let groups_mark token channel ts =
   let uri = endpoint "groups.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-    |> definitely_add "ts" ts
+    |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -610,9 +631,9 @@ let im_history token ?latest ?oldest ?count channel =
   let uri = endpoint "im.history"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-    |> optionally_add "latest" latest
-    |> optionally_add "oldest" oldest
-    |> optionally_add "count" count
+    |> optionally_add "latest" @@ maybe string_of_timestamp latest
+    |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
+    |> optionally_add "count" @@ maybe string_of_int count
   in query uri (function
     | #history_result as res -> res
     | other -> `Unknown_error)
@@ -626,7 +647,7 @@ let im_mark token channel ts =
   let uri = endpoint "im.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
-    |> definitely_add "ts" ts
+    |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -659,9 +680,9 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
     |> definitely_add "query" query_
     |> optionally_add "sort" sort
     |> optionally_add "sort_dir" sort_dir
-    |> optionally_add "highlight" highlight
-    |> optionally_add "count" count
-    |> optionally_add "page" page
+    |> optionally_add "highlight" @@ maybe string_of_bool highlight
+    |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "page" @@ maybe string_of_int page
   in query uri only_auth_can_fail
 
 let search_all = search @@ endpoint "search.all"
@@ -671,9 +692,9 @@ let search_messages = search @@ endpoint "search.messages"
 let stars_list ?user ?count ?page token =
   let uri = endpoint "stars.list"
     |> definitely_add "token" token
-    |> optionally_add "user" user
-    |> optionally_add "count" count
-    |> optionally_add "page" page
+    |> optionally_add "user" @@ maybe id_of_user user
+    |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
     | #authed_result as res -> res
     | #user_error as err -> err
@@ -682,7 +703,7 @@ let stars_list ?user ?count ?page token =
 let users_info token user =
   let uri = endpoint "users.info"
     |> definitely_add "token" token
-    |> definitely_add "user" user
+    |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
     | #user_error as err -> err

@@ -186,6 +186,8 @@ type channel
 (** An user, represented by either a user name or a user id. *)
 type user
 
+type group
+
 (** Converts a string into a token *)
 val token_of_string: string -> token
 
@@ -193,12 +195,14 @@ val message_of_string: string -> message
 
 val topic_of_string: string -> topic
 
+val group_of_string: string -> group
+
 (** Converts a string into a user. Can be either a username or an user id. *)
 val user_of_string: string -> user
 
 (** Converts a string int a channel. Can be either a channel name or a
     channel id. *)
-val channel_of_string: string -> user
+val channel_of_string: string -> channel
 
 (** Checks API calling code. *)
 val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t

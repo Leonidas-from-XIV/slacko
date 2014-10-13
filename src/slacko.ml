@@ -178,6 +178,9 @@ type channel = ChannelId of string | ChannelName of string
 
 type user = UserId of string | UserName of string
 
+(* TODO make this an union type *)
+type group = string
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -276,6 +279,7 @@ let only_auth_can_fail = function
 
 (* Slacko API helper methods *)
 let token_of_string = identity
+let group_of_string = identity
 (* TODO: should this do validation of the mesages? Length limits? *)
 let message_of_string = identity
 let topic_of_string = identity

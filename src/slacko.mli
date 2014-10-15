@@ -188,6 +188,10 @@ type user
 
 type group
 
+type sort_criterion = Score | Timestamp
+
+type sort_direction = Ascending | Descending
+
 (** Converts a string into a token *)
 val token_of_string: string -> token
 
@@ -307,13 +311,13 @@ val oauth_access: string -> string -> ?redirect_url:string -> string -> [> api_r
 val presence_set: token -> string -> [> authed_result | presence_error ] Lwt.t
 
 (** Searches for messages and files matching a query. *)
-val search_all: token -> ?sort:string -> ?sort_dir:string -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
+val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
 
 (** Searches for files matching a query. *)
-val search_files: token -> ?sort:string -> ?sort_dir:string -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
+val search_files: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
 
 (** Searches for messages matching a query. *)
-val search_messages: token -> ?sort:string -> ?sort_dir:string -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
+val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
 
 (** Lists stars for a user. *)
 val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [> authed_result | user_error ] Lwt.t

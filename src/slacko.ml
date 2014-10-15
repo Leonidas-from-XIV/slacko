@@ -181,6 +181,10 @@ type user = UserId of string | UserName of string
 (* TODO make this an union type *)
 type group = string
 
+type sort_criterion = Score | Timestamp
+
+type sort_direction = Ascending | Descending
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -295,6 +299,14 @@ let id_of_user = function
 let string_of_bool = function
   | true -> "1"
   | false -> "0"
+
+let string_of_criterion = function
+  | Score -> "score"
+  | Timestamp -> "timestamp"
+
+let string_of_direction = function
+  | Ascending -> "asc"
+  | Descending -> "desc"
 
 let maybe fn = function
   | Some v -> Some (fn v)
@@ -678,8 +690,8 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
   let uri = base
     |> definitely_add "token" token
     |> definitely_add "query" query_
-    |> optionally_add "sort" sort
-    |> optionally_add "sort_dir" sort_dir
+    |> optionally_add "sort" @@ maybe string_of_criterion sort
+    |> optionally_add "sort_dir" @@ maybe string_of_direction sort_dir
     |> optionally_add "highlight" @@ maybe string_of_bool highlight
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page

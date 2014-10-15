@@ -254,8 +254,8 @@ let filter_useless = function
   | otherwise -> otherwise
 
 let query uri return_value_fn =
-  lwt (_, body) = Cohttp_unix.Client.get uri in
-  lwt content = Cohttp_body.to_string body in
+  let%lwt (_, body) = Cohttp_unix.Client.get uri in
+  let%lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
     |> filter_useless
@@ -264,8 +264,8 @@ let query uri return_value_fn =
 
 (* do a POST request *)
 let query_post uri body return_value_fn =
-  lwt (_, body) = Cohttp_unix.Client.post ~body uri in
-  lwt content = Cohttp_body.to_string body in
+  let%lwt (_, body) = Cohttp_unix.Client.post ~body uri in
+  let%lwt content = Cohttp_body.to_string body in
   Yojson.Basic.from_string content
     |> validate
     |> filter_useless

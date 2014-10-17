@@ -35,9 +35,8 @@ everything is self-contained.
 In case you want to manually install it, you can, too. There's a number of
 dependencies that you have to take care of yourself:
 
-  * [OCaml](http://ocaml.org/) (Well, that is obvious)
-  * [camlp4](https://github.com/ocaml/camlp4)
-  * [Lwt](https://ocsigen.org/lwt/)
+  * [OCaml](http://ocaml.org/), >= 4.02.0 (no kidding)
+  * [Lwt](https://ocsigen.org/lwt/) >= 2.4.6 (for ppx support)
   * [Cmdliner](http://erratique.ch/software/cmdliner)
   * [Yojson](http://mjambon.com/yojson.html)
 

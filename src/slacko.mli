@@ -45,101 +45,146 @@ type timestamp_error = [
   | `Invalid_ts_oldest
 ]
 
+(** API calls that require {!channel} inputs can throw this error. *)
 type channel_error = [
   | `Channel_not_found
 ]
 
+(** API calls that require {!user} inputs often throw this error if the user
+    was not found. *)
 type user_error = [
   | `User_not_found
 ]
 
+(** Inviting might fail because invitation is impossible for some reason or
+    because attempting to invite oneself. *)
 type invite_error = [
   | `Cant_invite_self
   | `Cant_invite
 ]
 
+(** Some API calls require the {!user} to be in {!channel} for the action to
+    succeed, not meeting this requirement can raise this error. *)
 type not_in_channel_error = [
   | `Not_in_channel
 ]
 
+(** Some API calls require the {!user} not to be in {!channel} for the action
+    to suceed. The opposite of {!not_in_channel_error}. *)
 type already_in_channel_error = [
   | `Already_in_channel
 ]
 
+(** Channels might be archived, so modification attempts will fail with this
+    error*)
 type archive_error = [
   | `Is_archived
 ]
 
+(** When creating channels, names have to be unique, an attempt to create a
+    duplicate one will result in this error. *)
 type name_error = [
   | `Name_taken
 ]
 
+(** Kick (in general) might fail, because kicking oneself is not supported. *)
 type kick_error = [
   | `Cant_kick_self
 ]
 
+(** Kicking users from channels might fail, because channels have additional
+    restrictions on kicking: users can't be kicked from the #general channel
+    and they cannot be kicked from the last channel they are in. *)
 type channel_kick_error = [
   | kick_error
   | `Cant_kick_from_general
   | `Cant_kick_from_last_channel
 ]
 
+(** If an action was attempted that the user does not have permission to,
+    this error is returned. *)
 type restriction_error = [
   | `Restricted_action
 ]
 
+(** Leaving the #general channel is not supported by Slack, an attempt do
+    do so will trigger this error. *)
 type leave_general_error = [
   | `Cant_leave_general
 ]
 
+(** {!topic} types might be rejected by the Slack API because they are too
+    long and can't be set. *)
 type topic_error = [
   | `Too_long
 ]
 
+(** The {!message} might not exist or be impossible to delete for other
+    reasons. *)
 type message_error = [
   | `Cant_delete_message
   | `Message_not_found
 ]
 
+(** {!message} types, like {!topic} types might be too long to post. *)
 type message_length_error = [
   | `Msg_too_long
 ]
 
+(** Doing too many API requests in a certain timespan might cause a rate
+    limitation to be applied by Slack. This is the error that results in
+    that case. *)
 type rate_error = [
   | `Rate_limited
 ]
 
+(** Updating a {!message} might fail because the message was not found,
+    couldn't be updated for some reason or because the time in which a message
+    can be edited has passed. *)
 type message_update_error = [
   | `Message_not_found
   | `Cant_update_message
   | `Edit_window_closed
 ]
 
+(** Handling files can result in multiple problems: the file wasn't found in
+    the first place or it might have been deleted in the maintime. *)
 type file_error = [
   | `File_not_found
   | `File_deleted
 ]
 
+(** This error shouldn't ever be returned but serves as a catch-all in case
+    the Slack API returns a new, unknown error type that Slacko doesn't yet
+    understand. *)
 type unknown_type_error = [
   | `Unknown_type
 ]
 
+(** When trying to archive something that was already archived before, this
+    error is returned. *)
 type already_archived_error = [
   | `Already_archived
 ]
 
+(** Doing an action in a {!group} when not being part of the group can fail. *)
 type not_in_group_error = [
   | `Not_in_group
 ]
 
+(* Leaving the last {!channel} is not supported by Slack. *)
 type leave_last_channel_error = [
   | `Cant_leave_last_channel
 ]
 
+(** An error when the user is the last member and can't do what he planned to
+    do because that would cause the {!channel} not to have members anymore. *)
 type last_member_error = [
   | `Last_member
 ]
 
+(** These errors might be returned when the exchange of oauth authorization
+    for a token has failed. *)
 type oauth_error = [
   | `Invalid_client_id
   | `Bad_client_secret
@@ -147,10 +192,12 @@ type oauth_error = [
   | `Bad_redirect_uri
 ]
 
+(** Setting an invalid presence information is not supported. *)
 type presence_error = [
   | `Invalid_presence
 ]
 
+(** User is not visible, so action cannot be performed on them. *)
 type user_visibility_error = [
   | `User_not_visible
 ]
@@ -162,6 +209,8 @@ type authed_result = [
   | auth_error
 ]
 
+(** Setting topics or purposes will result either in a success or one of these
+    errors. Convenience type composed of subtypes. *)
 type topic_result = [
   | authed_result
   | channel_error
@@ -170,6 +219,7 @@ type topic_result = [
   | topic_error
 ]
 
+(** Return value of a history related request. *)
 type history_result = [
   | authed_result
   | channel_error

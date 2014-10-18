@@ -152,7 +152,7 @@ type authed_result = [
   | auth_error
 ]
 
-type purpose_result = [
+type topic_result = [
   | authed_result
   | channel_error
   | archive_error
@@ -436,7 +436,7 @@ let channels_set_purpose token channel purpose =
     |> definitely_add "channel" @@ id_of_channel channel
     |> definitely_add "purpose" purpose
   in query uri (function
-    | #purpose_result as res -> res
+    | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let channels_set_topic token channel topic =
@@ -445,7 +445,7 @@ let channels_set_topic token channel topic =
     |> definitely_add "channel" @@ id_of_channel channel
     |> definitely_add "topic" topic
   in query uri (function
-    | #purpose_result as res -> res
+    | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let chat_delete token ts channel =
@@ -627,7 +627,7 @@ let groups_set_purpose token channel purpose =
     |> definitely_add "channel" channel
     |> definitely_add "purpose" purpose
   in query uri (function
-    | #purpose_result as res -> res
+    | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let groups_set_topic token channel topic =
@@ -636,7 +636,7 @@ let groups_set_topic token channel topic =
     |> definitely_add "channel" channel
     |> definitely_add "topic" topic
   in query uri (function
-    | #purpose_result as res -> res
+    | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let im_history token ?latest ?oldest ?count channel =

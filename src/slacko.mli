@@ -162,7 +162,7 @@ type authed_result = [
   | auth_error
 ]
 
-type purpose_result = [
+type topic_result = [
   | authed_result
   | channel_error
   | archive_error
@@ -263,10 +263,10 @@ val channels_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
 val channels_mark: token -> channel -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
 (** Sets the purpose for a channel. *)
-val channels_set_purpose: token -> channel -> topic -> [> purpose_result ] Lwt.t
+val channels_set_purpose: token -> channel -> topic -> [> topic_result ] Lwt.t
 
 (** Sets the topic for a channel. *)
-val channels_set_topic: token -> channel -> topic -> [> purpose_result ] Lwt.t
+val channels_set_topic: token -> channel -> topic -> [> topic_result ] Lwt.t
 
 (** Deletes a message. *)
 val chat_delete: token -> timestamp -> channel -> [> authed_result | channel_error | message_error ] Lwt.t
@@ -314,10 +314,10 @@ val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
 val groups_mark: token -> group -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
 (** Sets the purpose for a private group. *)
-val groups_set_purpose: token -> group -> topic -> [> purpose_result ] Lwt.t
+val groups_set_purpose: token -> group -> topic -> [> topic_result ] Lwt.t
 
 (** Sets the topic for a private group. *)
-val groups_set_topic: token -> group -> topic -> [> purpose_result ] Lwt.t
+val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
 val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> string -> [> history_result ] Lwt.t

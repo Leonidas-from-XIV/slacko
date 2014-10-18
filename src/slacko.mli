@@ -255,6 +255,9 @@ type sort_criterion = Score | Timestamp
 (** Search result can be ordered in ascending or descending order. *)
 type sort_direction = Ascending | Descending
 
+(** Presence can either be active or away. *)
+type presence = Active | Away
+
 (** {2 Type construction helper functions} *)
 
 (** To build the types required in the API calls, you can use these helper
@@ -381,8 +384,8 @@ val im_mark: token -> string -> timestamp -> [> authed_result | channel_error | 
 (** Exchanges a temporary OAuth code for an API token. *)
 val oauth_access: string -> string -> ?redirect_url:string -> string -> [> api_result | oauth_error ] Lwt.t
 
-(** Manually set user presence *)
-val presence_set: token -> string -> [> authed_result | presence_error ] Lwt.t
+(** Manually set user presence. *)
+val presence_set: token -> presence -> [> authed_result | presence_error ] Lwt.t
 
 (** Searches for messages and files matching a query. *)
 val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t

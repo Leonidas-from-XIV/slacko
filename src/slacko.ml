@@ -185,6 +185,8 @@ type sort_criterion = Score | Timestamp
 
 type sort_direction = Ascending | Descending
 
+type presence = Active | Away
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -307,6 +309,10 @@ let string_of_criterion = function
 let string_of_direction = function
   | Ascending -> "asc"
   | Descending -> "desc"
+
+let string_of_presence = function
+  | Active -> "active"
+  | Away -> "away"
 
 let maybe fn = function
   | Some v -> Some (fn v)
@@ -680,7 +686,7 @@ let oauth_access client_id client_secret ?redirect_url code =
 let presence_set token presence =
   let uri = endpoint "presence.set"
     |> definitely_add "token" token
-    |> definitely_add "presence" presence
+    |> definitely_add "presence" @@ string_of_presence presence
   in query uri (function
     | #authed_result as res -> res
     | #presence_error as err -> err

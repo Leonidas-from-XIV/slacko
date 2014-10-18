@@ -19,19 +19,27 @@
 *)
 
 (** An OCaml binding to the REST API of Slack. Each function triggers an
-    HTTP request, so it returns immediately and returns an Lwt value. *)
+    HTTP request, so it returns immediately and returns an {!Lwt.t} value.
+    @author Marek Kubica *)
 
+(** {2 Types used in the binding} *)
+
+(** The basic type that each API endpoint will always return. Most API calls
+    return much more possible error cases, see below. *)
 type api_result = [
   | `Success of Yojson.Basic.json
   | `Unknown_error
 ]
 
+(** API calls that require authentication might fail with these errors *)
 type auth_error = [
   | `Not_authed
   | `Invalid_auth
   | `Account_inactive
 ]
 
+(** API calls that take timestamps can throw errors when the timestamp is
+    invalid. *)
 type timestamp_error = [
   | `Invalid_ts_latest
   | `Invalid_ts_oldest
@@ -147,6 +155,8 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
+(** API calls which require authentication will always return (at least) these
+    error types. *)
 type authed_result = [
   | api_result
   | auth_error
@@ -170,35 +180,47 @@ type history_result = [
 type timestamp = float
 
 (** Tokens are of a special type, use token_of_string to turn a string into a
-    token *)
+    token. *)
 type token
 
-(** The topic type represents a topic or a purpose message *)
+(** The topic type represents a topic or a purpose message. *)
 type topic
 
-(** The message represents a message to be posted *)
+(** The message represents a message to be posted. *)
 type message
 
-(** A channel type, can be either a channel name (startingwith a #) or a
+(** A channel type, can be either a channel name (starting with a #) or a
     channel id. *)
 type channel
 
 (** An user, represented by either a user name or a user id. *)
 type user
 
+(** A group, a private subset of users chatting together. *)
 type group
 
+(** What criterion to use in search. *)
 type sort_criterion = Score | Timestamp
 
+(** Search result can be ordered in ascending or descending order. *)
 type sort_direction = Ascending | Descending
 
-(** Converts a string into a token *)
+(** {2 Type construction helper functions} *)
+
+(** To build the types required in the API calls, you can use these helper
+    functions. *)
+
+(** Converts a string into a token. *)
 val token_of_string: string -> token
 
+(** Build a message from a string. *)
 val message_of_string: string -> message
 
+(** Build a topic out of a string. {!topic} types are also used to
+    set purposes. *)
 val topic_of_string: string -> topic
 
+(** Construct a group out of a given string. *)
 val group_of_string: string -> group
 
 (** Converts a string into a user. Can be either a username or an user id. *)
@@ -207,6 +229,8 @@ val user_of_string: string -> user
 (** Converts a string int a channel. Can be either a channel name or a
     channel id. *)
 val channel_of_string: string -> channel
+
+(** {2 Slack API calls} *)
 
 (** Checks API calling code. *)
 val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t

@@ -110,7 +110,9 @@ cases, just shoot me a pull request.
 Credit where credit's due
 -------------------------
 
-Thanks go to all the fine folks who wrote
+Thanks go to all the people who wrote
 [CoHTTP](https://github.com/mirage/ocaml-cohttp), a real-world HTTP library
 that doesn't suck and [Lwt](http://ocsigen.org/lwt/), an oddball library that
-subconsciously *makes sense*. Also, the fine folks in `#ocaml` on freenode.
+subconsciously *makes sense*. Also, the fine folks in
+[#ocaml](http://irclog.whitequark.org/ocaml/) on
+[freenode](https://freenode.net/).

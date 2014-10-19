@@ -8,7 +8,10 @@
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
-<link title="Slacko" rel="Chapter" href="Slacko.html"><title>Slacko</title>
+<link title="Slacko" rel="Chapter" href="Slacko.html"><link title="Types used in the binding" rel="Section" href="#2_Typesusedinthebinding">
+<link title="Type construction helper functions" rel="Section" href="#2_Typeconstructionhelperfunctions">
+<link title="Slack API calls" rel="Section" href="#2_SlackAPIcalls">
+<title>Slacko</title>
 </head>
 <body>
 <div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
@@ -17,219 +20,487 @@
 
 <pre><span class="keyword">module</span> Slacko: <code class="code">sig</code> <a href="Slacko.html">..</a> <code class="code">end</code></pre><div class="info module top">
 An OCaml binding to the REST API of Slack. Each function triggers an
-    HTTP request, so it returns immediately and returns an Lwt value.<br>
+    HTTP request, so it returns immediately and returns an <code class="code">Lwt.t</code> value.<br>
+<b>Author(s):</b> Marek Kubica<br>
 </div>
 <hr width="100%">
+<br>
+<h2 id="2_Typesusedinthebinding">Types used in the binding</h2><br>
+
+<pre><span id="TYPEapi_result"><span class="keyword">type</span> <code class="type"></code>api_result</span> = <code class="type">[ `Success of Yojson.Basic.json | `Unknown_error ]</code> </pre>
+<div class="info ">
+The basic type that each API endpoint will always return. Most API calls
+    return much more possible error cases, see below.<br>
+</div>
+
 
 <pre><span id="TYPEauth_error"><span class="keyword">type</span> <code class="type"></code>auth_error</span> = <code class="type">[ `Account_inactive | `Invalid_auth | `Not_authed ]</code> </pre>
+<div class="info ">
+API calls that require authentication might fail with these errors<br>
+</div>
 
 
 <pre><span id="TYPEtimestamp_error"><span class="keyword">type</span> <code class="type"></code>timestamp_error</span> = <code class="type">[ `Invalid_ts_latest | `Invalid_ts_oldest ]</code> </pre>
+<div class="info ">
+API calls that take timestamps can throw errors when the timestamp is
+    invalid.<br>
+</div>
 
 
 <pre><span id="TYPEchannel_error"><span class="keyword">type</span> <code class="type"></code>channel_error</span> = <code class="type">[ `Channel_not_found ]</code> </pre>
+<div class="info ">
+API calls that require <a href="Slacko.html#TYPEchannel"><code class="code">Slacko.channel</code></a> inputs can throw this error.<br>
+</div>
 
 
 <pre><span id="TYPEuser_error"><span class="keyword">type</span> <code class="type"></code>user_error</span> = <code class="type">[ `User_not_found ]</code> </pre>
+<div class="info ">
+API calls that require <a href="Slacko.html#TYPEuser"><code class="code">Slacko.user</code></a> inputs often throw this error if the user
+    was not found.<br>
+</div>
 
 
 <pre><span id="TYPEinvite_error"><span class="keyword">type</span> <code class="type"></code>invite_error</span> = <code class="type">[ `Cant_invite | `Cant_invite_self ]</code> </pre>
+<div class="info ">
+Inviting might fail because invitation is impossible for some reason or
+    because attempting to invite oneself.<br>
+</div>
 
 
 <pre><span id="TYPEnot_in_channel_error"><span class="keyword">type</span> <code class="type"></code>not_in_channel_error</span> = <code class="type">[ `Not_in_channel ]</code> </pre>
+<div class="info ">
+Some API calls require the <a href="Slacko.html#TYPEuser"><code class="code">Slacko.user</code></a> to be in <a href="Slacko.html#TYPEchannel"><code class="code">Slacko.channel</code></a> for the action to
+    succeed, not meeting this requirement can raise this error.<br>
+</div>
 
 
 <pre><span id="TYPEalready_in_channel_error"><span class="keyword">type</span> <code class="type"></code>already_in_channel_error</span> = <code class="type">[ `Already_in_channel ]</code> </pre>
+<div class="info ">
+Some API calls require the <a href="Slacko.html#TYPEuser"><code class="code">Slacko.user</code></a> not to be in <a href="Slacko.html#TYPEchannel"><code class="code">Slacko.channel</code></a> for the action
+    to suceed. The opposite of <a href="Slacko.html#TYPEnot_in_channel_error"><code class="code">Slacko.not_in_channel_error</code></a>.<br>
+</div>
 
 
 <pre><span id="TYPEarchive_error"><span class="keyword">type</span> <code class="type"></code>archive_error</span> = <code class="type">[ `Is_archived ]</code> </pre>
+<div class="info ">
+Channels might be archived, so modification attempts will fail with this
+    error<br>
+</div>
 
 
 <pre><span id="TYPEname_error"><span class="keyword">type</span> <code class="type"></code>name_error</span> = <code class="type">[ `Name_taken ]</code> </pre>
+<div class="info ">
+When creating channels, names have to be unique, an attempt to create a
+    duplicate one will result in this error.<br>
+</div>
 
 
 <pre><span id="TYPEkick_error"><span class="keyword">type</span> <code class="type"></code>kick_error</span> = <code class="type">[ `Cant_kick_self ]</code> </pre>
+<div class="info ">
+Kick (in general) might fail, because kicking oneself is not supported.<br>
+</div>
 
 
 <pre><span id="TYPEchannel_kick_error"><span class="keyword">type</span> <code class="type"></code>channel_kick_error</span> = <code class="type">[ `Cant_kick_from_general | `Cant_kick_from_last_channel | `Cant_kick_self ]</code> </pre>
+<div class="info ">
+Kicking users from channels might fail, because channels have additional
+    restrictions on kicking: users can't be kicked from the #general channel
+    and they cannot be kicked from the last channel they are in.<br>
+</div>
 
 
 <pre><span id="TYPErestriction_error"><span class="keyword">type</span> <code class="type"></code>restriction_error</span> = <code class="type">[ `Restricted_action ]</code> </pre>
+<div class="info ">
+If an action was attempted that the user does not have permission to,
+    this error is returned.<br>
+</div>
 
 
 <pre><span id="TYPEleave_general_error"><span class="keyword">type</span> <code class="type"></code>leave_general_error</span> = <code class="type">[ `Cant_leave_general ]</code> </pre>
+<div class="info ">
+Leaving the #general channel is not supported by Slack, an attempt do
+    do so will trigger this error.<br>
+</div>
 
 
 <pre><span id="TYPEtopic_error"><span class="keyword">type</span> <code class="type"></code>topic_error</span> = <code class="type">[ `Too_long ]</code> </pre>
+<div class="info ">
+<a href="Slacko.html#TYPEtopic"><code class="code">Slacko.topic</code></a> types might be rejected by the Slack API because they are too
+    long and can't be set.<br>
+</div>
 
 
 <pre><span id="TYPEmessage_error"><span class="keyword">type</span> <code class="type"></code>message_error</span> = <code class="type">[ `Cant_delete_message | `Message_not_found ]</code> </pre>
+<div class="info ">
+The <a href="Slacko.html#TYPEmessage"><code class="code">Slacko.message</code></a> might not exist or be impossible to delete for other
+    reasons.<br>
+</div>
 
 
 <pre><span id="TYPEmessage_length_error"><span class="keyword">type</span> <code class="type"></code>message_length_error</span> = <code class="type">[ `Msg_too_long ]</code> </pre>
+<div class="info ">
+<a href="Slacko.html#TYPEmessage"><code class="code">Slacko.message</code></a> types, like <a href="Slacko.html#TYPEtopic"><code class="code">Slacko.topic</code></a> types might be too long to post.<br>
+</div>
 
 
 <pre><span id="TYPErate_error"><span class="keyword">type</span> <code class="type"></code>rate_error</span> = <code class="type">[ `Rate_limited ]</code> </pre>
+<div class="info ">
+Doing too many API requests in a certain timespan might cause a rate
+    limitation to be applied by Slack. This is the error that results in
+    that case.<br>
+</div>
 
 
 <pre><span id="TYPEmessage_update_error"><span class="keyword">type</span> <code class="type"></code>message_update_error</span> = <code class="type">[ `Cant_update_message | `Edit_window_closed | `Message_not_found ]</code> </pre>
+<div class="info ">
+Updating a <a href="Slacko.html#TYPEmessage"><code class="code">Slacko.message</code></a> might fail because the message was not found,
+    couldn't be updated for some reason or because the time in which a message
+    can be edited has passed.<br>
+</div>
 
 
 <pre><span id="TYPEfile_error"><span class="keyword">type</span> <code class="type"></code>file_error</span> = <code class="type">[ `File_deleted | `File_not_found ]</code> </pre>
+<div class="info ">
+Handling files can result in multiple problems: the file wasn't found in
+    the first place or it might have been deleted in the maintime.<br>
+</div>
 
 
 <pre><span id="TYPEunknown_type_error"><span class="keyword">type</span> <code class="type"></code>unknown_type_error</span> = <code class="type">[ `Unknown_type ]</code> </pre>
+<div class="info ">
+This error shouldn't ever be returned but serves as a catch-all in case
+    the Slack API returns a new, unknown error type that Slacko doesn't yet
+    understand.<br>
+</div>
 
 
 <pre><span id="TYPEalready_archived_error"><span class="keyword">type</span> <code class="type"></code>already_archived_error</span> = <code class="type">[ `Already_archived ]</code> </pre>
+<div class="info ">
+When trying to archive something that was already archived before, this
+    error is returned.<br>
+</div>
 
 
 <pre><span id="TYPEnot_in_group_error"><span class="keyword">type</span> <code class="type"></code>not_in_group_error</span> = <code class="type">[ `Not_in_group ]</code> </pre>
+<div class="info ">
+Doing an action in a <a href="Slacko.html#TYPEgroup"><code class="code">Slacko.group</code></a> when not being part of the group can fail.<br>
+</div>
 
 
 <pre><span id="TYPEleave_last_channel_error"><span class="keyword">type</span> <code class="type"></code>leave_last_channel_error</span> = <code class="type">[ `Cant_leave_last_channel ]</code> </pre>
 
 
 <pre><span id="TYPElast_member_error"><span class="keyword">type</span> <code class="type"></code>last_member_error</span> = <code class="type">[ `Last_member ]</code> </pre>
+<div class="info ">
+An error when the user is the last member and can't do what he planned to
+    do because that would cause the <a href="Slacko.html#TYPEchannel"><code class="code">Slacko.channel</code></a> not to have members anymore.<br>
+</div>
 
 
 <pre><span id="TYPEoauth_error"><span class="keyword">type</span> <code class="type"></code>oauth_error</span> = <code class="type">[ `Bad_client_secret | `Bad_redirect_uri | `Invalid_client_id | `Invalid_code ]</code> </pre>
+<div class="info ">
+These errors might be returned when the exchange of oauth authorization
+    for a token has failed.<br>
+</div>
 
 
 <pre><span id="TYPEpresence_error"><span class="keyword">type</span> <code class="type"></code>presence_error</span> = <code class="type">[ `Invalid_presence ]</code> </pre>
+<div class="info ">
+Setting an invalid presence information is not supported.<br>
+</div>
 
 
 <pre><span id="TYPEuser_visibility_error"><span class="keyword">type</span> <code class="type"></code>user_visibility_error</span> = <code class="type">[ `User_not_visible ]</code> </pre>
+<div class="info ">
+User is not visible, so action cannot be performed on them.<br>
+</div>
 
 
-<pre><span id="TYPEapierror"><span class="keyword">type</span> <code class="type"></code>apierror</span> = <code class="type">[ `Account_inactive<br>       | `Already_archived<br>       | `Already_in_channel<br>       | `Bad_client_secret<br>       | `Bad_redirect_uri<br>       | `Cant_delete_message<br>       | `Cant_invite<br>       | `Cant_invite_self<br>       | `Cant_kick_from_general<br>       | `Cant_kick_from_last_channel<br>       | `Cant_kick_self<br>       | `Cant_leave_general<br>       | `Cant_leave_last_channel<br>       | `Cant_update_message<br>       | `Channel_not_found<br>       | `Edit_window_closed<br>       | `File_deleted<br>       | `File_not_found<br>       | `Invalid_auth<br>       | `Invalid_client_id<br>       | `Invalid_code<br>       | `Invalid_presence<br>       | `Invalid_ts_latest<br>       | `Invalid_ts_oldest<br>       | `Is_archived<br>       | `Last_member<br>       | `Message_not_found<br>       | `Msg_too_long<br>       | `Name_taken<br>       | `No_channel<br>       | `No_text<br>       | `Not_authed<br>       | `Not_in_channel<br>       | `Not_in_group<br>       | `Rate_limited<br>       | `Restricted_action<br>       | `Success of Yojson.Basic.json<br>       | `Too_long<br>       | `Unknown_Error<br>       | `Unknown_type<br>       | `User_not_found<br>       | `User_not_visible ]</code> </pre>
+<pre><span id="TYPEauthed_result"><span class="keyword">type</span> <code class="type"></code>authed_result</span> = <code class="type">[ `Account_inactive<br>       | `Invalid_auth<br>       | `Not_authed<br>       | `Success of Yojson.Basic.json<br>       | `Unknown_error ]</code> </pre>
+<div class="info ">
+API calls which require authentication will always return (at least) these
+    error types.<br>
+</div>
 
 
-<pre><span id="VALapi_test"><span class="keyword">val</span> api_test</span> : <code class="type">?foo:string -><br>       ?error:string -><br>       unit -> [> `Success of Yojson.Basic.json | `Unknown_error ] Lwt.t</code></pre><div class="info ">
+<pre><span id="TYPEtopic_result"><span class="keyword">type</span> <code class="type"></code>topic_result</span> = <code class="type">[ `Account_inactive<br>       | `Channel_not_found<br>       | `Invalid_auth<br>       | `Is_archived<br>       | `Not_authed<br>       | `Not_in_channel<br>       | `Success of Yojson.Basic.json<br>       | `Too_long<br>       | `Unknown_error ]</code> </pre>
+<div class="info ">
+Setting topics or purposes will result either in a success or one of these
+    errors. Convenience type composed of subtypes.<br>
+</div>
+
+
+<pre><span id="TYPEhistory_result"><span class="keyword">type</span> <code class="type"></code>history_result</span> = <code class="type">[ `Account_inactive<br>       | `Channel_not_found<br>       | `Invalid_auth<br>       | `Invalid_ts_latest<br>       | `Invalid_ts_oldest<br>       | `Not_authed<br>       | `Success of Yojson.Basic.json<br>       | `Unknown_error ]</code> </pre>
+<div class="info ">
+Return value of a history related request.<br>
+</div>
+
+
+<pre><span id="TYPEtimestamp"><span class="keyword">type</span> <code class="type"></code>timestamp</span> = <code class="type">float</code> </pre>
+<div class="info ">
+Timestamps are usually represented as floats in OCaml, following suit<br>
+</div>
+
+
+<pre><span id="TYPEtoken"><span class="keyword">type</span> <code class="type"></code>token</span> </pre>
+<div class="info ">
+Tokens are of a special type, use token_of_string to turn a string into a
+    token.<br>
+</div>
+
+
+<pre><span id="TYPEtopic"><span class="keyword">type</span> <code class="type"></code>topic</span> </pre>
+<div class="info ">
+The topic type represents a topic or a purpose message.<br>
+</div>
+
+
+<pre><span id="TYPEmessage"><span class="keyword">type</span> <code class="type"></code>message</span> </pre>
+<div class="info ">
+The message represents a message to be posted.<br>
+</div>
+
+
+<pre><span id="TYPEchannel"><span class="keyword">type</span> <code class="type"></code>channel</span> </pre>
+<div class="info ">
+A channel type, can be either a channel name (starting with a #) or a
+    channel id.<br>
+</div>
+
+
+<pre><span id="TYPEuser"><span class="keyword">type</span> <code class="type"></code>user</span> </pre>
+<div class="info ">
+An user, represented by either a user name or a user id.<br>
+</div>
+
+
+<pre><span id="TYPEgroup"><span class="keyword">type</span> <code class="type"></code>group</span> </pre>
+<div class="info ">
+A group, a private subset of users chatting together.<br>
+</div>
+
+
+<pre><code><span id="TYPEsort_criterion"><span class="keyword">type</span> <code class="type"></code>sort_criterion</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsort_criterion.Score"><span class="constructor">Score</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsort_criterion.Timestamp"><span class="constructor">Timestamp</span></span></code></td>
+
+</tr></table>
+
+<div class="info ">
+What criterion to use in search.<br>
+</div>
+
+
+<pre><code><span id="TYPEsort_direction"><span class="keyword">type</span> <code class="type"></code>sort_direction</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsort_direction.Ascending"><span class="constructor">Ascending</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTsort_direction.Descending"><span class="constructor">Descending</span></span></code></td>
+
+</tr></table>
+
+<div class="info ">
+Search result can be ordered in ascending or descending order.<br>
+</div>
+
+
+<pre><code><span id="TYPEpresence"><span class="keyword">type</span> <code class="type"></code>presence</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpresence.Active"><span class="constructor">Active</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTpresence.Away"><span class="constructor">Away</span></span></code></td>
+
+</tr></table>
+
+<div class="info ">
+Presence can either be active or away.<br>
+</div>
+
+<br>
+<h2 id="2_Typeconstructionhelperfunctions">Type construction helper functions</h2><br>
+<br>
+To build the types required in the API calls, you can use these helper
+    functions.<br>
+
+<pre><span id="VALtoken_of_string"><span class="keyword">val</span> token_of_string</span> : <code class="type">string -> <a href="Slacko.html#TYPEtoken">token</a></code></pre><div class="info ">
+Converts a string into a token.<br>
+</div>
+
+<pre><span id="VALmessage_of_string"><span class="keyword">val</span> message_of_string</span> : <code class="type">string -> <a href="Slacko.html#TYPEmessage">message</a></code></pre><div class="info ">
+Build a message from a string.<br>
+</div>
+
+<pre><span id="VALtopic_of_string"><span class="keyword">val</span> topic_of_string</span> : <code class="type">string -> <a href="Slacko.html#TYPEtopic">topic</a></code></pre><div class="info ">
+Build a topic out of a string. <a href="Slacko.html#TYPEtopic"><code class="code">Slacko.topic</code></a> types are also used to
+    set purposes.<br>
+</div>
+
+<pre><span id="VALgroup_of_string"><span class="keyword">val</span> group_of_string</span> : <code class="type">string -> <a href="Slacko.html#TYPEgroup">group</a></code></pre><div class="info ">
+Construct a group out of a given string.<br>
+</div>
+
+<pre><span id="VALuser_of_string"><span class="keyword">val</span> user_of_string</span> : <code class="type">string -> <a href="Slacko.html#TYPEuser">user</a></code></pre><div class="info ">
+Converts a string into a user. Can be either a username or an user id.<br>
+</div>
+
+<pre><span id="VALchannel_of_string"><span class="keyword">val</span> channel_of_string</span> : <code class="type">string -> <a href="Slacko.html#TYPEchannel">channel</a></code></pre><div class="info ">
+Converts a string int a channel. Can be either a channel name or a
+    channel id.<br>
+</div>
+<br>
+<h2 id="2_SlackAPIcalls">Slack API calls</h2><br>
+
+<pre><span id="VALapi_test"><span class="keyword">val</span> api_test</span> : <code class="type">?foo:string -> ?error:string -> unit -> [> <a href="Slacko.html#TYPEapi_result">api_result</a> ] Lwt.t</code></pre><div class="info ">
 Checks API calling code.<br>
 </div>
 
-<pre><span id="VALauth_test"><span class="keyword">val</span> auth_test</span> : <code class="type">string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALauth_test"><span class="keyword">val</span> auth_test</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Checks authentication &amp; identity.<br>
 </div>
 
-<pre><span id="VALchannels_history"><span class="keyword">val</span> channels_history</span> : <code class="type">string -><br>       ?latest:string -><br>       ?oldest:string -><br>       ?count:string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Invalid_ts_latest<br>        | `Invalid_ts_oldest<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_history"><span class="keyword">val</span> channels_history</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?latest:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?oldest:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?count:int -> <a href="Slacko.html#TYPEchannel">channel</a> -> [> <a href="Slacko.html#TYPEhistory_result">history_result</a> ] Lwt.t</code></pre><div class="info ">
 Fetches history of messages and events from a channel.<br>
 </div>
 
-<pre><span id="VALchannels_info"><span class="keyword">val</span> channels_info</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_info"><span class="keyword">val</span> channels_info</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Gets information about a channel.<br>
 </div>
 
-<pre><span id="VALchannels_invite"><span class="keyword">val</span> channels_invite</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Already_in_channel<br>        | `Cant_invite<br>        | `Cant_invite_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_invite"><span class="keyword">val</span> channels_invite</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       <a href="Slacko.html#TYPEuser">user</a> -><br>       [> `Account_inactive<br>        | `Already_in_channel<br>        | `Cant_invite<br>        | `Cant_invite_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
 Invites a user to a channel.<br>
 </div>
 
-<pre><span id="VALchannels_join"><span class="keyword">val</span> channels_join</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Name_taken<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_join"><span class="keyword">val</span> channels_join</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Name_taken<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Joins a channel, creating it if needed.<br>
 </div>
 
-<pre><span id="VALchannels_kick"><span class="keyword">val</span> channels_kick</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_kick_from_general<br>        | `Cant_kick_from_last_channel<br>        | `Cant_kick_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_kick"><span class="keyword">val</span> channels_kick</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       <a href="Slacko.html#TYPEuser">user</a> -><br>       [> `Account_inactive<br>        | `Cant_kick_from_general<br>        | `Cant_kick_from_last_channel<br>        | `Cant_kick_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
 Removes a user from a channel.<br>
 </div>
 
-<pre><span id="VALchannels_leave"><span class="keyword">val</span> channels_leave</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_leave_general<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_leave"><span class="keyword">val</span> channels_leave</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       [> `Account_inactive<br>        | `Cant_leave_general<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Leaves a channel.<br>
 </div>
 
-<pre><span id="VALchannels_list"><span class="keyword">val</span> channels_list</span> : <code class="type">?exclude_archived:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_list"><span class="keyword">val</span> channels_list</span> : <code class="type">?exclude_archived:bool -> <a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Lists all channels in a Slack team.<br>
 </div>
 
-<pre><span id="VALchannels_mark"><span class="keyword">val</span> channels_mark</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_mark"><span class="keyword">val</span> channels_mark</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       <a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Sets the read cursor in a channel.<br>
 </div>
 
-<pre><span id="VALchannels_set_purpose"><span class="keyword">val</span> channels_set_purpose</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Too_long<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_set_purpose"><span class="keyword">val</span> channels_set_purpose</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -> <a href="Slacko.html#TYPEtopic">topic</a> -> [> <a href="Slacko.html#TYPEtopic_result">topic_result</a> ] Lwt.t</code></pre><div class="info ">
 Sets the purpose for a channel.<br>
 </div>
 
-<pre><span id="VALchannels_set_topic"><span class="keyword">val</span> channels_set_topic</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Too_long<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchannels_set_topic"><span class="keyword">val</span> channels_set_topic</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -> <a href="Slacko.html#TYPEtopic">topic</a> -> [> <a href="Slacko.html#TYPEtopic_result">topic_result</a> ] Lwt.t</code></pre><div class="info ">
 Sets the topic for a channel.<br>
 </div>
 
-<pre><span id="VALchat_delete"><span class="keyword">val</span> chat_delete</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_delete_message<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Message_not_found<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchat_delete"><span class="keyword">val</span> chat_delete</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       [> `Account_inactive<br>        | `Cant_delete_message<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Message_not_found<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Deletes a message.<br>
 </div>
 
-<pre><span id="VALchat_post_message"><span class="keyword">val</span> chat_post_message</span> : <code class="type">string -><br>       string -><br>       ?username:string -><br>       ?parse:string -><br>       ?icon_url:string -><br>       ?icon_emoji:string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Msg_too_long<br>        | `Not_authed<br>        | `Rate_limited<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchat_post_message"><span class="keyword">val</span> chat_post_message</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       ?username:string -><br>       ?parse:string -><br>       ?icon_url:string -><br>       ?icon_emoji:string -><br>       <a href="Slacko.html#TYPEmessage">message</a> -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Msg_too_long<br>        | `Not_authed<br>        | `Rate_limited<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Sends a message to a channel.<br>
 </div>
 
-<pre><span id="VALchat_update"><span class="keyword">val</span> chat_update</span> : <code class="type">string -><br>       string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_update_message<br>        | `Channel_not_found<br>        | `Edit_window_closed<br>        | `Invalid_auth<br>        | `Message_not_found<br>        | `Msg_too_long<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALchat_update"><span class="keyword">val</span> chat_update</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       <a href="Slacko.html#TYPEchannel">channel</a> -><br>       <a href="Slacko.html#TYPEmessage">message</a> -><br>       [> `Account_inactive<br>        | `Cant_update_message<br>        | `Channel_not_found<br>        | `Edit_window_closed<br>        | `Invalid_auth<br>        | `Message_not_found<br>        | `Msg_too_long<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Updates a message.<br>
 </div>
 
-<pre><span id="VALemoji_list"><span class="keyword">val</span> emoji_list</span> : <code class="type">string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALemoji_list"><span class="keyword">val</span> emoji_list</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Lists custom emoji for a team.<br>
 </div>
 
-<pre><span id="VALfiles_info"><span class="keyword">val</span> files_info</span> : <code class="type">string -><br>       ?count:string -><br>       ?page:string -><br>       string -><br>       [> `Account_inactive<br>        | `File_deleted<br>        | `File_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALfiles_info"><span class="keyword">val</span> files_info</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?count:int -><br>       ?page:int -><br>       string -><br>       [> `Account_inactive<br>        | `File_deleted<br>        | `File_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Gets information about a team file.<br>
 </div>
 
-<pre><span id="VALfiles_list"><span class="keyword">val</span> files_list</span> : <code class="type">?user:string -><br>       ?ts_from:string -><br>       ?ts_to:string -><br>       ?types:string -><br>       ?count:string -><br>       ?page:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `Unknown_type<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALfiles_list"><span class="keyword">val</span> files_list</span> : <code class="type">?user:<a href="Slacko.html#TYPEuser">user</a> -><br>       ?ts_from:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?ts_to:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?types:string -><br>       ?count:int -><br>       ?page:int -><br>       <a href="Slacko.html#TYPEtoken">token</a> -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `Unknown_type<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
 Lists &amp; filters team files.<br>
 </div>
 
-<pre><span id="VALfiles_upload"><span class="keyword">val</span> files_upload</span> : <code class="type">string -><br>       ?filetype:string -><br>       ?filename:string -><br>       ?title:string -><br>       ?initial_comment:string -><br>       ?channels:string -><br>       Cohttp_lwt_body.t -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALfiles_upload"><span class="keyword">val</span> files_upload</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?filetype:string -><br>       ?filename:string -><br>       ?title:string -><br>       ?initial_comment:string -><br>       ?channels:string -> Cohttp_lwt_body.t -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Uploads or creates a file.<br>
 </div>
 
-<pre><span id="VALgroups_create"><span class="keyword">val</span> groups_create</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Name_taken<br>        | `Not_authed<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_create"><span class="keyword">val</span> groups_create</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Name_taken<br>        | `Not_authed<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Creates a private group.<br>
 </div>
 
-<pre><span id="VALgroups_create_child"><span class="keyword">val</span> groups_create_child</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Already_archived<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_create_child"><span class="keyword">val</span> groups_create_child</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -><br>       [> `Account_inactive<br>        | `Already_archived<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Clones and archives a private group.<br>
 </div>
 
-<pre><span id="VALgroups_history"><span class="keyword">val</span> groups_history</span> : <code class="type">string -><br>       ?latest:string -><br>       ?oldest:string -><br>       ?count:string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Invalid_ts_latest<br>        | `Invalid_ts_oldest<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_history"><span class="keyword">val</span> groups_history</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?latest:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?oldest:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?count:int -> <a href="Slacko.html#TYPEgroup">group</a> -> [> <a href="Slacko.html#TYPEhistory_result">history_result</a> ] Lwt.t</code></pre><div class="info ">
 Fetches history of messages and events from a private group.<br>
 </div>
 
-<pre><span id="VALgroups_invite"><span class="keyword">val</span> groups_invite</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_invite<br>        | `Cant_invite_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_invite"><span class="keyword">val</span> groups_invite</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -><br>       <a href="Slacko.html#TYPEuser">user</a> -><br>       [> `Account_inactive<br>        | `Cant_invite<br>        | `Cant_invite_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
 Invites a user to a private group.<br>
 </div>
 
-<pre><span id="VALgroups_kick"><span class="keyword">val</span> groups_kick</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_kick_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Not_in_group<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_kick"><span class="keyword">val</span> groups_kick</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -><br>       <a href="Slacko.html#TYPEuser">user</a> -><br>       [> `Account_inactive<br>        | `Cant_kick_self<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Not_in_group<br>        | `Restricted_action<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
 Removes a user from a private group.<br>
 </div>
 
-<pre><span id="VALgroups_leave"><span class="keyword">val</span> groups_leave</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Cant_leave_last_channel<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Last_member<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_leave"><span class="keyword">val</span> groups_leave</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -><br>       [> `Account_inactive<br>        | `Cant_leave_last_channel<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Last_member<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Leaves a private group.<br>
 </div>
 
-<pre><span id="VALgroups_list"><span class="keyword">val</span> groups_list</span> : <code class="type">?exclude_archived:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_list"><span class="keyword">val</span> groups_list</span> : <code class="type">?exclude_archived:bool -> <a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Lists private groups that the calling user has access to.<br>
 </div>
 
-<pre><span id="VALgroups_mark"><span class="keyword">val</span> groups_mark</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_mark"><span class="keyword">val</span> groups_mark</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -><br>       <a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Sets the read cursor in a private group.<br>
 </div>
 
-<pre><span id="VALgroups_set_purpose"><span class="keyword">val</span> groups_set_purpose</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Too_long<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_set_purpose"><span class="keyword">val</span> groups_set_purpose</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -> <a href="Slacko.html#TYPEtopic">topic</a> -> [> <a href="Slacko.html#TYPEtopic_result">topic_result</a> ] Lwt.t</code></pre><div class="info ">
 Sets the purpose for a private group.<br>
 </div>
 
-<pre><span id="VALgroups_set_topic"><span class="keyword">val</span> groups_set_topic</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Is_archived<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Too_long<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALgroups_set_topic"><span class="keyword">val</span> groups_set_topic</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEgroup">group</a> -> <a href="Slacko.html#TYPEtopic">topic</a> -> [> <a href="Slacko.html#TYPEtopic_result">topic_result</a> ] Lwt.t</code></pre><div class="info ">
 Sets the topic for a private group.<br>
 </div>
 
-<pre><span id="VALim_history"><span class="keyword">val</span> im_history</span> : <code class="type">string -><br>       ?latest:string -><br>       ?oldest:string -><br>       ?count:string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Invalid_ts_latest<br>        | `Invalid_ts_oldest<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALim_history"><span class="keyword">val</span> im_history</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?latest:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?oldest:<a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       ?count:int -> string -> [> <a href="Slacko.html#TYPEhistory_result">history_result</a> ] Lwt.t</code></pre><div class="info ">
 Fetches history of messages and events from direct message channel.<br>
 </div>
 
-<pre><span id="VALim_list"><span class="keyword">val</span> im_list</span> : <code class="type">string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALim_list"><span class="keyword">val</span> im_list</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Lists direct message channels for the calling user.<br>
 </div>
 
-<pre><span id="VALim_mark"><span class="keyword">val</span> im_mark</span> : <code class="type">string -><br>       string -><br>       string -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALim_mark"><span class="keyword">val</span> im_mark</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       string -><br>       <a href="Slacko.html#TYPEtimestamp">timestamp</a> -><br>       [> `Account_inactive<br>        | `Channel_not_found<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Not_in_channel<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
 Sets the read cursor in a direct message channel.<br>
 </div>
 
@@ -237,35 +508,35 @@ Sets the read cursor in a direct message channel.<br>
 Exchanges a temporary OAuth code for an API token.<br>
 </div>
 
-<pre><span id="VALpresence_set"><span class="keyword">val</span> presence_set</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Invalid_presence<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
-Manually set user presence<br>
+<pre><span id="VALpresence_set"><span class="keyword">val</span> presence_set</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEpresence">presence</a> -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Invalid_presence<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+Manually set user presence.<br>
 </div>
 
-<pre><span id="VALsearch_all"><span class="keyword">val</span> search_all</span> : <code class="type">string -><br>       ?sort:string -><br>       ?sort_dir:string -><br>       ?highlight:string -><br>       ?count:string -><br>       ?page:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALsearch_all"><span class="keyword">val</span> search_all</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?sort:<a href="Slacko.html#TYPEsort_criterion">sort_criterion</a> -><br>       ?sort_dir:<a href="Slacko.html#TYPEsort_direction">sort_direction</a> -><br>       ?highlight:bool -><br>       ?count:int -> ?page:int -> string -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Searches for messages and files matching a query.<br>
 </div>
 
-<pre><span id="VALsearch_files"><span class="keyword">val</span> search_files</span> : <code class="type">string -><br>       ?sort:string -><br>       ?sort_dir:string -><br>       ?highlight:string -><br>       ?count:string -><br>       ?page:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALsearch_files"><span class="keyword">val</span> search_files</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?sort:<a href="Slacko.html#TYPEsort_criterion">sort_criterion</a> -><br>       ?sort_dir:<a href="Slacko.html#TYPEsort_direction">sort_direction</a> -><br>       ?highlight:bool -><br>       ?count:int -> ?page:int -> string -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Searches for files matching a query.<br>
 </div>
 
-<pre><span id="VALsearch_messages"><span class="keyword">val</span> search_messages</span> : <code class="type">string -><br>       ?sort:string -><br>       ?sort_dir:string -><br>       ?highlight:string -><br>       ?count:string -><br>       ?page:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALsearch_messages"><span class="keyword">val</span> search_messages</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       ?sort:<a href="Slacko.html#TYPEsort_criterion">sort_criterion</a> -><br>       ?sort_dir:<a href="Slacko.html#TYPEsort_direction">sort_direction</a> -><br>       ?highlight:bool -><br>       ?count:int -> ?page:int -> string -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Searches for messages matching a query.<br>
 </div>
 
-<pre><span id="VALstars_list"><span class="keyword">val</span> stars_list</span> : <code class="type">?user:string -><br>       ?count:string -><br>       ?page:string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALstars_list"><span class="keyword">val</span> stars_list</span> : <code class="type">?user:<a href="Slacko.html#TYPEuser">user</a> -><br>       ?count:int -><br>       ?page:int -><br>       <a href="Slacko.html#TYPEtoken">token</a> -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found ]<br>       Lwt.t</code></pre><div class="info ">
 Lists stars for a user.<br>
 </div>
 
-<pre><span id="VALusers_info"><span class="keyword">val</span> users_info</span> : <code class="type">string -><br>       string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found<br>        | `User_not_visible ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALusers_info"><span class="keyword">val</span> users_info</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -><br>       <a href="Slacko.html#TYPEuser">user</a> -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error<br>        | `User_not_found<br>        | `User_not_visible ]<br>       Lwt.t</code></pre><div class="info ">
 Gets information about a user.<br>
 </div>
 
-<pre><span id="VALusers_list"><span class="keyword">val</span> users_list</span> : <code class="type">string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALusers_list"><span class="keyword">val</span> users_list</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Lists all users in a Slack team.<br>
 </div>
 
-<pre><span id="VALusers_set_active"><span class="keyword">val</span> users_set_active</span> : <code class="type">string -><br>       [> `Account_inactive<br>        | `Invalid_auth<br>        | `Not_authed<br>        | `Success of Yojson.Basic.json<br>        | `Unknown_error ]<br>       Lwt.t</code></pre><div class="info ">
+<pre><span id="VALusers_set_active"><span class="keyword">val</span> users_set_active</span> : <code class="type"><a href="Slacko.html#TYPEtoken">token</a> -> [> <a href="Slacko.html#TYPEauthed_result">authed_result</a> ] Lwt.t</code></pre><div class="info ">
 Marks a user as active.<br>
 </div>
 </body></html>

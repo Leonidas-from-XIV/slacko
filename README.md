@@ -39,6 +39,7 @@ dependencies that you have to take care of yourself:
   * [Lwt](https://ocsigen.org/lwt/) >= 2.4.6 (for ppx support)
   * [Cmdliner](http://erratique.ch/software/cmdliner)
   * [Yojson](http://mjambon.com/yojson.html)
+  * [Cohttp](https://github.com/mirage/ocaml-cohttp)
 
 Then you can build Slacko by yourself:
 

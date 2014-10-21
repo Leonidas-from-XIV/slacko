@@ -1,25 +1,33 @@
-OASISFormat: 0.4
-Name:        slacko
-Version:     0.10.0
-Synopsis:    Binding to the Slack API
-Authors:     Marek Kubica
-License:     LGPL-3 with OCaml linking exception
-Plugins:     META (0.4), DevFiles (0.4)
-BuildTools:  ocamlbuild
+OASISFormat:  0.4
+Name:         slacko
+Version:      0.10.0
+Synopsis:     Neat binding to the Slack API
+Authors:      Marek Kubica
+Maintainers:  Marek Kubica
+License:      LGPL-3 with OCaml linking exception
+LicenseFile:  COPYING
+Homepage:     https://github.com/Leonidas-from-XIV/slacko
+Plugins:      META (0.4), DevFiles (0.4)
+BuildTools:   ocamlbuild
+BuildDepends: cohttp.lwt, yojson
 
 Library slacko
   Path:           src
-  BuildDepends:   cohttp.lwt, lwt.ppx, yojson
+  BuildDepends:   lwt.ppx
   Modules:        Slacko
   ByteOpt:        -safe-string
   NativeOpt:      -safe-string
   CompiledObject: best
-  
+
 Executable "slack-notify"
   Path:           src
-  BuildDepends:   cohttp.lwt, cmdliner, yojson
+  BuildDepends:   cmdliner
   MainIs:         slack_notify.ml
   ByteOpt:        -safe-string
   NativeOpt:      -safe-string
   CompiledObject: best
-  
+
+SourceRepository head
+  Type:     git
+  Location: https://github.com/Leonidas-from-XIV/slacko.git
+  Browser:  https://github.com/Leonidas-from-XIV/slacko

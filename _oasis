@@ -5,16 +5,21 @@ Synopsis:    Binding to the Slack API
 Authors:     Marek Kubica
 License:     LGPL-3 with OCaml linking exception
 Plugins:     META (0.4), DevFiles (0.4)
+BuildTools:  ocamlbuild
 
 Library slacko
-  Path:         src
-  BuildTools:   ocamlbuild
-  BuildDepends: cohttp.lwt, lwt.ppx, yojson
-  Modules:      Slacko
+  Path:           src
+  BuildDepends:   cohttp.lwt, lwt.ppx, yojson
+  Modules:        Slacko
+  ByteOpt:        -safe-string
+  NativeOpt:      -safe-string
+  CompiledObject: best
   
 Executable "slack-notify"
-  Path:         src
-  BuildTools:   ocamlbuild
-  BuildDepends: cohttp.lwt, cmdliner, yojson
-  MainIs:       slack_notify.ml
+  Path:           src
+  BuildDepends:   cohttp.lwt, cmdliner, yojson
+  MainIs:         slack_notify.ml
+  ByteOpt:        -safe-string
+  NativeOpt:      -safe-string
+  CompiledObject: best
   

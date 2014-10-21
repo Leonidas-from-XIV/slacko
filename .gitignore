@@ -1,4 +1,5 @@
 *.byte
+*.native
 /_build/
 _tags
 META

@@ -178,8 +178,7 @@ type channel = ChannelId of string | ChannelName of string
 
 type user = UserId of string | UserName of string
 
-(* TODO make this an union type *)
-type group = string
+type group = GroupId of string | GroupName of string
 
 type sort_criterion = Score | Timestamp
 
@@ -298,6 +297,14 @@ let id_of_user = function
   | UserId id -> id
   | UserName name -> failwith "UserName not supported yet"
 
+let id_of_group = function
+  | GroupId id -> id
+  | GroupName name -> failwith "GroupName not supported yet"
+
+let name_of_group = function
+  | GroupId id -> failwith "Need to specify a name"
+  | GroupName name -> name
+
 let string_of_bool = function
   | true -> "1"
   | false -> "0"
@@ -320,7 +327,6 @@ let maybe fn = function
 
 (* Slacko API helper methods *)
 let token_of_string = identity
-let group_of_string = identity
 (* TODO: should this do validation of the mesages? Length limits? *)
 let message_of_string = identity
 let topic_of_string = identity
@@ -330,6 +336,9 @@ let channel_of_string s =
 
 let user_of_string s =
   if s.[0] = 'U' then UserId s else UserName s
+
+let group_of_string s =
+  if s.[0] = 'G' then GroupId s else GroupName s
 
 (* Slack API begins here *)
 
@@ -541,17 +550,17 @@ let files_upload token
 let groups_create token name =
   let uri = endpoint "groups.create"
     |> definitely_add "token" token
-    |> definitely_add "name" name
+    |> definitely_add "name" @@ name_of_group name
   in query uri (function
     | #authed_result as res -> res
     | #name_error as err -> err
     | #restriction_error as err -> err
     | other -> `Unknown_error)
 
-let groups_create_child token channel =
+let groups_create_child token group =
   let uri = endpoint "groups.createChild"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -559,10 +568,10 @@ let groups_create_child token channel =
     | #restriction_error as err -> err
     | other -> `Unknown_error)
 
-let groups_history token ?latest ?oldest ?count channel =
+let groups_history token ?latest ?oldest ?count group =
   let uri = endpoint "groups.history"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
     |> optionally_add "count" @@ maybe string_of_int count
@@ -570,10 +579,10 @@ let groups_history token ?latest ?oldest ?count channel =
     | #history_result as res -> res
     | other -> `Unknown_error)
 
-let groups_invite token channel user =
+let groups_invite token group user =
   let uri = endpoint "groups.invite"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
     |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
@@ -583,10 +592,10 @@ let groups_invite token channel user =
     | #archive_error as err -> err
     | other -> `Unknown_error)
 
-let groups_kick token channel user =
+let groups_kick token group user =
   let uri = endpoint "groups.kick"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
     |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
@@ -597,10 +606,10 @@ let groups_kick token channel user =
     | #restriction_error as err -> err
     | other -> `Unknown_error)
 
-let groups_leave token channel =
+let groups_leave token group =
   let uri = endpoint "groups.leave"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -615,10 +624,10 @@ let groups_list ?exclude_archived token =
     |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
   in query uri only_auth_can_fail
 
-let groups_mark token channel ts =
+let groups_mark token group ts =
   let uri = endpoint "groups.mark"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
     |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
     | #authed_result as res -> res
@@ -627,19 +636,19 @@ let groups_mark token channel ts =
     | #not_in_channel_error as err -> err
     | other -> `Unknown_error)
 
-let groups_set_purpose token channel purpose =
+let groups_set_purpose token group purpose =
   let uri = endpoint "groups.setPurpose"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
     |> definitely_add "purpose" purpose
   in query uri (function
     | #topic_result as res -> res
     | other -> `Unknown_error)
 
-let groups_set_topic token channel topic =
+let groups_set_topic token group topic =
   let uri = endpoint "groups.setTopic"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel
+    |> definitely_add "channel" @@ id_of_group group
     |> definitely_add "topic" topic
   in query uri (function
     | #topic_result as res -> res

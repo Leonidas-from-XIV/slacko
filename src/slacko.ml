@@ -283,10 +283,41 @@ let only_auth_can_fail = function
   | #authed_result as res -> res
   | other -> `Unknown_error
 
-(* TODO: channel resolution *)
-let id_of_channel = function
-  | ChannelId id -> id
-  | ChannelName name -> failwith "ChannelName not supported yet"
+let maybe fn = function
+  | Some v -> Some (fn v)
+  | None -> None
+
+let channels_list ?exclude_archived token =
+  let uri = endpoint "channels.list"
+    |> definitely_add "token" token
+    |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
+  in query uri only_auth_can_fail
+
+(* TODO: define proper exceptions *)
+exception A
+exception B
+exception C
+
+let id_of_channel token = function
+  | ChannelId id -> Lwt.return id
+  | ChannelName name -> (
+    let open Yojson.Basic.Util in
+    (* Split off the leading '#' *)
+    let name = String.sub name 1 @@ String.length name - 1 in
+    (* traverse all channels and see which ones have the given name *)
+    match%lwt channels_list token with
+    | `Success json -> (let candidates = json |> member "channels" |> to_list |>
+      filter_map (fun chan ->
+        match (chan |> member "name") with
+          (* If a channel matches the name, get its ID *)
+          | `String n when n = name -> Some (chan |> member "id" |> to_string)
+          | _ -> None) in
+      (* make sure we have only one candidate *)
+      match candidates with
+        | [] -> Lwt.fail A
+        | [x] -> Lwt.return x
+        | _ -> Lwt.fail B)
+    | _ -> Lwt.fail C)
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -321,10 +352,6 @@ let string_of_presence = function
   | Active -> "active"
   | Away -> "away"
 
-let maybe fn = function
-  | Some v -> Some (fn v)
-  | None -> None
-
 (* Slacko API helper methods *)
 let token_of_string = identity
 (* TODO: should this do validation of the mesages? Length limits? *)
@@ -357,9 +384,10 @@ let auth_test token =
 
 let channels_history token
   ?latest ?oldest ?count channel =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.history"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" @@ channel_id
     |> optionally_add "latest" @@ maybe string_of_timestamp @@ latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp @@ oldest
     |> optionally_add "count" @@ maybe string_of_int @@ count
@@ -368,18 +396,20 @@ let channels_history token
     | other -> `Unknown_error)
 
 let channels_info token channel =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" @@ channel_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
     | other -> `Unknown_error)
 
 let channels_invite token channel user =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" @@ channel_id
     |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
@@ -403,9 +433,10 @@ let channels_join token name =
     | other -> `Unknown_error)
 
 let channels_kick token channel user =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.kick"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
     |> definitely_add "user" @@ id_of_user user
   in query uri (function
     | #authed_result as res -> res
@@ -417,9 +448,10 @@ let channels_kick token channel user =
     | other -> `Unknown_error)
 
 let channels_leave token channel =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.leave"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -427,16 +459,11 @@ let channels_leave token channel =
     | #leave_general_error as err -> err
     | other -> `Unknown_error)
 
-let channels_list ?exclude_archived token =
-  let uri = endpoint "channels.list"
-    |> definitely_add "token" token
-    |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
-  in query uri only_auth_can_fail
-
 let channels_mark token channel ts =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.mark"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
     |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
     | #authed_result as res -> res
@@ -446,28 +473,31 @@ let channels_mark token channel ts =
     | other -> `Unknown_error)
 
 let channels_set_purpose token channel purpose =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.setPurpose"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
     |> definitely_add "purpose" purpose
   in query uri (function
     | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let channels_set_topic token channel topic =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.setTopic"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
     |> definitely_add "topic" topic
   in query uri (function
     | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let chat_delete token ts channel =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "chat.delete"
     |> definitely_add "token" token
     |> definitely_add "ts" @@ string_of_timestamp ts
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -493,10 +523,11 @@ let chat_post_message token channel
     | other -> `Unknown_error)
 
 let chat_update token ts channel text =
+  let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "chat.update"
     |> definitely_add "token" token
     |> definitely_add "ts" @@ string_of_timestamp ts
-    |> definitely_add "channel" @@ id_of_channel channel
+    |> definitely_add "channel" channel_id
     |> definitely_add "text" text
   in query uri (function
     | #authed_result as res -> res

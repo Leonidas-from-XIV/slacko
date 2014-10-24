@@ -418,7 +418,7 @@ let channels_info token channel =
   let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ channel_id
+    |> definitely_add "channel" channel_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err

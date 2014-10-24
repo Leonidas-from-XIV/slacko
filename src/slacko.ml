@@ -186,6 +186,10 @@ type sort_direction = Ascending | Descending
 
 type presence = Active | Away
 
+(* some useful Lwt operators *)
+let (>|=) = Lwt.(>|=)
+let (>>=) = Lwt.(>>=)
+
 let base_url = "https://slack.com/api/"
 
 let endpoint e =
@@ -575,7 +579,7 @@ let files_info token ?count ?page file =
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
   let%lwt user_id = match user with
-    | Some u -> let%lwt v = id_of_user token u in Lwt.return (Some v)
+    | Some u -> id_of_user token u >|= (fun x -> Some x)
     | None -> Lwt.return None in
   let uri = endpoint "files.list"
     |> definitely_add "token" token
@@ -775,7 +779,7 @@ let search_messages = search @@ endpoint "search.messages"
 
 let stars_list ?user ?count ?page token =
   let%lwt user_id = match user with
-    | Some u -> let%lwt v = id_of_user token u in Lwt.return (Some v)
+    | Some u -> id_of_user token u >|= (fun x -> Some x)
     | None -> Lwt.return None in
   let uri = endpoint "stars.list"
     |> definitely_add "token" token

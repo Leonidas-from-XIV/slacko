@@ -574,9 +574,9 @@ let files_info token ?count ?page file =
     | other -> `Unknown_error)
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
-  let%lwt user_id = (match user with
+  let%lwt user_id = match user with
     | Some u -> let%lwt v = id_of_user token u in Lwt.return (Some v)
-    | None -> Lwt.return None) in
+    | None -> Lwt.return None in
   let uri = endpoint "files.list"
     |> definitely_add "token" token
     |> optionally_add "user" user_id
@@ -774,9 +774,9 @@ let search_files = search @@ endpoint "search.files"
 let search_messages = search @@ endpoint "search.messages"
 
 let stars_list ?user ?count ?page token =
-  let%lwt user_id = (match user with
+  let%lwt user_id = match user with
     | Some u -> let%lwt v = id_of_user token u in Lwt.return (Some v)
-    | None -> Lwt.return None) in
+    | None -> Lwt.return None in
   let uri = endpoint "stars.list"
     |> definitely_add "token" token
     |> optionally_add "user" user_id

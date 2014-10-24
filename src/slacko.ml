@@ -293,6 +293,11 @@ let channels_list ?exclude_archived token =
     |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
   in query uri only_auth_can_fail
 
+let users_list token =
+  let uri = endpoint "users.list"
+    |> definitely_add "token" token
+  in query uri only_auth_can_fail
+
 (* TODO: define proper exceptions *)
 exception A
 exception B
@@ -324,9 +329,23 @@ let string_of_channel = function
   | ChannelId id -> id
   | ChannelName name -> name
 
-let id_of_user = function
-  | UserId id -> id
-  | UserName name -> failwith "UserName not supported yet"
+let id_of_user token = function
+  | UserId id -> Lwt.return id
+  | UserName name -> (
+    let open Yojson.Basic.Util in
+    match%lwt users_list token with
+    | `Success json -> (let candidates = json |> member "members" |> to_list |>
+      filter_map (fun chan ->
+        match (chan |> member "name") with
+          (* If a channel matches the name, get its ID *)
+          | `String n when n = name -> Some (chan |> member "id" |> to_string)
+          | _ -> None) in
+      (* make sure we have only one candidate *)
+      match candidates with
+        | [] -> Lwt.fail A
+        | [x] -> Lwt.return x
+        | _ -> Lwt.fail B)
+    | _ -> Lwt.fail C)
 
 let id_of_group = function
   | GroupId id -> id
@@ -407,10 +426,11 @@ let channels_info token channel =
 
 let channels_invite token channel user =
   let%lwt channel_id = id_of_channel token channel in
+  let%lwt user_id = id_of_user token user in
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ channel_id
-    |> definitely_add "user" @@ id_of_user user
+    |> definitely_add "channel" channel_id
+    |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -434,10 +454,11 @@ let channels_join token name =
 
 let channels_kick token channel user =
   let%lwt channel_id = id_of_channel token channel in
+  let%lwt user_id = id_of_user token user in
   let uri = endpoint "channels.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
-    |> definitely_add "user" @@ id_of_user user
+    |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -553,9 +574,12 @@ let files_info token ?count ?page file =
     | other -> `Unknown_error)
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
+  let%lwt user_id = (match user with
+    | Some u -> let%lwt v = id_of_user token u in Lwt.return (Some v)
+    | None -> Lwt.return None) in
   let uri = endpoint "files.list"
     |> definitely_add "token" token
-    |> optionally_add "user" @@ maybe id_of_user user
+    |> optionally_add "user" user_id
     |> optionally_add "ts_from" @@ maybe string_of_timestamp ts_from
     |> optionally_add "ts_to" @@ maybe string_of_timestamp ts_to
     |> optionally_add "types" types
@@ -611,10 +635,11 @@ let groups_history token ?latest ?oldest ?count group =
     | other -> `Unknown_error)
 
 let groups_invite token group user =
+  let%lwt user_id = id_of_user token user in
   let uri = endpoint "groups.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" @@ id_of_group group
-    |> definitely_add "user" @@ id_of_user user
+    |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -624,10 +649,11 @@ let groups_invite token group user =
     | other -> `Unknown_error)
 
 let groups_kick token group user =
+  let%lwt user_id = id_of_user token user in
   let uri = endpoint "groups.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" @@ id_of_group group
-    |> definitely_add "user" @@ id_of_user user
+    |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -748,9 +774,12 @@ let search_files = search @@ endpoint "search.files"
 let search_messages = search @@ endpoint "search.messages"
 
 let stars_list ?user ?count ?page token =
+  let%lwt user_id = (match user with
+    | Some u -> let%lwt v = id_of_user token u in Lwt.return (Some v)
+    | None -> Lwt.return None) in
   let uri = endpoint "stars.list"
     |> definitely_add "token" token
-    |> optionally_add "user" @@ maybe id_of_user user
+    |> optionally_add "user" user_id
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
@@ -759,19 +788,15 @@ let stars_list ?user ?count ?page token =
     | other -> `Unknown_error)
 
 let users_info token user =
+  let%lwt user_id = id_of_user token user in
   let uri = endpoint "users.info"
     |> definitely_add "token" token
-    |> definitely_add "user" @@ id_of_user user
+    |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
     | #user_error as err -> err
     | #user_visibility_error as err -> err
     | other -> `Unknown_error)
-
-let users_list token =
-  let uri = endpoint "users.list"
-    |> definitely_add "token" token
-  in query uri only_auth_can_fail
 
 let users_set_active token =
   let uri = endpoint "users.setActive"

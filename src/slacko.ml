@@ -313,26 +313,28 @@ exception A
 exception B
 exception C
 
+(* look up the id of query from results provided by the listfn *)
+let lookup token listfn collection query =
+  let open Yojson.Basic.Util in
+  match%lwt listfn token with
+  | `Success json -> (let candidates = json |> member collection |> to_list |>
+    filter_map (fun chan ->
+      match (chan |> member "name") with
+        (* If a channel matches the name, get its ID *)
+        | `String q when q = query -> Some (chan |> member "id" |> to_string)
+        | _ -> None) in
+    (* make sure we have only one candidate *)
+    match candidates with
+      | [] -> Lwt.fail A
+      | [x] -> Lwt.return x
+      | _ -> Lwt.fail B)
+  | _ -> Lwt.fail C
+
 let id_of_channel token = function
   | ChannelId id -> Lwt.return id
-  | ChannelName name -> (
-    let open Yojson.Basic.Util in
-    (* Split off the leading '#' *)
-    let name = String.sub name 1 @@ String.length name - 1 in
-    (* traverse all channels and see which ones have the given name *)
-    match%lwt channels_list token with
-    | `Success json -> (let candidates = json |> member "channels" |> to_list |>
-      filter_map (fun chan ->
-        match (chan |> member "name") with
-          (* If a channel matches the name, get its ID *)
-          | `String n when n = name -> Some (chan |> member "id" |> to_string)
-          | _ -> None) in
-      (* make sure we have only one candidate *)
-      match candidates with
-        | [] -> Lwt.fail A
-        | [x] -> Lwt.return x
-        | _ -> Lwt.fail B)
-    | _ -> Lwt.fail C)
+  | ChannelName name -> lookup token channels_list "channels" @@
+      (* Split off the leading '#' *)
+      String.sub name 1 @@ String.length name - 1
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -341,39 +343,11 @@ let string_of_channel = function
 
 let id_of_user token = function
   | UserId id -> Lwt.return id
-  | UserName name -> (
-    let open Yojson.Basic.Util in
-    match%lwt users_list token with
-    | `Success json -> (let candidates = json |> member "members" |> to_list |>
-      filter_map (fun chan ->
-        match (chan |> member "name") with
-          (* If a channel matches the name, get its ID *)
-          | `String n when n = name -> Some (chan |> member "id" |> to_string)
-          | _ -> None) in
-      (* make sure we have only one candidate *)
-      match candidates with
-        | [] -> Lwt.fail A
-        | [x] -> Lwt.return x
-        | _ -> Lwt.fail B)
-    | _ -> Lwt.fail C)
+  | UserName name -> lookup token users_list "members" name
 
 let id_of_group token = function
   | GroupId id -> Lwt.return id
-  | GroupName name -> (
-    let open Yojson.Basic.Util in
-    match%lwt groups_list token with
-    | `Success json -> (let candidates = json |> member "groups" |> to_list |>
-      filter_map (fun chan ->
-        match (chan |> member "name") with
-          (* If a channel matches the name, get its ID *)
-          | `String n when n = name -> Some (chan |> member "id" |> to_string)
-          | _ -> None) in
-      (* make sure we have only one candidate *)
-      match candidates with
-        | [] -> Lwt.fail A
-        | [x] -> Lwt.return x
-        | _ -> Lwt.fail B)
-    | _ -> Lwt.fail C)
+  | GroupName name -> lookup token groups_list "groups" name
 
 let name_of_group = function
   | GroupId id -> failwith "Need to specify a name"

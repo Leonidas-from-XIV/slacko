@@ -423,8 +423,8 @@ let channels_info token channel =
     | other -> `Unknown_error)
 
 let channels_invite token channel user =
-  let%lwt channel_id = id_of_channel token channel in
-  let%lwt user_id = id_of_user token user in
+  let%lwt channel_id = id_of_channel token channel and
+    user_id = id_of_user token user in
   let uri = endpoint "channels.info"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -451,8 +451,8 @@ let channels_join token name =
     | other -> `Unknown_error)
 
 let channels_kick token channel user =
-  let%lwt channel_id = id_of_channel token channel in
-  let%lwt user_id = id_of_user token user in
+  let%lwt channel_id = id_of_channel token channel and
+    user_id = id_of_user token user in
   let uri = endpoint "channels.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -635,8 +635,8 @@ let groups_history token ?latest ?oldest ?count group =
     | other -> `Unknown_error)
 
 let groups_invite token group user =
-  let%lwt user_id = id_of_user token user in
-  let%lwt group_id = id_of_group token group in
+  let%lwt user_id = id_of_user token user and
+    group_id = id_of_group token group in
   let uri = endpoint "groups.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -650,8 +650,8 @@ let groups_invite token group user =
     | other -> `Unknown_error)
 
 let groups_kick token group user =
-  let%lwt user_id = id_of_user token user in
-  let%lwt group_id = id_of_group token group in
+  let%lwt user_id = id_of_user token user and
+    group_id = id_of_group token group in
   let uri = endpoint "groups.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id

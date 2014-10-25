@@ -302,6 +302,12 @@ let users_list token =
     |> definitely_add "token" token
   in query uri only_auth_can_fail
 
+let groups_list ?exclude_archived token =
+  let uri = endpoint "groups.list"
+    |> definitely_add "token" token
+    |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
+  in query uri only_auth_can_fail
+
 (* TODO: define proper exceptions *)
 exception A
 exception B
@@ -351,9 +357,23 @@ let id_of_user token = function
         | _ -> Lwt.fail B)
     | _ -> Lwt.fail C)
 
-let id_of_group = function
-  | GroupId id -> id
-  | GroupName name -> failwith "GroupName not supported yet"
+let id_of_group token = function
+  | GroupId id -> Lwt.return id
+  | GroupName name -> (
+    let open Yojson.Basic.Util in
+    match%lwt groups_list token with
+    | `Success json -> (let candidates = json |> member "groups" |> to_list |>
+      filter_map (fun chan ->
+        match (chan |> member "name") with
+          (* If a channel matches the name, get its ID *)
+          | `String n when n = name -> Some (chan |> member "id" |> to_string)
+          | _ -> None) in
+      (* make sure we have only one candidate *)
+      match candidates with
+        | [] -> Lwt.fail A
+        | [x] -> Lwt.return x
+        | _ -> Lwt.fail B)
+    | _ -> Lwt.fail C)
 
 let name_of_group = function
   | GroupId id -> failwith "Need to specify a name"
@@ -617,9 +637,10 @@ let groups_create token name =
     | other -> `Unknown_error)
 
 let groups_create_child token group =
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.createChild"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -628,9 +649,10 @@ let groups_create_child token group =
     | other -> `Unknown_error)
 
 let groups_history token ?latest ?oldest ?count group =
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.history"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
     |> optionally_add "count" @@ maybe string_of_int count
@@ -640,9 +662,10 @@ let groups_history token ?latest ?oldest ?count group =
 
 let groups_invite token group user =
   let%lwt user_id = id_of_user token user in
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.invite"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
@@ -654,9 +677,10 @@ let groups_invite token group user =
 
 let groups_kick token group user =
   let%lwt user_id = id_of_user token user in
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.kick"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
   in query uri (function
     | #authed_result as res -> res
@@ -668,9 +692,10 @@ let groups_kick token group user =
     | other -> `Unknown_error)
 
 let groups_leave token group =
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.leave"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
   in query uri (function
     | #authed_result as res -> res
     | #channel_error as err -> err
@@ -679,16 +704,11 @@ let groups_leave token group =
     | #last_member_error as err -> err
     | other -> `Unknown_error)
 
-let groups_list ?exclude_archived token =
-  let uri = endpoint "groups.list"
-    |> definitely_add "token" token
-    |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
-  in query uri only_auth_can_fail
-
 let groups_mark token group ts =
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.mark"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
     |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
     | #authed_result as res -> res
@@ -698,18 +718,20 @@ let groups_mark token group ts =
     | other -> `Unknown_error)
 
 let groups_set_purpose token group purpose =
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.setPurpose"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
     |> definitely_add "purpose" purpose
   in query uri (function
     | #topic_result as res -> res
     | other -> `Unknown_error)
 
 let groups_set_topic token group topic =
+  let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.setTopic"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ id_of_group group
+    |> definitely_add "channel" group_id
     |> definitely_add "topic" topic
   in query uri (function
     | #topic_result as res -> res

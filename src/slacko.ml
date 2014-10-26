@@ -371,9 +371,14 @@ let string_of_presence = function
 
 (* Slacko API helper methods *)
 let token_of_string = identity
-(* TODO: should this do validation of the mesages? Length limits? *)
 let message_of_string = identity
-let topic_of_string = identity
+
+(* TODO: option type? *)
+let topic_of_string text =
+  if String.length text > 250 then
+    failwith "Too long"
+  else
+    text
 
 let channel_of_string s =
   if s.[0] = 'C' then ChannelId s else ChannelName s

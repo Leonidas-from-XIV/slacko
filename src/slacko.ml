@@ -373,12 +373,33 @@ let string_of_presence = function
 let token_of_string = identity
 let message_of_string = identity
 
-(* TODO: option type? *)
-let topic_of_string text =
-  if String.length text > 250 then
-    failwith "Too long"
-  else
-    text
+(* Calculate the amount of codepoints in a string encoded in UTF-8 *)
+let utf8_codepoints text =
+  (* convert string to int list *)
+  let explode s =
+    let rec exp i l =
+      if i < 0 then l else exp (i - 1) (Char.code s.[i] :: l) in
+    exp (String.length s - 1) [] in
+  (*
+   * http://www.daemonology.net/blog/2008-06-05-faster-utf8-strlen.html
+   * http://porg.es/blog/counting-characters-in-utf-8-strings-is-faster
+   *)
+  let rec codepoints = function
+    | [] -> 0
+    | x::xs when x < 0x7F -> 1 + codepoints xs
+    | x::_::xs when x >= 0xC0 && x <= 0xDF -> 1 + codepoints xs
+    | x::_::_::xs when x >= 0xE0 && x <= 0xEF -> 1 + codepoints xs
+    | x::_::_::_::xs when x >= 0xF0 && x <= 0xFF -> 1 + codepoints xs
+    (* you are bad and should feel bad *)
+    | x::_ -> failwith @@ Printf.sprintf "Invalid UTF-8 byte: 0x%X" x in
+  codepoints @@ explode text
+
+let topic_of_string text = if utf8_codepoints text <= 250 then Some text else None
+
+let topic_of_string_exn text =
+  match topic_of_string text with
+  | Some t -> t
+  | None -> failwith "Too long"
 
 let channel_of_string s =
   if s.[0] = 'C' then ChannelId s else ChannelName s

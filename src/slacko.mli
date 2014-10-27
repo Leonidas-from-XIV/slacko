@@ -270,8 +270,13 @@ val token_of_string: string -> token
 val message_of_string: string -> message
 
 (** Build a topic out of a string. {!topic} types are also used to
-    set purposes. *)
-val topic_of_string: string -> topic
+    set purposes. Also validates the length of the topic, since Slack has
+    lenght limits on purposes and topics. *)
+val topic_of_string: string -> topic option
+
+(** Same as {!topic_of_string} but throws an exception if it fails to convert.
+    the text data into a {!topic}. *)
+val topic_of_string_exn: string -> topic
 
 (** Construct a group out of a given string. *)
 val group_of_string: string -> group

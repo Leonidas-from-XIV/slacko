@@ -271,21 +271,31 @@ val message_of_string: string -> message
 
 (** Build a topic out of a string. {!topic} types are also used to
     set purposes. Also validates the length of the topic, since Slack has
-    lenght limits on purposes and topics. *)
+    a 250 UTF-8 codepoint lenght limit on purposes and topics. *)
 val topic_of_string: string -> topic option
 
-(** Same as {!topic_of_string} but throws an exception if it fails to convert.
+(** Same as {!topic_of_string} but throws an exception if it fails to convert
     the text data into a {!topic}. *)
 val topic_of_string_exn: string -> topic
 
-(** Construct a group out of a given string. *)
+(** Construct a group out of a given string. This can be either a group id,
+    starting with capital 'G' character which is the preferred way or it can
+    be a group name for convenience. In the latter case, each API call with
+    requires a group will perform an additional request to determine the group
+    id from the name. *)
 val group_of_string: string -> group
 
-(** Converts a string into a user. Can be either a username or an user id. *)
+(** Constructs a user out of a given string. The string can either be an user
+    id starting with a capital 'U' which is the preferred way or it can be a
+    simple user name in which case every API call will look up the user name
+    to an id in an additional request. *)
 val user_of_string: string -> user
 
-(** Converts a string int a channel. Can be either a channel name or a
-    channel id. *)
+(** Constructs a channel out of a given string. Can either be a channel id
+    starting with a capital 'C' which is the preferred way or a channel name
+    starting with a '#'. If a channel name was provided, each consecutive API
+    call using it will first need to resolve the channel name into a channel
+    id by means of an additional request. *)
 val channel_of_string: string -> channel
 
 (** {2 Slack API calls} *)

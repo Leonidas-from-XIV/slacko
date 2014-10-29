@@ -20,37 +20,57 @@
 
 (** An OCaml binding to the REST API of Slack. Each function triggers an
     HTTP request, so it returns immediately and returns an {!Lwt.t} value.
+
+    To use the API you first need to either apply for a {!token} from Slack,
+    or get one via the OAuth2 API. This string can then be converted into
+    a {!token} by means of {!token_of_string}. With this {!token} most other
+    methods from the binding can be called. The result of each API call is
+    a variant type containing either the JSON result or an error type
+    describing what kind of error occured.
+
     @author Marek Kubica *)
 
 (** {2 Types used in the binding} *)
 
-(** The basic type that each API endpoint will always return. Most API calls
-    return much more possible error cases, see below. *)
+(** The binding exposes a number of errors that can happen. As not every
+    function returns every possible API error, the possible errors are grouped
+    into more convenient sets of errors that can be composed together to get
+    the exact error types.
+*)
+
+(** The basic type that each API endpoint will return at least. This type
+    includes the case that the request succeeded as well as the case that an
+    error happened that the binding didn't know how to handle. It gets
+    composed into {e every other} API return type. *)
 type api_result = [
   | `Success of Yojson.Basic.json
   | `Unknown_error
 ]
 
-(** API calls that require authentication might fail with these errors *)
+(** API calls that require authentication (a {!token}) might fail with one of
+    these errors, so functions that take {!token} arguments will return
+    {e at least} these error variants. *)
 type auth_error = [
   | `Not_authed
   | `Invalid_auth
   | `Account_inactive
 ]
 
-(** API calls that take timestamps can throw errors when the timestamp is
-    invalid. *)
+(** API calls that take {!timestamp} arguments can signal errors when the
+    timestamp is invalid. The binding does its best to make sure that invalid
+    timestamps are avoided. *)
 type timestamp_error = [
   | `Invalid_ts_latest
   | `Invalid_ts_oldest
 ]
 
-(** API calls that require {!channel} inputs can throw this error. *)
+(** API calls that require {!channel} inputs can signal this error if the
+    channel does not exist. *)
 type channel_error = [
   | `Channel_not_found
 ]
 
-(** API calls that require {!user} inputs often throw this error if the user
+(** API calls that require {!user} inputs signal this error if the user
     was not found. *)
 type user_error = [
   | `User_not_found
@@ -76,7 +96,7 @@ type already_in_channel_error = [
 ]
 
 (** Channels might be archived, so modification attempts will fail with this
-    error*)
+    error. *)
 type archive_error = [
   | `Is_archived
 ]
@@ -226,14 +246,17 @@ type history_result = [
   | timestamp_error
 ]
 
-(** Timestamps are usually represented as floats in OCaml, following suit *)
+(** In Slack, timestamps are represented as float, same as in OCaml, so the
+    {!timestamp} type is following suit, so all timestamp-related functions
+    can be used. *)
 type timestamp = float
 
-(** Tokens are of a special type, use token_of_string to turn a string into a
-    token. *)
+(** Tokens are required in the API for all actions that require
+    authentication. *)
 type token
 
-(** The topic type represents a topic or a purpose message. *)
+(** The topic type represents a topic or a purpose message. Both are limited
+    deliberately to have at most 250 UTF-8 encoded codepoints. *)
 type topic
 
 (** The message represents a message to be posted. *)
@@ -271,7 +294,7 @@ val message_of_string: string -> message
 
 (** Build a topic out of a string. {!topic} types are also used to
     set purposes. Also validates the length of the topic, since Slack has
-    a 250 UTF-8 codepoint lenght limit on purposes and topics. *)
+    a 250 UTF-8 codepoint length limit on purposes and topics. *)
 val topic_of_string: string -> topic option
 
 (** Same as {!topic_of_string} but throws an exception if it fails to convert

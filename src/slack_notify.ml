@@ -72,36 +72,6 @@ let execute token username channel icon_url icon_emoji msg =
     msg
   >|= (fun c ->
     print_endline @@ string_or_bust c)
-  (*
-  Slacko.api_test ~foo:"whatever" () >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.auth_test token >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.channels_list token
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.channels_history token "C02LFT2FJ"
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.channels_info token "C02LFT2FJ"
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.emoji_list token
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.im_list token
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.stars_list token
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.users_list token
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c)) >>
-  Slacko.users_set_active token
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c))
-  *)
   |> Lwt_main.run
 
 let execute_t = Cmdliner.Term.(pure execute $ token $ username $ channel $ icon_url $ icon_emoji $ message)

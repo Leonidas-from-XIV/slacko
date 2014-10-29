@@ -70,8 +70,8 @@ let execute token username channel icon_url icon_emoji msg =
     ?icon_emoji:(icon_emoji)
     ?icon_url:(icon_url)
     msg
-  >>= (fun c ->
-    return (print_endline @@ string_or_bust c))
+  >|= (fun c ->
+    print_endline @@ string_or_bust c)
   (*
   Slacko.api_test ~foo:"whatever" () >>= (fun c ->
     return (print_endline @@ string_or_bust c)) >>

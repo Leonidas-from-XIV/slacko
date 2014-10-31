@@ -146,7 +146,10 @@ type message_error = [
   | `Message_not_found
 ]
 
-(** {!message} types, like {!topic} types might be too long to post. *)
+(** {!message} types, like {!topic} types might be too long to post. The Slack
+    API does not specify the maximum message length, so Slacko can't make sure
+    your messages stay below this limit, so everytime you post, this error can
+    realistically happen. *)
 type message_length_error = [
   | `Msg_too_long
 ]

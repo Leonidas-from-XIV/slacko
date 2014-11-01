@@ -31,7 +31,7 @@ let icon_url =
   Cmdliner.Arg.(value & opt (some string) None & info ["icon-url"] ~docv:"URL" ~doc)
 
 let icon_emoji =
-  let doc = "emoji to use as the icon for this message. Overrides icon-url" in
+  let doc = "Emoji to use as the icon for this message. Overrides icon-url" in
   Cmdliner.Arg.(value & opt (some string) None & info ["icon-emoji"] ~docv:"EMOJI" ~doc)
 
 let channel =
@@ -43,7 +43,7 @@ let message =
   Cmdliner.Arg.(required & pos 1 (some string) None & info [] ~docv:"MSG" ~doc)
 
 let info =
-  let doc = "Writes messages to slack" in
+  let doc = "Posts messages to Slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
 let execute token username channel icon_url icon_emoji msg =

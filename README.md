@@ -49,6 +49,16 @@ $ ocaml setup.ml -build
 $ ocaml setup.ml -install
 ```
 
+How do I even use this thing?
+-----------------------------
+
+The workflow is always very simple: you get a token from Slack either manually
+or my quwerying the OAuth API. Then you can instantly use any API method that
+Slacko supports. If you want, you can look at snapshot of
+[the Slacko docs](http://leonidas-from-xiv.github.io/slacko/) to see what
+functions are available (hint: all of them).
+
+
 Ready, set, go!
 ---------------
 

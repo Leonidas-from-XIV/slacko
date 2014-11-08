@@ -326,13 +326,21 @@ val channel_of_string: string -> channel
 
 (** {2 Slack API calls} *)
 
-(** Checks API calling code. *)
+(** Checks API calling code.
+    @param foo A dummy value that will be returned by the API.
+    @param error If set, will return a specific kind of error. *)
 val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t
 
-(** Checks authentication & identity. *)
+(** Checks authentication & identity.
+    @param token The authentication token that was issued by Slack. *)
 val auth_test: token -> [> authed_result ] Lwt.t
 
-(** Fetches history of messages and events from a channel. *)
+(** Fetches history of messages and events from a channel.
+    @param token The authentication token that was issued by Slack.
+    @param latest The newest message from history to be returned.
+    @param oldest The oldest message from history to be returned.
+    @param count The number of messages to be returned.
+    @param channel The Slack channel from which to get the history. *)
 val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> history_result ] Lwt.t
 
 (** Gets information about a channel. *)

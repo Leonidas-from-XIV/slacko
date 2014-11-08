@@ -159,6 +159,7 @@ function build_one {
     esac
     #opam install $pkg
     #opam remove -a ${pkg%%.*}
+    opam install --deps-only slacko
     ocaml setup.ml -configure
     ocaml setup.ml -build
     ocaml setup.ml -install
@@ -178,6 +179,7 @@ function build_one {
   fi
 }
 
+echo 'slacko' >> tobuild.txt
 for i in `cat tobuild.txt`; do
   build_one $i
 done

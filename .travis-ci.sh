@@ -115,73 +115,14 @@ function build_one {
   esac
   echo Current switch is:
   opam switch
-  # test for installability
-  case "$OPAM_VERSION" in
-      1.0.*|1.1.*)
-          avail_cmd="opam install $pkg --dry-run | grep -E -v \"The dependency [^ ]+ of package [^ ]+ is not available for your compiler or your OS.\" | grep -v \"Your request cannot be satisfied.\" || true"
-          ;;
-      *)
-          avail_cmd="opam list -s -a $pkg | grep -v \"No packages found.\""
-          ;;
-  esac
-  is_available=$(eval $avail_cmd) # eval for a real pipe
-  # override availability
-  is_available=true
-  if [ -z "$is_available" ] ; then
-      echo $avail_cmd
-      echo Skipping $pkg as not installable
-  else
-    echo "Begin availability check:"
-    echo $avail_cmd
-    echo $is_available
-    echo "End   availability check."
-    case $TRAVIS_OS_NAME in
-    linux)
-      depext=`opam install $pkg -e ubuntu`
-      echo Ubuntu depexts: $depext
-      if [ "$depext" != "" ]; then
-        sudo apt-get install -qq pkg-config build-essential m4 $depext
-      fi
-      srcext=`opam install $pkg -e source,linux`
-      if [ "$srcext" != "" ]; then
-        curl -sL ${srcext} | bash
-      fi
-      ;;
-    osx)
-      depext=`opam install $pkg -e osx,homebrew`
-      echo Homebrew depexts: $depext
-      if [ "$depext" != "" ]; then
-        brew install $depext
-      fi
-      srcext=`opam install $pkg -e osx,source`
-      if [ "$srcext" != "" ]; then
-        curl -sL ${srcext} | bash
-      fi
-      ;;
-    esac
-    #opam install $pkg
-    #opam remove -a ${pkg%%.*}
-    opam install --deps-only slacko
-    ocaml setup.ml -configure
-    ocaml setup.ml -build
-    ocaml setup.ml -install
-    ocaml setup.ml -uninstall
-
-    if [ "$depext" != "" ]; then
-      case $TRAVIS_OS_NAME in
-      linux)
-        sudo apt-get remove $depext
-        sudo apt-get autoremove
-        ;;
-      osx)
-        brew remove $depext
-        ;;
-      esac
-    fi
-  fi
+  opam install cmdliner lwt cohttp ocamlfind ssl yojson
+  ocaml setup.ml -configure
+  ocaml setup.ml -build
+  ocaml setup.ml -install
+  ocaml setup.ml -uninstall
 }
 
-echo 'slacko.0.10.0' >> tobuild.txt
+echo 'slacko' >> tobuild.txt
 for i in `cat tobuild.txt`; do
   build_one $i
 done

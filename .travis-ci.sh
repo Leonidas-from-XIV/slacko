@@ -125,6 +125,8 @@ function build_one {
           ;;
   esac
   is_available=$(eval $avail_cmd) # eval for a real pipe
+  # override availability
+  is_available=true
   if [ -z "$is_available" ] ; then
       echo $avail_cmd
       echo Skipping $pkg as not installable

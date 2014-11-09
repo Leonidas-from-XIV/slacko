@@ -181,7 +181,7 @@ function build_one {
   fi
 }
 
-echo 'slacko' >> tobuild.txt
+echo 'slacko.0.10.0' >> tobuild.txt
 for i in `cat tobuild.txt`; do
   build_one $i
 done

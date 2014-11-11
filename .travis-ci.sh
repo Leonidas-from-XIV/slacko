@@ -115,6 +115,7 @@ function build_one {
   esac
   echo Current switch is:
   opam switch
+  opam update
   opam install cmdliner lwt cohttp ocamlfind ssl yojson
   ocaml setup.ml -configure
   ocaml setup.ml -build

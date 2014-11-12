@@ -1,4 +1,4 @@
-OPAM_DEPENDS="lwt>=2.4.6 ssl cmdliner cohttp>=0.10.0 yojson"
+OPAM_DEPENDS='"lwt>=2.4.6" ssl cmdliner "cohttp>=0.10.0" yojson'
 
 case "$OCAML_VERSION,$OPAM_VERSION" in
 4.01.0,1.1.0) ppa=avsm/ocaml41+opam11 ;;

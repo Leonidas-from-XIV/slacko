@@ -23,8 +23,10 @@ opam init
 opam update
 sudo apt-get install -qq `opam install -e ubuntu ${OPAM_DEPENDS}`
 opam install ${OPAM_DEPENDS}
+opam install oasis
 eval `opam config env`
 
+oasis setup
 ocaml setup.ml -configure
 ocaml setup.ml -build
 ocaml setup.ml -install

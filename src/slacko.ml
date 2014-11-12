@@ -517,6 +517,20 @@ let channels_mark token channel ts =
     | #not_in_channel_error as err -> err
     | other -> `Unknown_error)
 
+let channels_rename token channel name =
+  let%lwt channel_id = id_of_channel token channel in
+  let uri = endpoint "channels.rename"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel_id
+    |> definitely_add "name" name
+  in query uri (function
+    (* TODO: add more error types *)
+    | #authed_result as res -> res
+    | #channel_error as err -> err
+    | #not_in_channel_error as err -> err
+    | #name_error as err -> err
+    | other -> `Unknown_error)
+
 let channels_set_purpose token channel purpose =
   let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "channels.setPurpose"

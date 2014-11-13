@@ -1,4 +1,4 @@
-OPAM_DEPENDS='"lwt>=2.4.6" ssl cmdliner "cohttp>=0.10.0" yojson'
+OPAM_DEPENDS="lwt\>=2.4.6 ssl cmdliner cohttp\>=0.10.0 yojson"
 
 case "$OCAML_VERSION,$OPAM_VERSION" in
 4.01.0,1.1.0) ppa=avsm/ocaml41+opam11 ;;
@@ -8,7 +8,7 @@ case "$OCAML_VERSION,$OPAM_VERSION" in
 *) echo Unknown $OCAML_VERSION,$OPAM_VERSION; exit 1 ;;
 esac
 
-echo "yes" | sudo add-apt-repository ppa:$ppa
+sudo add-apt-repository --yes ppa:$ppa
 sudo apt-get update -qq
 sudo apt-get install -qq ocaml ocaml-native-compilers camlp4-extra opam time
 

@@ -1,5 +1,3 @@
-OPAM_DEPENDS="lwt>=2.4.6 ssl cmdliner cohttp>=0.10.0 yojson"
-
 case "$OCAML_VERSION,$OPAM_VERSION" in
 4.01.0,1.1.0) ppa=avsm/ocaml41+opam11 ;;
 4.01.0,1.2.0) ppa=avsm/ocaml41+opam12 ;;
@@ -21,13 +19,10 @@ opam --git-version
 
 opam init
 opam update
-sudo apt-get install -qq `opam install -e ubuntu ${OPAM_DEPENDS}`
-opam install ${OPAM_DEPENDS}
 opam install oasis
+opam pin add -n -k path slacko opam/
 eval `opam config env`
-
 oasis setup
-ocaml setup.ml -configure
-ocaml setup.ml -build
-sudo ocaml setup.ml -install
-sudo ocaml setup.ml -uninstall
+opam install --deps-only -d -t slacko
+opam install -d -t -v slacko
+opam remove slacko

@@ -147,6 +147,10 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
+type invalid_name_error = [
+  | `Invalid_name
+]
+
 type authed_result = [
   | api_result
   | auth_error
@@ -250,6 +254,9 @@ let validate json =
       | `String "unknown_type" -> `Unknown_type
       | `String "user_not_found" -> `User_not_found
       | `String "user_not_visible" -> `User_not_visible
+      | `String "not_authorized" -> `Not_authorized
+      | `String "invalid_name" -> `Invalid_name
+      | `String "user_is_restricted" -> `User_is_restricted
       | _ -> `Unknown_error
 
 (* filter out "ok" and "error" keys *)
@@ -524,11 +531,13 @@ let channels_rename token channel name =
     |> definitely_add "channel" channel_id
     |> definitely_add "name" name
   in query uri (function
-    (* TODO: add more error types *)
     | #authed_result as res -> res
     | #channel_error as err -> err
     | #not_in_channel_error as err -> err
     | #name_error as err -> err
+    | #invalid_name_error as err -> err
+    | `Not_authorized -> `Not_authorized
+    | `User_is_restricted -> `User_is_restricted
     | other -> `Unknown_error)
 
 let channels_set_purpose token channel purpose =
@@ -729,6 +738,20 @@ let groups_mark token group ts =
     | #channel_error as err -> err
     | #archive_error as err -> err
     | #not_in_channel_error as err -> err
+    | other -> `Unknown_error)
+
+let groups_rename token group name =
+  let%lwt group_id = id_of_group token group in
+  let uri = endpoint "groups.rename"
+    |> definitely_add "token" token
+    |> definitely_add "channel" group_id
+    |> definitely_add "name" name
+  in query uri (function
+    | #authed_result as res -> res
+    | #channel_error as err -> err
+    | #name_error as err -> err
+    | #invalid_name_error as err -> err
+    | `User_is_restricted -> `User_is_restricted
     | other -> `Unknown_error)
 
 let groups_set_purpose token group purpose =

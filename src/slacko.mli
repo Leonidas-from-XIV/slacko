@@ -225,6 +225,10 @@ type user_visibility_error = [
   | `User_not_visible
 ]
 
+type invalid_name_error = [
+  | `Invalid_name
+]
+
 (** API calls which require authentication will always return (at least) these
     error types. *)
 type authed_result = [
@@ -364,6 +368,9 @@ val channels_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
 (** Sets the read cursor in a channel. *)
 val channels_mark: token -> channel -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
+(** Renames a team channel. *)
+val channels_rename: token -> channel -> string -> [> authed_result | channel_error | not_in_channel_error | name_error | invalid_name_error | `Not_authorized | `User_is_restricted ] Lwt.t
+
 (** Sets the purpose for a channel. *)
 val channels_set_purpose: token -> channel -> topic -> [> topic_result ] Lwt.t
 
@@ -414,6 +421,9 @@ val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
 
 (** Sets the read cursor in a private group. *)
 val groups_mark: token -> group -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
+
+(** Renames a private group. *)
+val groups_rename: token -> group -> string -> [> authed_result | channel_error | name_error | invalid_name_error | `User_is_restricted ] Lwt.t
 
 (** Sets the purpose for a private group. *)
 val groups_set_purpose: token -> group -> topic -> [> topic_result ] Lwt.t

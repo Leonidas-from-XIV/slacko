@@ -25,4 +25,9 @@ eval `opam config env`
 oasis setup
 opam install --deps-only -d -t slacko
 opam install -d -t -v slacko
+
+if [ $? -eq 66 ]; then
+  # dependency can't be installed, no problem
+  exit 0
+fi
 opam remove slacko

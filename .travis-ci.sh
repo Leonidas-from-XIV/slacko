@@ -19,10 +19,10 @@ opam --git-version
 
 opam init
 opam update
+opam pin add -n -k path slacko .
 opam install oasis
 eval `opam config env`
 oasis setup
-opam pin add -k path slacko .
 opam install --deps-only -d -t slacko
 opam install -d -t -v slacko
 

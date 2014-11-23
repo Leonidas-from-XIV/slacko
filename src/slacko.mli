@@ -339,6 +339,9 @@ val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t
     @param token The authentication token that was issued by Slack. *)
 val auth_test: token -> [> authed_result ] Lwt.t
 
+(** Creates a channel. *)
+val channels_create: token -> string -> [> authed_result | name_error | `User_is_restricted ] Lwt.t
+
 (** Fetches history of messages and events from a channel.
     @param token The authentication token that was issued by Slack.
     @param latest The newest message from history to be returned.

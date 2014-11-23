@@ -432,6 +432,16 @@ let auth_test token =
     |> definitely_add "token" token
   in query uri only_auth_can_fail
 
+let channels_create token name =
+  let uri = endpoint "channels.create"
+    |> definitely_add "token" token
+    |> definitely_add "name" name
+  in query uri (function
+    | #authed_result as res -> res
+    | #name_error as err -> err
+    | `User_is_restricted -> `User_is_restricted
+    | other -> `Unknown_error)
+
 let channels_history token
   ?latest ?oldest ?count channel =
   let%lwt channel_id = id_of_channel token channel in

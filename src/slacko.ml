@@ -315,10 +315,9 @@ let groups_list ?exclude_archived token =
     |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
   in query uri only_auth_can_fail
 
-(* TODO: define proper exceptions *)
-exception A
-exception B
-exception C
+exception No_matches
+exception No_unique_matches
+exception Lookup_failed
 
 (* look up the id of query from results provided by the listfn *)
 let lookup token listfn collection query =
@@ -332,10 +331,10 @@ let lookup token listfn collection query =
         | _ -> None) in
     (* make sure we have only one candidate *)
     match candidates with
-      | [] -> Lwt.fail A
+      | [] -> Lwt.fail No_matches
       | [x] -> Lwt.return x
-      | _ -> Lwt.fail B)
-  | _ -> Lwt.fail C
+      | _ -> Lwt.fail No_unique_matches)
+  | _ -> Lwt.fail Lookup_failed
 
 let id_of_channel token = function
   | ChannelId id -> Lwt.return id

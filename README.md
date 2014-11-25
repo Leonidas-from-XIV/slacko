@@ -3,6 +3,8 @@ Slacko
 
 ![Slacko logo](slacko.png) A neat interface for [Slack](https://slack.com/)
 
+[![Build Status](https://travis-ci.org/Leonidas-from-XIV/slacko.svg?branch=master)](https://travis-ci.org/Leonidas-from-XIV/slacko)
+
 Your company got you Slack and you're all like "yeah, and now I am forced to
 use a browser or what?". Fear no more, because as it turns out Slack has a REST
 API that can be accessed.

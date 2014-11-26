@@ -44,6 +44,7 @@
     composed into {e every other} API return type. *)
 type api_result = [
   | `Success of Yojson.Basic.json
+  | `Unhandled_error of string
   | `Unknown_error
 ]
 

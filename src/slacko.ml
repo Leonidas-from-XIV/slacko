@@ -23,6 +23,7 @@ module Cohttp_body = Cohttp_lwt_body
 
 type api_result = [
   | `Success of Yojson.Basic.json
+  | `Unhandled_error of string
   | `Unknown_error
 ]
 
@@ -240,6 +241,7 @@ let validate json =
       | `String "is_archived" -> `Is_archived
       | `String "last_member" -> `Last_member
       | `String "message_not_found" -> `Message_not_found
+      (* not supposed to happen *)
       | `String "msg_too_long" -> `Msg_too_long
       | `String "name_taken" -> `Name_taken
       (* can't really happen *)
@@ -257,6 +259,8 @@ let validate json =
       | `String "not_authorized" -> `Not_authorized
       | `String "invalid_name" -> `Invalid_name
       | `String "user_is_restricted" -> `User_is_restricted
+      (* when the API changes and introduces new, yet unhandled error types *)
+      | `String err -> `Unhandled_error err
       | _ -> `Unknown_error
 
 (* filter out "ok" and "error" keys *)

@@ -296,7 +296,7 @@ let identity x = x
 (* Many functions can only succeed or fail due to an auth error *)
 let only_auth_can_fail = function
   | #authed_result as res -> res
-  | other -> `Unknown_error
+  | _ -> `Unknown_error
 
 let maybe fn = function
   | Some v -> Some (fn v)
@@ -428,7 +428,7 @@ let api_test ?foo ?error () =
     |> optionally_add "error" error
   in query uri (function
     | #api_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let auth_test token =
   let uri = endpoint "auth.test"
@@ -440,10 +440,10 @@ let channels_create token name =
     |> definitely_add "token" token
     |> definitely_add "name" name
   in query uri (function
-    | #authed_result as res -> res
-    | #name_error as err -> err
-    | `User_is_restricted -> `User_is_restricted
-    | other -> `Unknown_error)
+    | #authed_result
+    | #name_error
+    | `User_is_restricted as res -> res
+    | _ -> `Unknown_error)
 
 let channels_history token
   ?latest ?oldest ?count channel =
@@ -456,7 +456,7 @@ let channels_history token
     |> optionally_add "count" @@ maybe string_of_int @@ count
   in query uri (function
     | #history_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let channels_info token channel =
   let%lwt channel_id = id_of_channel token channel in
@@ -464,9 +464,9 @@ let channels_info token channel =
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error as res -> res
+    | _ -> `Unknown_error)
 
 let channels_invite token channel user =
   let%lwt channel_id = id_of_channel token channel and
@@ -476,25 +476,25 @@ let channels_invite token channel user =
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #user_error as err -> err
-    | #invite_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #already_in_channel_error as err -> err
-    | #archive_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #user_error
+    | #invite_error
+    | #not_in_channel_error
+    | #already_in_channel_error
+    | #archive_error as res -> res
+    | _ -> `Unknown_error)
 
 let channels_join token name =
   let uri = endpoint "channels.join"
     |> definitely_add "token" token
     |> definitely_add "name" @@ string_of_channel name
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #name_error as err -> err
-    | #archive_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #name_error
+    | #archive_error as res -> res
+    | _ -> `Unknown_error)
 
 let channels_kick token channel user =
   let%lwt channel_id = id_of_channel token channel and
@@ -504,13 +504,13 @@ let channels_kick token channel user =
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #user_error as err -> err
-    | #channel_kick_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #restriction_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #user_error
+    | #channel_kick_error
+    | #not_in_channel_error
+    | #restriction_error as res -> res
+    | _ -> `Unknown_error)
 
 let channels_leave token channel =
   let%lwt channel_id = id_of_channel token channel in
@@ -518,11 +518,11 @@ let channels_leave token channel =
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #leave_general_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #archive_error
+    | #leave_general_error as res -> res
+    | _ -> `Unknown_error)
 
 let channels_mark token channel ts =
   let%lwt channel_id = id_of_channel token channel in
@@ -531,11 +531,11 @@ let channels_mark token channel ts =
     |> definitely_add "channel" channel_id
     |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #not_in_channel_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #archive_error
+    | #not_in_channel_error as res -> res
+    | _ -> `Unknown_error)
 
 let channels_rename token channel name =
   let%lwt channel_id = id_of_channel token channel in
@@ -544,14 +544,14 @@ let channels_rename token channel name =
     |> definitely_add "channel" channel_id
     |> definitely_add "name" name
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #not_in_channel_error as err -> err
-    | #name_error as err -> err
-    | #invalid_name_error as err -> err
-    | `Not_authorized -> `Not_authorized
-    | `User_is_restricted -> `User_is_restricted
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #not_in_channel_error
+    | #name_error
+    | #invalid_name_error
+    | `Not_authorized
+    | `User_is_restricted as res -> res
+    | _ -> `Unknown_error)
 
 let channels_set_purpose token channel purpose =
   let%lwt channel_id = id_of_channel token channel in
@@ -561,7 +561,7 @@ let channels_set_purpose token channel purpose =
     |> definitely_add "purpose" purpose
   in query uri (function
     | #topic_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let channels_set_topic token channel topic =
   let%lwt channel_id = id_of_channel token channel in
@@ -571,7 +571,7 @@ let channels_set_topic token channel topic =
     |> definitely_add "topic" topic
   in query uri (function
     | #topic_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let chat_delete token ts channel =
   let%lwt channel_id = id_of_channel token channel in
@@ -580,10 +580,10 @@ let chat_delete token ts channel =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> definitely_add "channel" channel_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #message_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #message_error as res -> res
+    | _ -> `Unknown_error)
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
@@ -596,12 +596,12 @@ let chat_post_message token channel
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #message_length_error as err -> err
-    | #rate_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #archive_error
+    | #message_length_error
+    | #rate_error as res -> res
+    | _ -> `Unknown_error)
 
 let chat_update token ts channel text =
   let%lwt channel_id = id_of_channel token channel in
@@ -611,11 +611,11 @@ let chat_update token ts channel text =
     |> definitely_add "channel" channel_id
     |> definitely_add "text" text
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #message_update_error as err -> err
-    | #message_length_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #message_update_error
+    | #message_length_error as res -> res
+    | _ -> `Unknown_error)
 
 let emoji_list token =
   let uri = endpoint "emoji.list"
@@ -629,9 +629,9 @@ let files_info token ?count ?page file =
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
-    | #authed_result as res -> res
-    | #file_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #file_error as res -> res
+    | _ -> `Unknown_error)
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
   let%lwt user_id = match user with
@@ -646,10 +646,10 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
-    | #authed_result as res -> res
-    | #user_error as err -> err
-    | #unknown_type_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #user_error
+    | #unknown_type_error as res -> res
+    | _ -> `Unknown_error)
 
 let files_upload token
   ?filetype ?filename ?title ?initial_comment ?channels content =
@@ -667,10 +667,10 @@ let groups_create token name =
     |> definitely_add "token" token
     |> definitely_add "name" @@ name_of_group name
   in query uri (function
-    | #authed_result as res -> res
-    | #name_error as err -> err
-    | #restriction_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #name_error
+    | #restriction_error as res -> res
+    | _ -> `Unknown_error)
 
 let groups_create_child token group =
   let%lwt group_id = id_of_group token group in
@@ -678,11 +678,11 @@ let groups_create_child token group =
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #already_archived_error as err -> err
-    | #restriction_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #already_archived_error
+    | #restriction_error as res -> res
+    | _ -> `Unknown_error)
 
 let groups_history token ?latest ?oldest ?count group =
   let%lwt group_id = id_of_group token group in
@@ -694,7 +694,7 @@ let groups_history token ?latest ?oldest ?count group =
     |> optionally_add "count" @@ maybe string_of_int count
   in query uri (function
     | #history_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let groups_invite token group user =
   let%lwt user_id = id_of_user token user and
@@ -704,12 +704,12 @@ let groups_invite token group user =
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #user_error as err -> err
-    | #invite_error as err -> err
-    | #archive_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #user_error
+    | #invite_error
+    | #archive_error as res -> res
+    | _ -> `Unknown_error)
 
 let groups_kick token group user =
   let%lwt user_id = id_of_user token user and
@@ -719,13 +719,13 @@ let groups_kick token group user =
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #user_error as err -> err
-    | #kick_error as err -> err
-    | #not_in_group_error as err -> err
-    | #restriction_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #user_error
+    | #kick_error
+    | #not_in_group_error
+    | #restriction_error as res -> res
+    | _ -> `Unknown_error)
 
 let groups_leave token group =
   let%lwt group_id = id_of_group token group in
@@ -733,12 +733,12 @@ let groups_leave token group =
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #leave_last_channel_error as err -> err
-    | #last_member_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #archive_error
+    | #leave_last_channel_error
+    | #last_member_error as res -> res
+    | _ -> `Unknown_error)
 
 let groups_mark token group ts =
   let%lwt group_id = id_of_group token group in
@@ -747,11 +747,11 @@ let groups_mark token group ts =
     |> definitely_add "channel" group_id
     |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #archive_error as err -> err
-    | #not_in_channel_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #archive_error
+    | #not_in_channel_error as res -> res
+    | _ -> `Unknown_error)
 
 let groups_rename token group name =
   let%lwt group_id = id_of_group token group in
@@ -760,12 +760,12 @@ let groups_rename token group name =
     |> definitely_add "channel" group_id
     |> definitely_add "name" name
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #name_error as err -> err
-    | #invalid_name_error as err -> err
-    | `User_is_restricted -> `User_is_restricted
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #name_error
+    | #invalid_name_error
+    | `User_is_restricted as res -> res
+    | _ -> `Unknown_error)
 
 let groups_set_purpose token group purpose =
   let%lwt group_id = id_of_group token group in
@@ -775,7 +775,7 @@ let groups_set_purpose token group purpose =
     |> definitely_add "purpose" purpose
   in query uri (function
     | #topic_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let groups_set_topic token group topic =
   let%lwt group_id = id_of_group token group in
@@ -785,7 +785,7 @@ let groups_set_topic token group topic =
     |> definitely_add "topic" topic
   in query uri (function
     | #topic_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let im_history token ?latest ?oldest ?count channel =
   let uri = endpoint "im.history"
@@ -796,7 +796,7 @@ let im_history token ?latest ?oldest ?count channel =
     |> optionally_add "count" @@ maybe string_of_int count
   in query uri (function
     | #history_result as res -> res
-    | other -> `Unknown_error)
+    | _ -> `Unknown_error)
 
 let im_list token =
   let uri = endpoint "im.list"
@@ -809,10 +809,10 @@ let im_mark token channel ts =
     |> definitely_add "channel" channel
     |> definitely_add "ts" @@ string_of_timestamp ts
   in query uri (function
-    | #authed_result as res -> res
-    | #channel_error as err -> err
-    | #not_in_channel_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #channel_error
+    | #not_in_channel_error as res -> res
+    | _ -> `Unknown_error)
 
 let oauth_access client_id client_secret ?redirect_url code =
   let uri = endpoint "oauth.access"
@@ -821,18 +821,18 @@ let oauth_access client_id client_secret ?redirect_url code =
     |> definitely_add "code" code
     |> optionally_add "redirect_url" redirect_url
   in query uri (function
-    | #api_result as res -> res
-    | #oauth_error as err -> err
-    | other -> `Unknown_error)
+    | #api_result
+    | #oauth_error as res -> res
+    | _ -> `Unknown_error)
 
 let presence_set token presence =
   let uri = endpoint "presence.set"
     |> definitely_add "token" token
     |> definitely_add "presence" @@ string_of_presence presence
   in query uri (function
-    | #authed_result as res -> res
-    | #presence_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #presence_error as res -> res
+    | _ -> `Unknown_error)
 
 let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
   let uri = base
@@ -859,9 +859,9 @@ let stars_list ?user ?count ?page token =
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
   in query uri (function
-    | #authed_result as res -> res
-    | #user_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #user_error as res -> res
+    | _ -> `Unknown_error)
 
 let users_info token user =
   let%lwt user_id = id_of_user token user in
@@ -869,10 +869,10 @@ let users_info token user =
     |> definitely_add "token" token
     |> definitely_add "user" user_id
   in query uri (function
-    | #authed_result as res -> res
-    | #user_error as err -> err
-    | #user_visibility_error as err -> err
-    | other -> `Unknown_error)
+    | #authed_result
+    | #user_error
+    | #user_visibility_error as res -> res
+    | _ -> `Unknown_error)
 
 let users_set_active token =
   let uri = endpoint "users.setActive"

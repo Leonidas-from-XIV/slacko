@@ -340,6 +340,9 @@ val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t
     @param token The authentication token that was issued by Slack. *)
 val auth_test: token -> [> authed_result ] Lwt.t
 
+(** Archives a channel. *)
+val channels_archive: token -> channel -> [> authed_result | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted ] Lwt.t
+
 (** Creates a channel. *)
 val channels_create: token -> string -> [> authed_result | name_error | `User_is_restricted ] Lwt.t
 
@@ -381,6 +384,9 @@ val channels_set_purpose: token -> channel -> topic -> [> topic_result ] Lwt.t
 (** Sets the topic for a channel. *)
 val channels_set_topic: token -> channel -> topic -> [> topic_result ] Lwt.t
 
+(** Unarchives a channel. *)
+val channels_unarchive: token -> channel -> [> authed_result | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
+
 (** Deletes a message. *)
 val chat_delete: token -> timestamp -> channel -> [> authed_result | channel_error | message_error ] Lwt.t
 
@@ -401,6 +407,9 @@ val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:s
 
 (** Uploads or creates a file. *)
 val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string -> ?initial_comment:string -> ?channels:string -> Cohttp_lwt_body.t -> [> authed_result ] Lwt.t
+
+(** Archives a private group. *)
+val groups_archive: token -> group -> [> authed_result | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Creates a private group. *)
 val groups_create: token -> group -> [> authed_result | name_error | restriction_error ] Lwt.t
@@ -434,6 +443,9 @@ val groups_set_purpose: token -> group -> topic -> [> topic_result ] Lwt.t
 
 (** Sets the topic for a private group. *)
 val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
+
+(** Unarchives a private group. *)
+val groups_unarchive: token -> group -> [> authed_result | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
 val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> string -> [> history_result ] Lwt.t

@@ -219,6 +219,7 @@ let validate json =
       | `String "already_in_channel" -> `Already_in_channel
       | `String "bad_client_secret" -> `Bad_client_secret
       | `String "bad_redirect_uri" -> `Bad_redirect_uri
+      | `String "cant_archive_general" -> `Cant_archive_general
       | `String "cant_invite" -> `Cant_invite
       | `String "cant_invite_self" -> `Cant_invite_self
       | `String "cant_delete_message" -> `Cant_delete_message
@@ -240,6 +241,7 @@ let validate json =
       | `String "invalid_ts_oldest" -> `Invalid_ts_oldest
       | `String "is_archived" -> `Is_archived
       | `String "last_member" -> `Last_member
+      | `String "last_ra_channel" -> `Last_restricted_channel
       | `String "message_not_found" -> `Message_not_found
       (* not supposed to happen *)
       | `String "msg_too_long" -> `Msg_too_long
@@ -248,6 +250,7 @@ let validate json =
       | `String "no_channel" -> `No_channel
       (* can't really happen either *)
       | `String "no_text" -> `No_text
+      | `String "not_archived" -> `Not_archived
       | `String "not_authed" -> `Not_authed
       | `String "not_in_channel" -> `Not_in_channel
       | `String "rate_limited" -> `Rate_limited
@@ -259,6 +262,8 @@ let validate json =
       | `String "not_authorized" -> `Not_authorized
       | `String "invalid_name" -> `Invalid_name
       | `String "user_is_restricted" -> `User_is_restricted
+      (* lolwat, I'm not making this up *)
+      | `String "user_is_ultra_restricted" -> `User_is_ultra_restricted
       (* when the API changes and introduces new, yet unhandled error types *)
       | `String err -> `Unhandled_error err
       | _ -> `Unknown_error
@@ -435,6 +440,21 @@ let auth_test token =
     |> definitely_add "token" token
   in query uri only_auth_can_fail
 
+let channels_archive token channel =
+  let%lwt channel_id = id_of_channel token channel in
+  let uri = endpoint "channels.archive"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel_id
+  in query uri (function
+      | #authed_result
+      | #channel_error
+      | #already_archived_error
+      | `Cant_archive_general
+      | `Last_restricted_channel
+      | #restriction_error
+      | `User_is_restricted as res -> res
+      | _ -> `Unknown_error)
+
 let channels_create token name =
   let uri = endpoint "channels.create"
     |> definitely_add "token" token
@@ -573,6 +593,18 @@ let channels_set_topic token channel topic =
     | #topic_result as res -> res
     | _ -> `Unknown_error)
 
+let channels_unarchive token channel =
+  let%lwt channel_id = id_of_channel token channel in
+  let uri = endpoint "channels.unarchive"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel_id
+  in query uri (function
+    | #authed_result
+    | #channel_error
+    | `Not_archived
+    | `User_is_restricted as res -> res
+    | _ -> `Unknown_error)
+
 let chat_delete token ts channel =
   let%lwt channel_id = id_of_channel token channel in
   let uri = endpoint "chat.delete"
@@ -661,6 +693,21 @@ let files_upload token
     |> optionally_add "initial_comment" initial_comment
     |> optionally_add "channels" channels
   in query_post uri content only_auth_can_fail
+
+let groups_archive token group =
+  let%lwt group_id = id_of_group token group in
+  let uri = endpoint "groups.archive"
+    |> definitely_add "token" token
+    |> definitely_add "channel" group_id
+  in query uri (function
+      | #authed_result
+      | #channel_error
+      | #already_archived_error
+      | `Group_contains_others
+      | `Last_restricted_channel
+      | #restriction_error
+      | `User_is_ultra_restricted as res -> res
+      | _ -> `Unknown_error)
 
 let groups_create token name =
   let uri = endpoint "groups.create"
@@ -785,6 +832,18 @@ let groups_set_topic token group topic =
     |> definitely_add "topic" topic
   in query uri (function
     | #topic_result as res -> res
+    | _ -> `Unknown_error)
+
+let groups_unarchive token group =
+  let%lwt group_id = id_of_group token group in
+  let uri = endpoint "groups.unarchive"
+    |> definitely_add "token" token
+    |> definitely_add "channel" group_id
+  in query uri (function
+    | #authed_result
+    | #channel_error
+    | `Not_archived
+    | `User_is_restricted as res -> res
     | _ -> `Unknown_error)
 
 let im_history token ?latest ?oldest ?count channel =

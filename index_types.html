@@ -28,18 +28,20 @@ Some API calls require the <a href="Slacko.html#TYPEuser"><code class="code">Sla
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEapi_result">api_result</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-The basic type that each API endpoint will always return.
+The basic type that each API endpoint will return at least.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEarchive_error">archive_error</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Channels might be archived, so modification attempts will fail with this
-    error
+    error.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEauth_error">auth_error</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-API calls that require authentication might fail with these errors
+API calls that require authentication (a <a href="Slacko.html#TYPEtoken"><code class="code">Slacko.token</code></a>) might fail with one of
+    these errors, so functions that take <a href="Slacko.html#TYPEtoken"><code class="code">Slacko.token</code></a> arguments will return
+    <em>at least</em> these error variants.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEauthed_result">authed_result</a> [<a href="Slacko.html">Slacko</a>]</td>
@@ -57,7 +59,8 @@ A channel type, can be either a channel name (starting with a #) or a
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEchannel_error">channel_error</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-API calls that require <a href="Slacko.html#TYPEchannel"><code class="code">Slacko.channel</code></a> inputs can throw this error.
+API calls that require <a href="Slacko.html#TYPEchannel"><code class="code">Slacko.channel</code></a> inputs can signal this error if the
+    channel does not exist.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEchannel_kick_error">channel_kick_error</a> [<a href="Slacko.html">Slacko</a>]</td>
@@ -87,6 +90,8 @@ Return value of a history related request.
 </div>
 </td></tr>
 <tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Slacko.html#TYPEinvalid_name_error">invalid_name_error</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td></td></tr>
 <tr><td><a href="Slacko.html#TYPEinvite_error">invite_error</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Inviting might fail because invitation is impossible for some reason or
@@ -201,19 +206,21 @@ Search result can be ordered in ascending or descending order.
 <tr><td align="left"><br>T</td></tr>
 <tr><td><a href="Slacko.html#TYPEtimestamp">timestamp</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-Timestamps are usually represented as floats in OCaml, following suit
+In Slack, timestamps are represented as float, same as in OCaml, so the
+    <a href="Slacko.html#TYPEtimestamp"><code class="code">Slacko.timestamp</code></a> type is following suit, so all timestamp-related functions
+    can be used.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEtimestamp_error">timestamp_error</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-API calls that take timestamps can throw errors when the timestamp is
-    invalid.
+API calls that take <a href="Slacko.html#TYPEtimestamp"><code class="code">Slacko.timestamp</code></a> arguments can signal errors when the
+    timestamp is invalid.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEtoken">token</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-Tokens are of a special type, use token_of_string to turn a string into a
-    token.
+Tokens are required in the API for all actions that require
+    authentication.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEtopic">topic</a> [<a href="Slacko.html">Slacko</a>]</td>
@@ -248,7 +255,7 @@ An user, represented by either a user name or a user id.
 </td></tr>
 <tr><td><a href="Slacko.html#TYPEuser_error">user_error</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-API calls that require <a href="Slacko.html#TYPEuser"><code class="code">Slacko.user</code></a> inputs often throw this error if the user
+API calls that require <a href="Slacko.html#TYPEuser"><code class="code">Slacko.user</code></a> inputs signal this error if the user
     was not found.
 </div>
 </td></tr>

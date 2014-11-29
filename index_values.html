@@ -27,7 +27,17 @@ Checks authentication &amp; identity.
 <tr><td align="left"><br>C</td></tr>
 <tr><td><a href="Slacko.html#VALchannel_of_string">channel_of_string</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-Converts a string int a channel.
+Constructs a channel out of a given string.
+</div>
+</td></tr>
+<tr><td><a href="Slacko.html#VALchannels_archive">channels_archive</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Archives a channel.
+</div>
+</td></tr>
+<tr><td><a href="Slacko.html#VALchannels_create">channels_create</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Creates a channel.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#VALchannels_history">channels_history</a> [<a href="Slacko.html">Slacko</a>]</td>
@@ -70,6 +80,11 @@ Lists all channels in a Slack team.
 Sets the read cursor in a channel.
 </div>
 </td></tr>
+<tr><td><a href="Slacko.html#VALchannels_rename">channels_rename</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Renames a team channel.
+</div>
+</td></tr>
 <tr><td><a href="Slacko.html#VALchannels_set_purpose">channels_set_purpose</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Sets the purpose for a channel.
@@ -78,6 +93,11 @@ Sets the purpose for a channel.
 <tr><td><a href="Slacko.html#VALchannels_set_topic">channels_set_topic</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Sets the topic for a channel.
+</div>
+</td></tr>
+<tr><td><a href="Slacko.html#VALchannels_unarchive">channels_unarchive</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Unarchives a channel.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#VALchat_delete">chat_delete</a> [<a href="Slacko.html">Slacko</a>]</td>
@@ -123,6 +143,11 @@ Uploads or creates a file.
 Construct a group out of a given string.
 </div>
 </td></tr>
+<tr><td><a href="Slacko.html#VALgroups_archive">groups_archive</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Archives a private group.
+</div>
+</td></tr>
 <tr><td><a href="Slacko.html#VALgroups_create">groups_create</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Creates a private group.
@@ -163,6 +188,11 @@ Lists private groups that the calling user has access to.
 Sets the read cursor in a private group.
 </div>
 </td></tr>
+<tr><td><a href="Slacko.html#VALgroups_rename">groups_rename</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Renames a private group.
+</div>
+</td></tr>
 <tr><td><a href="Slacko.html#VALgroups_set_purpose">groups_set_purpose</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Sets the purpose for a private group.
@@ -171,6 +201,11 @@ Sets the purpose for a private group.
 <tr><td><a href="Slacko.html#VALgroups_set_topic">groups_set_topic</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
 Sets the topic for a private group.
+</div>
+</td></tr>
+<tr><td><a href="Slacko.html#VALgroups_unarchive">groups_unarchive</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Unarchives a private group.
 </div>
 </td></tr>
 <tr><td align="left"><br>I</td></tr>
@@ -239,10 +274,16 @@ Converts a string into a token.
 Build a topic out of a string.
 </div>
 </td></tr>
+<tr><td><a href="Slacko.html#VALtopic_of_string_exn">topic_of_string_exn</a> [<a href="Slacko.html">Slacko</a>]</td>
+<td><div class="info">
+Same as <a href="Slacko.html#VALtopic_of_string"><code class="code">Slacko.topic_of_string</code></a> but throws an exception if it fails to convert
+    the text data into a <a href="Slacko.html#TYPEtopic"><code class="code">Slacko.topic</code></a>.
+</div>
+</td></tr>
 <tr><td align="left"><br>U</td></tr>
 <tr><td><a href="Slacko.html#VALuser_of_string">user_of_string</a> [<a href="Slacko.html">Slacko</a>]</td>
 <td><div class="info">
-Converts a string into a user.
+Constructs a user out of a given string.
 </div>
 </td></tr>
 <tr><td><a href="Slacko.html#VALusers_info">users_info</a> [<a href="Slacko.html">Slacko</a>]</td>

@@ -245,6 +245,7 @@ type topic_result = [
   | archive_error
   | not_in_channel_error
   | topic_error
+  | `User_is_restricted
 ]
 
 (** Return value of a history related request. *)
@@ -358,16 +359,16 @@ val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:
 val channels_info: token -> channel -> [> authed_result | channel_error ] Lwt.t
 
 (** Invites a user to a channel. *)
-val channels_invite: token -> channel -> user -> [> authed_result | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error ] Lwt.t
+val channels_invite: token -> channel -> user -> [> authed_result | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Joins a channel, creating it if needed. *)
-val channels_join: token -> channel -> [> authed_result | channel_error | name_error | archive_error ] Lwt.t
+val channels_join: token -> channel -> [> authed_result | channel_error | name_error | archive_error | `User_is_restricted ] Lwt.t
 
 (** Removes a user from a channel. *)
-val channels_kick: token -> channel -> user -> [> authed_result | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error ] Lwt.t
+val channels_kick: token -> channel -> user -> [> authed_result | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Leaves a channel. *)
-val channels_leave: token -> channel -> [> authed_result | channel_error | archive_error | leave_general_error ] Lwt.t
+val channels_leave: token -> channel -> [> authed_result | channel_error | archive_error | leave_general_error | `User_is_restricted ] Lwt.t
 
 (** Lists all channels in a Slack team. *)
 val channels_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
@@ -412,22 +413,22 @@ val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string
 val groups_archive: token -> group -> [> authed_result | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Creates a private group. *)
-val groups_create: token -> group -> [> authed_result | name_error | restriction_error ] Lwt.t
+val groups_create: token -> group -> [> authed_result | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Clones and archives a private group. *)
-val groups_create_child: token -> group -> [> authed_result | channel_error | already_archived_error | restriction_error ] Lwt.t
+val groups_create_child: token -> group -> [> authed_result | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Fetches history of messages and events from a private group. *)
 val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> [> history_result ] Lwt.t
 
 (** Invites a user to a private group. *)
-val groups_invite: token -> group -> user -> [> authed_result | channel_error | user_error | invite_error | archive_error ] Lwt.t
+val groups_invite: token -> group -> user -> [> authed_result | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Removes a user from a private group. *)
-val groups_kick: token -> group -> user -> [> authed_result | channel_error | user_error | kick_error | not_in_group_error | restriction_error ] Lwt.t
+val groups_kick: token -> group -> user -> [> authed_result | channel_error | user_error | kick_error | not_in_group_error | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Leaves a private group. *)
-val groups_leave: token -> group -> [> authed_result | channel_error | archive_error | leave_last_channel_error | last_member_error ] Lwt.t
+val groups_leave: token -> group -> [> authed_result | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Lists private groups that the calling user has access to. *)
 val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t

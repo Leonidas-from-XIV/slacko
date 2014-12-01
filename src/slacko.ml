@@ -163,6 +163,7 @@ type topic_result = [
   | archive_error
   | not_in_channel_error
   | topic_error
+  | `User_is_restricted
 ]
 
 type history_result = [
@@ -502,7 +503,8 @@ let channels_invite token channel user =
     | #invite_error
     | #not_in_channel_error
     | #already_in_channel_error
-    | #archive_error as res -> res
+    | #archive_error
+    | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error)
 
 let channels_join token name =
@@ -513,7 +515,8 @@ let channels_join token name =
     | #authed_result
     | #channel_error
     | #name_error
-    | #archive_error as res -> res
+    | #archive_error
+    | `User_is_restricted as res -> res
     | _ -> `Unknown_error)
 
 let channels_kick token channel user =
@@ -529,7 +532,8 @@ let channels_kick token channel user =
     | #user_error
     | #channel_kick_error
     | #not_in_channel_error
-    | #restriction_error as res -> res
+    | #restriction_error
+    | `User_is_restricted as res -> res
     | _ -> `Unknown_error)
 
 let channels_leave token channel =
@@ -541,7 +545,8 @@ let channels_leave token channel =
     | #authed_result
     | #channel_error
     | #archive_error
-    | #leave_general_error as res -> res
+    | #leave_general_error
+    | `User_is_restricted as res -> res
     | _ -> `Unknown_error)
 
 let channels_mark token channel ts =
@@ -716,7 +721,8 @@ let groups_create token name =
   in query uri (function
     | #authed_result
     | #name_error
-    | #restriction_error as res -> res
+    | #restriction_error
+    | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error)
 
 let groups_create_child token group =
@@ -728,7 +734,8 @@ let groups_create_child token group =
     | #authed_result
     | #channel_error
     | #already_archived_error
-    | #restriction_error as res -> res
+    | #restriction_error
+    | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error)
 
 let groups_history token ?latest ?oldest ?count group =
@@ -755,7 +762,8 @@ let groups_invite token group user =
     | #channel_error
     | #user_error
     | #invite_error
-    | #archive_error as res -> res
+    | #archive_error
+    | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error)
 
 let groups_kick token group user =
@@ -771,7 +779,8 @@ let groups_kick token group user =
     | #user_error
     | #kick_error
     | #not_in_group_error
-    | #restriction_error as res -> res
+    | #restriction_error
+    | `User_is_restricted as res -> res
     | _ -> `Unknown_error)
 
 let groups_leave token group =

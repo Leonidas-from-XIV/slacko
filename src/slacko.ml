@@ -714,6 +714,16 @@ let groups_archive token group =
       | `User_is_ultra_restricted as res -> res
       | _ -> `Unknown_error)
 
+let groups_close token group =
+  let%lwt group_id = id_of_group token group in
+  let uri = endpoint "groups.close"
+    |> definitely_add "token" token
+    |> definitely_add "channel" group_id
+  in query uri (function
+    | #authed_result
+    | #channel_error as res -> res
+    | _ -> `Unknown_error)
+
 let groups_create token name =
   let uri = endpoint "groups.create"
     |> definitely_add "token" token
@@ -793,7 +803,8 @@ let groups_leave token group =
     | #channel_error
     | #archive_error
     | #leave_last_channel_error
-    | #last_member_error as res -> res
+    | #last_member_error
+    | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error)
 
 let groups_mark token group ts =

@@ -412,6 +412,9 @@ val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string
 (** Archives a private group. *)
 val groups_archive: token -> group -> [> authed_result | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
+(** Closes a private group. *)
+val groups_close: token -> group -> [> authed_result | channel_error ] Lwt.t
+
 (** Creates a private group. *)
 val groups_create: token -> group -> [> authed_result | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 

@@ -439,6 +439,9 @@ val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
 (** Sets the read cursor in a private group. *)
 val groups_mark: token -> group -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
+(** Opens a private group. *)
+val groups_open: token -> group -> [> authed_result | channel_error ] Lwt.t
+
 (** Renames a private group. *)
 val groups_rename: token -> group -> string -> [> authed_result | channel_error | name_error | invalid_name_error | `User_is_restricted ] Lwt.t
 
@@ -451,6 +454,9 @@ val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
 (** Unarchives a private group. *)
 val groups_unarchive: token -> group -> [> authed_result | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
+(** Close a direct message channel. *)
+val im_close: token -> string -> [> authed_result | channel_error | `User_does_not_own_channel ] Lwt.t
+
 (** Fetches history of messages and events from direct message channel. *)
 val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> string -> [> history_result ] Lwt.t
 
@@ -459,6 +465,9 @@ val im_list: token -> [> authed_result ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
 val im_mark: token -> string -> timestamp -> [> authed_result | channel_error | not_in_channel_error ] Lwt.t
+
+(** Opens a direct message channel. *)
+val im_open: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t
 
 (** Exchanges a temporary OAuth code for an API token. *)
 val oauth_access: string -> string -> ?redirect_url:string -> string -> [> api_result | oauth_error ] Lwt.t

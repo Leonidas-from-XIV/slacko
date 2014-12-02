@@ -265,6 +265,7 @@ let validate json =
       | `String "user_is_restricted" -> `User_is_restricted
       (* lolwat, I'm not making this up *)
       | `String "user_is_ultra_restricted" -> `User_is_ultra_restricted
+      | `String "user_does_not_own_channel" -> `User_does_not_own_channel
       (* when the API changes and introduces new, yet unhandled error types *)
       | `String err -> `Unhandled_error err
       | _ -> `Unknown_error
@@ -820,6 +821,16 @@ let groups_mark token group ts =
     | #not_in_channel_error as res -> res
     | _ -> `Unknown_error)
 
+let groups_open token group =
+  let%lwt group_id = id_of_group token group in
+  let uri = endpoint "groups.open"
+    |> definitely_add "token" token
+    |> definitely_add "channel" group_id
+  in query uri (function
+    | #authed_result
+    | #channel_error as res -> res
+    | _ -> `Unknown_error)
+
 let groups_rename token group name =
   let%lwt group_id = id_of_group token group in
   let uri = endpoint "groups.rename"
@@ -866,6 +877,16 @@ let groups_unarchive token group =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error)
 
+let im_close token channel =
+  let uri = endpoint "im.close"
+    |> definitely_add "token" token
+    |> definitely_add "channel" channel
+  in query uri (function
+    | #authed_result
+    | #channel_error
+    | `User_does_not_own_channel as res -> res
+    | _ -> `Unknown_error)
+
 let im_history token ?latest ?oldest ?count channel =
   let uri = endpoint "im.history"
     |> definitely_add "token" token
@@ -891,6 +912,17 @@ let im_mark token channel ts =
     | #authed_result
     | #channel_error
     | #not_in_channel_error as res -> res
+    | _ -> `Unknown_error)
+
+let im_open token user =
+  let%lwt user_id = id_of_user token user in
+  let uri = endpoint "im.open"
+    |> definitely_add "token" token
+    |> definitely_add "user" user_id
+  in query uri (function
+    | #authed_result
+    | #user_error
+    | #user_visibility_error as res -> res
     | _ -> `Unknown_error)
 
 let oauth_access client_id client_secret ?redirect_url code =

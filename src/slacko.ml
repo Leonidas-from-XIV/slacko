@@ -85,10 +85,6 @@ type leave_general_error = [
   | `Cant_leave_general
 ]
 
-type topic_error = [
-  | `Too_long
-]
-
 type message_error = [
   | `Cant_delete_message
   | `Message_not_found
@@ -162,7 +158,6 @@ type topic_result = [
   | channel_error
   | archive_error
   | not_in_channel_error
-  | topic_error
   | `User_is_restricted
 ]
 

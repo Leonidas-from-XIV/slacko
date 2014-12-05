@@ -134,12 +134,6 @@ type leave_general_error = [
   | `Cant_leave_general
 ]
 
-(** {!topic} types might be rejected by the Slack API because they are too
-    long and can't be set. *)
-type topic_error = [
-  | `Too_long
-]
-
 (** The {!message} might not exist or be impossible to delete for other
     reasons. *)
 type message_error = [
@@ -244,7 +238,6 @@ type topic_result = [
   | channel_error
   | archive_error
   | not_in_channel_error
-  | topic_error
   | `User_is_restricted
 ]
 

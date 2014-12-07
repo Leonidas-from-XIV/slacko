@@ -268,11 +268,17 @@ type message
     channel id. *)
 type channel
 
+(** A type of an IM conversation *)
+type conversation
+
 (** An user, represented by either a user name or a user id. *)
 type user
 
 (** A group, a private subset of users chatting together. *)
 type group
+
+(** A place one can post messages to. *)
+type room = Channel of channel | Im of conversation | User of user | Group of group
 
 (** What criterion to use in search. *)
 type sort_criterion = Score | Timestamp
@@ -322,6 +328,9 @@ val user_of_string: string -> user
     call using it will first need to resolve the channel name into a channel
     id by means of an additional request. *)
 val channel_of_string: string -> channel
+
+(* TODO: document *)
+val conversation_of_string: string -> conversation
 
 (** {2 Slack API calls} *)
 
@@ -448,16 +457,16 @@ val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
 val groups_unarchive: token -> group -> [> authed_result | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
 (** Close a direct message channel. *)
-val im_close: token -> string -> [> authed_result | channel_error | `User_does_not_own_channel ] Lwt.t
+val im_close: token -> conversation -> [> authed_result | channel_error | `User_does_not_own_channel ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
-val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> string -> [> history_result ] Lwt.t
+val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> [> history_result ] Lwt.t
 
 (** Lists direct message channels for the calling user. *)
 val im_list: token -> [> authed_result ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
-val im_mark: token -> string -> timestamp -> [> authed_result | channel_error | not_in_channel_error ] Lwt.t
+val im_mark: token -> conversation -> timestamp -> [> authed_result | channel_error | not_in_channel_error ] Lwt.t
 
 (** Opens a direct message channel. *)
 val im_open: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t

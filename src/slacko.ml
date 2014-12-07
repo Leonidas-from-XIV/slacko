@@ -177,9 +177,13 @@ type message = string
 
 type channel = ChannelId of string | ChannelName of string
 
+type conversation = string
+
 type user = UserId of string | UserName of string
 
 type group = GroupId of string | GroupName of string
+
+type room = Channel of channel | Im of conversation | User of user | Group of group
 
 type sort_criterion = Score | Timestamp
 
@@ -364,6 +368,12 @@ let id_of_group token = function
   | GroupId id -> Lwt.return id
   | GroupName name -> lookup token groups_list "groups" name
 
+let id_of_room token = function
+  | Channel c -> id_of_channel token c
+  | Im i -> Lwt.return i
+  | User u -> id_of_user token u
+  | Group g -> id_of_group token g
+
 let name_of_group = function
   | GroupId id -> failwith "Need to specify a name"
   | GroupName name -> name
@@ -424,6 +434,10 @@ let user_of_string s =
 
 let group_of_string s =
   if s.[0] = 'G' then GroupId s else GroupName s
+
+(* TODO figure out the correct type *)
+let conversation_of_string s =
+  if s.[0] = 'D' then s else failwith "Not an IM channel"
 
 (* Slack API begins here *)
 
@@ -639,9 +653,10 @@ let chat_delete token ts channel =
 
 let chat_post_message token channel
   ?username ?parse ?icon_url ?icon_emoji text =
+  let%lwt channel_id = id_of_channel token channel in
   endpoint "chat.postMessage"
     |> definitely_add "token" token
-    |> definitely_add "channel" @@ string_of_channel channel
+    |> definitely_add "channel" channel_id
     |> definitely_add "text" text
     |> optionally_add "username" username
     |> optionally_add "parse" parse

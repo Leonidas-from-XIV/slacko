@@ -183,7 +183,7 @@ type user = UserId of string | UserName of string
 
 type group = GroupId of string | GroupName of string
 
-type room = Channel of channel | Im of conversation | User of user | Group of group
+type chat = Channel of channel | Im of conversation | User of user | Group of group
 
 type sort_criterion = Score | Timestamp
 
@@ -368,7 +368,7 @@ let id_of_group token = function
   | GroupId id -> Lwt.return id
   | GroupName name -> lookup token groups_list "groups" name
 
-let id_of_room token = function
+let id_of_chat token = function
   | Channel c -> id_of_channel token c
   | Im i -> Lwt.return i
   | User u -> id_of_user token u
@@ -638,12 +638,12 @@ let channels_unarchive token channel =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let chat_delete token ts channel =
-  let%lwt channel_id = id_of_channel token channel in
+let chat_delete token ts chat =
+  let%lwt chat_id = id_of_chat token chat in
   endpoint "chat.delete"
     |> definitely_add "token" token
+    |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
-    |> definitely_add "channel" channel_id
     |> query
     >|= function
     | #authed_result
@@ -651,12 +651,12 @@ let chat_delete token ts channel =
     | #message_error as res -> res
     | _ -> `Unknown_error
 
-let chat_post_message token channel
+let chat_post_message token chat
   ?username ?parse ?icon_url ?icon_emoji text =
-  let%lwt channel_id = id_of_channel token channel in
+  let%lwt chat_id = id_of_chat token chat in
   endpoint "chat.postMessage"
     |> definitely_add "token" token
-    |> definitely_add "channel" channel_id
+    |> definitely_add "channel" chat_id
     |> definitely_add "text" text
     |> optionally_add "username" username
     |> optionally_add "parse" parse
@@ -671,12 +671,12 @@ let chat_post_message token channel
     | #rate_error as res -> res
     | _ -> `Unknown_error
 
-let chat_update token ts channel text =
-  let%lwt channel_id = id_of_channel token channel in
+let chat_update token ts chat text =
+  let%lwt chat_id = id_of_chat token chat in
   endpoint "chat.update"
     |> definitely_add "token" token
+    |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
-    |> definitely_add "channel" channel_id
     |> definitely_add "text" text
     |> query
     >|= function

@@ -435,7 +435,7 @@ let user_of_string s =
 let group_of_string s =
   if s.[0] = 'G' then GroupId s else GroupName s
 
-(* TODO figure out the correct type *)
+(* TODO Create a conversation if conversation does not exist? *)
 let conversation_of_string s =
   if s.[0] = 'D' then s else failwith "Not an IM channel"
 

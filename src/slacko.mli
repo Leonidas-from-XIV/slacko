@@ -329,7 +329,8 @@ val user_of_string: string -> user
     id by means of an additional request. *)
 val channel_of_string: string -> channel
 
-(* TODO: document *)
+(** Create a conversation type out of a given string. The string is usually
+    starting with a capital 'D' and represents an IM conversation channel. *)
 val conversation_of_string: string -> conversation
 
 (** {2 Slack API calls} *)

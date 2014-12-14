@@ -191,6 +191,18 @@ type sort_direction = Ascending | Descending
 
 type presence = Active | Away
 
+type channel_obj = {
+  id: string;
+  name: string;
+  created: timestamp;
+  creator: string;
+  is_archived: bool;
+  is_member: bool;
+  is_general: bool;
+  last_read: timestamp;
+  unread_count: int;
+} [@@deriving yojson]
+
 (* some useful Lwt operators: *)
 (* Lwt.map *)
 let (>|=) = Lwt.(>|=)

@@ -13,7 +13,7 @@ BuildDepends: cohttp.lwt, yojson
 
 Library slacko
   Path:           src
-  BuildDepends:   lwt.ppx
+  BuildDepends:   lwt.ppx, ppx_deriving_yojson.runtime
   Modules:        Slacko
   ByteOpt:        -safe-string
   NativeOpt:      -safe-string

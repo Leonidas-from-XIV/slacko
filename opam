@@ -17,5 +17,6 @@ depends: [
   "lwt" {>= "2.4.6"}
   "ssl"
   "cohttp" {>= "0.10.0"}
+  "ppx_deriving_yojson"
 ]
 available: [ ocaml-version >= "4.02.0" ]

@@ -1,8 +1,5 @@
 language: c
-script: bash -e .travis-ci.sh
-cache: apt
-os:
-- linux
+install: wget https://raw.githubusercontent.com/samoht/ocaml-travisci-skeleton/master/.travis-opam.sh
+script: bash -ex .travis-opam.sh
 env:
-  matrix:
-    - OCAML_VERSION=4.02.1 OPAM_VERSION=1.2.0
+  - OCAML_VERSION=4.02

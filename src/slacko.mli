@@ -287,7 +287,7 @@ type sort_criterion = Score | Timestamp
 type sort_direction = Ascending | Descending
 
 (** Presence can either be active or away. *)
-type presence = Active | Away
+type presence = Auto | Away
 
 (** {2 Type construction helper functions} *)
 
@@ -475,9 +475,6 @@ val im_open: token -> user -> [> authed_result | user_error | user_visibility_er
 (** Exchanges a temporary OAuth code for an API token. *)
 val oauth_access: string -> string -> ?redirect_url:string -> string -> [> api_result | oauth_error ] Lwt.t
 
-(** Manually set user presence. *)
-val presence_set: token -> presence -> [> authed_result | presence_error ] Lwt.t
-
 (** Searches for messages and files matching a query. *)
 val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result ] Lwt.t
 
@@ -490,6 +487,9 @@ val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -
 (** Lists stars for a user. *)
 val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [> authed_result | user_error ] Lwt.t
 
+(** Gets user presence information. *)
+val users_get_presence: token -> user -> [> authed_result ] Lwt.t
+
 (** Gets information about a user. *)
 val users_info: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t
 
@@ -498,3 +498,6 @@ val users_list: token -> [> authed_result ] Lwt.t
 
 (** Marks a user as active. *)
 val users_set_active: token -> [> authed_result ] Lwt.t
+
+(** Manually sets user presence. *)
+val users_set_presence: token -> presence -> [> authed_result | presence_error ] Lwt.t

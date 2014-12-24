@@ -189,7 +189,7 @@ type sort_criterion = Score | Timestamp
 
 type sort_direction = Ascending | Descending
 
-type presence = Active | Away
+type presence = Auto | Away
 
 type channel_obj = {
   id: string;
@@ -403,7 +403,7 @@ let string_of_direction = function
   | Descending -> "desc"
 
 let string_of_presence = function
-  | Active -> "active"
+  | Auto -> "auto"
   | Away -> "away"
 
 (* Slacko API helper methods *)
@@ -1003,16 +1003,6 @@ let oauth_access client_id client_secret ?redirect_url code =
     | #oauth_error as res -> res
     | _ -> `Unknown_error
 
-let presence_set token presence =
-  endpoint "presence.set"
-    |> definitely_add "token" token
-    |> definitely_add "presence" @@ string_of_presence presence
-    |> query
-    >|= function
-    | #authed_result
-    | #presence_error as res -> res
-    | _ -> `Unknown_error
-
 let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
   base
     |> definitely_add "token" token
@@ -1044,6 +1034,16 @@ let stars_list ?user ?count ?page token =
     | #user_error as res -> res
     | _ -> `Unknown_error
 
+let users_get_presence token user =
+  let%lwt user_id = id_of_user token user in
+  endpoint "users.getPresence"
+    |> definitely_add "token" token
+    |> definitely_add "user" user_id
+    |> query
+    >|= function
+    | #authed_result as res -> res
+    | _ -> `Unknown_error
+
 let users_info token user =
   let%lwt user_id = id_of_user token user in
   endpoint "users.info"
@@ -1061,3 +1061,13 @@ let users_set_active token =
     |> definitely_add "token" token
     |> query
     >|= only_auth_can_fail
+
+let users_set_presence token presence =
+  endpoint "users.setPresence"
+    |> definitely_add "token" token
+    |> definitely_add "presence" @@ string_of_presence presence
+    |> query
+    >|= function
+    | #authed_result
+    | #presence_error as res -> res
+    | _ -> `Unknown_error

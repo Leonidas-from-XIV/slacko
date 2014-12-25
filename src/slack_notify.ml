@@ -52,7 +52,7 @@ let execute token username channel icon_url icon_emoji msg =
     |> print_endline;
 
   let string_or_bust = function
-    | `Success json -> Yojson.Basic.pretty_to_string json
+    | `Success json -> Yojson.Safe.pretty_to_string json
     | `Invalid_auth -> "Invalid token"
     | `Channel_not_found -> "Channel unknown"
     | `Is_archived -> "Channel is archived"

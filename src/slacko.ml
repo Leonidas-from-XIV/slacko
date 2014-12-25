@@ -22,7 +22,7 @@ module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
 type api_result = [
-  | `Success of Yojson.Basic.json
+  | `Success of Yojson.Safe.json
   | `Unhandled_error of string
   | `Unknown_error
 ]
@@ -191,6 +191,13 @@ type sort_direction = Ascending | Descending
 
 type presence = Auto | Away
 
+let timestamp_to_yojson ts =
+  `Int (int_of_float ts)
+
+let timestamp_of_yojson = function
+  | `Int x -> `Ok (float_of_int x)
+  | _ -> `Error "incorrect value"
+
 type channel_obj = {
   id: string;
   name: string;
@@ -238,9 +245,9 @@ let definitely_add key value = optionally_add key (Some value)
 
 let validate json =
   let open Yojson.Basic.Util in
-  match json |> member "ok" |> to_bool with
+  match json |> Yojson.Safe.to_basic |> member "ok" |> to_bool with
     | true -> `Success json
-    | false -> let error = json |> member "error" in
+    | false -> let error = json |> Yojson.Safe.to_basic |> member "error" in
       match error with
       | `String "account_inactive" -> `Account_inactive
       | `String "already_archived" -> `Already_archived
@@ -306,7 +313,7 @@ let filter_useless = function
 let query uri =
   let%lwt (_, body) = Cohttp_unix.Client.get uri in
   let%lwt content = Cohttp_body.to_string body in
-  Yojson.Basic.from_string content
+  Yojson.Safe.from_string content
     |> validate
     |> filter_useless
     |> Lwt.return
@@ -315,7 +322,7 @@ let query uri =
 let query_post body uri =
   let%lwt (_, body) = Cohttp_unix.Client.post ~body uri in
   let%lwt content = Cohttp_body.to_string body in
-  Yojson.Basic.from_string content
+  Yojson.Safe.from_string content
     |> validate
     |> filter_useless
     |> Lwt.return
@@ -362,7 +369,7 @@ exception Lookup_failed
 let lookup token listfn collection query =
   let open Yojson.Basic.Util in
   match%lwt listfn token with
-  | `Success json -> (let candidates = json |> member collection |> to_list |>
+  | `Success json -> (let candidates = json |> Yojson.Safe.to_basic |> member collection |> to_list |>
     filter_map (fun chan ->
       match (chan |> member "name") with
         (* If a channel matches the name, get its ID *)

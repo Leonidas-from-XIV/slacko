@@ -43,7 +43,7 @@
     error happened that the binding didn't know how to handle. It gets
     composed into {e every other} API return type. *)
 type api_result = [
-  | `Success of Yojson.Basic.json
+  | `Success of Yojson.Safe.json
   | `Unhandled_error of string
   | `Unknown_error
 ]

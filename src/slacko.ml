@@ -203,6 +203,20 @@ type channel_obj = {
   unread_count: int;
 } [@@deriving yojson]
 
+type user_obj = {
+  id: string;
+  name: string;
+  deleted: bool;
+  color: string;
+  profile: Yojson.Safe.json;
+  is_admin: bool;
+  is_owner: bool;
+  is_primary_owner: bool;
+  is_restricted: bool;
+  is_ultra_restricted: bool;
+  has_files: bool;
+} [@@deriving yojson]
+
 (* some useful Lwt operators: *)
 (* Lwt.map *)
 let (>|=) = Lwt.(>|=)

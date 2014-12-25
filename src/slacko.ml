@@ -1040,9 +1040,7 @@ let users_get_presence token user =
     |> definitely_add "token" token
     |> definitely_add "user" user_id
     |> query
-    >|= function
-    | #authed_result as res -> res
-    | _ -> `Unknown_error
+    >|= only_auth_can_fail
 
 let users_info token user =
   let%lwt user_id = id_of_user token user in

@@ -198,18 +198,6 @@ let timestamp_of_yojson = function
   | `Int x -> `Ok (float_of_int x)
   | _ -> `Error "incorrect value"
 
-type channel_obj = {
-  id: string;
-  name: string;
-  created: timestamp;
-  creator: string;
-  is_archived: bool;
-  is_member: bool;
-  is_general: bool;
-  last_read: timestamp;
-  unread_count: int;
-} [@@deriving yojson]
-
 let user_to_yojson = function
   | UserId id -> `String id
   | UserName name -> `String name
@@ -217,6 +205,38 @@ let user_to_yojson = function
 let user_of_yojson = function
   | `String x -> `Ok (UserId x)
   | _ -> `Error "incorrect value"
+
+let channel_to_yojson = function
+  | ChannelId id -> `String id
+  (* TODO: better solution *)
+  | _ -> failwith "Can't convert"
+
+let channel_of_yojson = function
+  | `String x -> `Ok (ChannelId x)
+  | _ -> `Error "incorrect value"
+
+type topic_obj = {
+    value: string;
+    creator: user;
+    last_set: timestamp;
+} [@@deriving yojson]
+
+type channel_obj = {
+  id: channel;
+  name: string;
+  is_channel: bool;
+  created: timestamp;
+  creator: user;
+  is_archived: bool;
+  is_general: bool;
+  members: user list;
+  topic: topic_obj;
+  purpose: topic_obj;
+  is_member: bool;
+  last_read: timestamp;
+  latest: Yojson.Safe.json;
+  unread_count: int;
+} [@@deriving yojson]
 
 type user_obj = {
   id: user;

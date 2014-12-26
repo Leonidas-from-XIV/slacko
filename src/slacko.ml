@@ -210,8 +210,16 @@ type channel_obj = {
   unread_count: int;
 } [@@deriving yojson]
 
+let user_to_yojson = function
+  | UserId id -> `String id
+  | UserName name -> `String name
+
+let user_of_yojson = function
+  | `String x -> `Ok (UserId x)
+  | _ -> `Error "incorrect value"
+
 type user_obj = {
-  id: string;
+  id: user;
   name: string;
   deleted: bool;
   color: string;

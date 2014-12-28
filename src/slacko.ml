@@ -233,9 +233,9 @@ type channel_obj = {
   topic: topic_obj;
   purpose: topic_obj;
   is_member: bool;
-  last_read: timestamp;
-  latest: Yojson.Safe.json;
-  unread_count: int;
+  last_read: timestamp option;
+  latest: Yojson.Safe.json option;
+  unread_count: int option;
 } [@@deriving yojson]
 
 type user_obj = {
@@ -250,6 +250,23 @@ type user_obj = {
   is_restricted: bool;
   is_ultra_restricted: bool;
   has_files: bool;
+} [@@deriving yojson]
+
+type group_obj = {
+  (* TODO group id *)
+  id: string;
+  name: string;
+  is_group: bool;
+  created: timestamp;
+  creator: user;
+  is_archived: bool;
+  members: user list;
+  topic: topic_obj;
+  purpose: topic_obj;
+  is_open: bool option;
+  last_read: timestamp option;
+  unread_count: int option;
+  latest: Yojson.Safe.json option;
 } [@@deriving yojson]
 
 (* some useful Lwt operators: *)

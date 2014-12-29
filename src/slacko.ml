@@ -215,6 +215,14 @@ let channel_of_yojson = function
   | `String x -> `Ok (ChannelId x)
   | _ -> `Error "incorrect value"
 
+let group_to_yojson = function
+  | GroupId id -> `String id
+  | _ -> failwith "Can't convert"
+
+let group_of_yojson = function
+  | `String x -> `Ok (GroupId x)
+  | _ -> `Error "incorrect value"
+
 type topic_obj = {
     value: string;
     creator: user;
@@ -253,8 +261,7 @@ type user_obj = {
 } [@@deriving yojson]
 
 type group_obj = {
-  (* TODO group id *)
-  id: string;
+  id: group;
   name: string;
   is_group: bool;
   created: timestamp;

@@ -257,8 +257,7 @@ type user_obj = {
   is_primary_owner: bool;
   is_restricted: bool;
   is_ultra_restricted: bool;
-  has_files: bool;
-} [@@deriving yojson]
+} [@@deriving yojson { strict = false } ]
 
 type group_obj = {
   id: group;
@@ -1126,6 +1125,12 @@ let users_info token user =
     | #user_error
     | #user_visibility_error as res -> res
     | _ -> `Unknown_error
+
+let users_info' token user =
+  users_info token user >|= function
+    | `Success (`Assoc [("user", d)]) ->
+        user_obj_of_yojson d
+    | e -> e
 
 let users_set_active token =
   endpoint "users.setActive"

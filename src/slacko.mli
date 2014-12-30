@@ -289,6 +289,19 @@ type sort_direction = Ascending | Descending
 (** Presence can either be active or away. *)
 type presence = Auto | Away
 
+type user_obj = {
+  id: user;
+  name: string;
+  deleted: bool;
+  color: string;
+  profile: Yojson.Safe.json;
+  is_admin: bool;
+  is_owner: bool;
+  is_primary_owner: bool;
+  is_restricted: bool;
+  is_ultra_restricted: bool;
+}
+
 (** {2 Type construction helper functions} *)
 
 (** To build the types required in the API calls, you can use these helper
@@ -492,6 +505,9 @@ val users_get_presence: token -> user -> [> authed_result ] Lwt.t
 
 (** Gets information about a user. *)
 val users_info: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t
+
+(** TODO: Temporary, experimental API *)
+val users_info': token -> user -> [> `Error of string | `Ok of user_obj | authed_result | user_error | user_visibility_error ] Lwt.t
 
 (** Lists all users in a Slack team. *)
 val users_list: token -> [> authed_result ] Lwt.t

@@ -302,6 +302,29 @@ type user_obj = {
   is_ultra_restricted: bool;
 }
 
+type topic_obj = {
+    value: string;
+    creator: user;
+    last_set: timestamp;
+}
+
+type channel_obj = {
+  id: channel;
+  name: string;
+  is_channel: bool;
+  created: timestamp;
+  creator: user;
+  is_archived: bool;
+  is_general: bool;
+  members: user list;
+  topic: topic_obj;
+  purpose: topic_obj;
+  is_member: bool;
+  last_read: timestamp option;
+  latest: Yojson.Safe.json option;
+  unread_count: int option;
+}
+
 (** {2 Type construction helper functions} *)
 
 (** To build the types required in the API calls, you can use these helper
@@ -373,6 +396,9 @@ val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:
 
 (** Gets information about a channel. *)
 val channels_info: token -> channel -> [> authed_result | channel_error ] Lwt.t
+
+(** TODO: Temporary, experimental API *)
+val users_info': token -> channel -> [> `Error of string | `Ok of channel_obj | authed_result | channel_error ] Lwt.t
 
 (** Invites a user to a channel. *)
 val channels_invite: token -> channel -> user -> [> authed_result | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted ] Lwt.t

@@ -196,7 +196,8 @@ let timestamp_to_yojson ts =
 
 let timestamp_of_yojson = function
   | `Int x -> `Ok (float_of_int x)
-  | _ -> `Error "incorrect value"
+  | `String x -> `Ok (float_of_string x)
+  | _ -> `Error "Couldn't parse timestamp type"
 
 let user_to_yojson = function
   | UserId id -> `String id
@@ -204,7 +205,7 @@ let user_to_yojson = function
 
 let user_of_yojson = function
   | `String x -> `Ok (UserId x)
-  | _ -> `Error "incorrect value"
+  | _ -> `Error "Couldn't parse user type"
 
 let channel_to_yojson = function
   | ChannelId id -> `String id
@@ -213,7 +214,7 @@ let channel_to_yojson = function
 
 let channel_of_yojson = function
   | `String x -> `Ok (ChannelId x)
-  | _ -> `Error "incorrect value"
+  | _ -> `Error "Couldn't parse channel type"
 
 let group_to_yojson = function
   | GroupId id -> `String id
@@ -221,7 +222,7 @@ let group_to_yojson = function
 
 let group_of_yojson = function
   | `String x -> `Ok (GroupId x)
-  | _ -> `Error "incorrect value"
+  | _ -> `Error "Couldn't parse group type"
 
 type topic_obj = {
     value: string;
@@ -591,6 +592,12 @@ let channels_info token channel =
     | #authed_result
     | #channel_error as res -> res
     | _ -> `Unknown_error
+
+let channels_info' token channel =
+  channels_info token channel >|= function
+    | `Success (`Assoc [("channel", d)]) ->
+        channel_obj_of_yojson d
+    | e -> e
 
 let channels_invite token channel user =
   let%lwt channel_id = id_of_channel token channel and

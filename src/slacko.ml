@@ -224,6 +224,13 @@ let group_of_yojson = function
   | `String x -> `Ok (GroupId x)
   | _ -> `Error "Couldn't parse group type"
 
+let conversation_to_yojson x =
+  `String x
+
+let conversation_of_yojson = function
+  | `String x -> `Ok x
+  | _ -> `Error "Couldn't parse conversation type"
+
 type topic_obj = {
     value: string;
     creator: user;
@@ -275,6 +282,54 @@ type group_obj = {
   unread_count: int option;
   latest: Yojson.Safe.json option;
 } [@@deriving yojson]
+
+type file_obj = {
+  (* TODO file id type *)
+  id: string;
+  created: timestamp;
+  (* deliberately omitted b/c deprecated *)
+  (*timestamp: timestamp;*)
+
+  name: string option;
+  title: string;
+  mimetype: string;
+  pretty_type: string;
+  user: user;
+
+  mode: string;
+  editable: bool;
+  is_external: bool;
+  external_type: string;
+
+  size: int;
+
+  url: string;
+  url_download: string;
+  url_private: string;
+  url_private_download: string;
+
+  thumb_64: string;
+  thunb_80: string;
+  thumb_360: string;
+  thumb_360_gif: string;
+  thumb_360_w: int;
+  thumb_360_h: int;
+
+  permalink: string;
+  edit_link: string;
+  preview: string;
+  preview_highlight: string;
+  lines: int;
+  lines_more: int;
+
+  is_public: bool;
+  (*public_url_shared: ???;*)
+  channels: channel list;
+  groups: group list;
+  ims: conversation list;
+  initial_comment: Yojson.Safe.json;
+  num_strats: int option;
+} [@@deriving yojson { strict = false }]
 
 (* some useful Lwt operators: *)
 (* Lwt.map *)

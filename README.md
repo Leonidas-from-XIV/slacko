@@ -39,6 +39,8 @@ dependencies that you have to take care of yourself:
 
   * [OCaml](http://ocaml.org/), >= 4.02.0 (no kidding)
   * [Lwt](https://ocsigen.org/lwt/) >= 2.4.6 (for ppx support)
+  * [ssl](https://github.com/savonet/ocaml-ssl) or
+    [tls](https://github.com/mirleft/ocaml-tls) (for SSL support)
   * [Cmdliner](http://erratique.ch/software/cmdliner)
   * [Yojson](http://mjambon.com/yojson.html)
   * [Cohttp](https://github.com/mirage/ocaml-cohttp)

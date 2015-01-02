@@ -15,8 +15,8 @@ depends: [
   "cmdliner"
   "yojson"
   "lwt" {>= "2.4.6"}
-  "ssl"
-  "cohttp" {>= "0.10.0"}
+  "tls" | "ssl"
+  "cohttp" {>= "0.13.0"}
   "ppx_deriving_yojson"
 ]
 available: [ ocaml-version >= "4.02.0" ]

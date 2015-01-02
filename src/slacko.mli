@@ -294,12 +294,19 @@ type user_obj = {
   name: string;
   deleted: bool;
   color: string;
+  real_name: string;
+  skype: string option;
+  phone: string option;
+  tz: string;
+  tz_label: string;
+  tz_offset: int;
   profile: Yojson.Safe.json;
   is_admin: bool;
   is_owner: bool;
   is_primary_owner: bool;
   is_restricted: bool;
   is_ultra_restricted: bool;
+  is_bot: bool;
 }
 
 type topic_obj = {

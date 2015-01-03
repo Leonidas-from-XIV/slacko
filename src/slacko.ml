@@ -338,6 +338,19 @@ type file_obj = {
   num_strats: int option;
 } [@@deriving yojson { strict = false }]
 
+type message_obj = {
+  type' [@key "type"]: string;
+  ts: timestamp;
+  user: user;
+  text: string;
+} [@@deriving yojson]
+
+type history_obj = {
+  latest: timestamp;
+  messages: message_obj list;
+  has_more: bool;
+} [@@deriving yojson]
+
 (* some useful Lwt operators: *)
 (* Lwt.map *)
 let (>|=) = Lwt.(>|=)
@@ -586,6 +599,10 @@ let group_of_string s =
 let conversation_of_string s =
   if s.[0] = 'D' then s else failwith "Not an IM channel"
 
+let translate_parsing_error = function
+  | `Error a -> `ParseFailure a
+  | `Ok a -> `Ok a
+
 (* Slack API begins here *)
 
 let api_test ?foo ?error () =
@@ -630,6 +647,12 @@ let channels_create token name =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
+let channels_create' token name =
+  channels_create token name >|= function
+    | `Success (`Assoc [("channel", d)]) ->
+        d |> channel_obj_of_yojson |> translate_parsing_error
+    | e -> e
+
 let channels_history token
   ?latest ?oldest ?count channel =
   let%lwt channel_id = id_of_channel token channel in
@@ -643,6 +666,12 @@ let channels_history token
     >|= function
     | #history_result as res -> res
     | _ -> `Unknown_error
+
+let channels_history' token
+  ?latest ?oldest ?count channel =
+  channels_history token ?latest ?oldest ?count channel >|= function
+    | `Success d -> d |> history_obj_of_yojson |> translate_parsing_error
+    | e -> e
 
 let channels_info token channel =
   let%lwt channel_id = id_of_channel token channel in
@@ -658,7 +687,7 @@ let channels_info token channel =
 let channels_info' token channel =
   channels_info token channel >|= function
     | `Success (`Assoc [("channel", d)]) ->
-        channel_obj_of_yojson d
+        d |> channel_obj_of_yojson |> translate_parsing_error
     | e -> e
 
 let channels_invite token channel user =
@@ -1198,7 +1227,7 @@ let users_info token user =
 let users_info' token user =
   users_info token user >|= function
     | `Success (`Assoc [("user", d)]) ->
-        user_obj_of_yojson d
+        d |> user_obj_of_yojson |> translate_parsing_error
     | e -> e
 
 let users_set_active token =

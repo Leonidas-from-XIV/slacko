@@ -332,6 +332,19 @@ type channel_obj = {
   unread_count: int option;
 }
 
+type message_obj = {
+  type': string;
+  ts: timestamp;
+  user: user;
+  text: string;
+}
+
+type history_obj = {
+  latest: timestamp;
+  messages: message_obj list;
+  has_more: bool;
+}
+
 (** {2 Type construction helper functions} *)
 
 (** To build the types required in the API calls, you can use these helper
@@ -393,6 +406,9 @@ val channels_archive: token -> channel -> [> authed_result | channel_error | alr
 (** Creates a channel. *)
 val channels_create: token -> string -> [> authed_result | name_error | `User_is_restricted ] Lwt.t
 
+(** TODO: Temporary, experimental API *)
+val channels_create': token -> string -> [> `Ok of channel_obj | `ParseFailure of string | authed_result | name_error | `User_is_restricted ] Lwt.t
+
 (** Fetches history of messages and events from a channel.
     @param token The authentication token that was issued by Slack.
     @param latest The newest message from history to be returned.
@@ -401,11 +417,14 @@ val channels_create: token -> string -> [> authed_result | name_error | `User_is
     @param channel The Slack channel from which to get the history. *)
 val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> history_result ] Lwt.t
 
+(** TODO: Temporary, experimental API *)
+val channels_history': token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> `Ok of history_obj | `ParseFailure of string | history_result ] Lwt.t
+
 (** Gets information about a channel. *)
 val channels_info: token -> channel -> [> authed_result | channel_error ] Lwt.t
 
 (** TODO: Temporary, experimental API *)
-val users_info': token -> channel -> [> `Error of string | `Ok of channel_obj | authed_result | channel_error ] Lwt.t
+val users_info': token -> channel -> [> `ParseFailure of string | `Ok of channel_obj | authed_result | channel_error ] Lwt.t
 
 (** Invites a user to a channel. *)
 val channels_invite: token -> channel -> user -> [> authed_result | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted ] Lwt.t
@@ -540,7 +559,7 @@ val users_get_presence: token -> user -> [> authed_result ] Lwt.t
 val users_info: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t
 
 (** TODO: Temporary, experimental API *)
-val users_info': token -> user -> [> `Error of string | `Ok of user_obj | authed_result | user_error | user_visibility_error ] Lwt.t
+val users_info': token -> user -> [> `ParseFailure of string | `Ok of user_obj | authed_result | user_error | user_visibility_error ] Lwt.t
 
 (** Lists all users in a Slack team. *)
 val users_list: token -> [> authed_result ] Lwt.t

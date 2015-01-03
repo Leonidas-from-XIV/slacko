@@ -107,7 +107,7 @@ But I do want to code my own stuff!
 -----------------------------------
 
 You know, Slacko is a nice gal/guy. So you can just plug together whatever you
-want with it, since it currently implements 
+want with it, since it currently implements
 [100% of the Slack API](https://api.slack.com/methods)! How neat is this? And
 you can use it in your own code without worrying about the license one bit,
 since the [LGPL 3.0](https://www.gnu.org/licenses/lgpl.html) is liberal for

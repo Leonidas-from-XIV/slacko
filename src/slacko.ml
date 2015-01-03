@@ -22,7 +22,7 @@ module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
 type api_result = [
-  | `Success of Yojson.Safe.json
+  | `JsonResponse of Yojson.Safe.json
   | `Unhandled_error of string
   | `Unknown_error
 ]
@@ -373,7 +373,7 @@ let definitely_add key value = optionally_add key (Some value)
 let validate json =
   let open Yojson.Basic.Util in
   match json |> Yojson.Safe.to_basic |> member "ok" |> to_bool with
-    | true -> `Success json
+    | true -> `JsonResponse json
     | false -> let error = json |> Yojson.Safe.to_basic |> member "error" in
       match error with
       | `String "account_inactive" -> `Account_inactive
@@ -433,7 +433,7 @@ let validate json =
 
 (* filter out "ok" and "error" keys *)
 let filter_useless = function
-  | `Success `Assoc items -> `Success (
+  | `JsonResponse `Assoc items -> `JsonResponse (
       `Assoc (List.filter (fun (k, _) -> k <> "ok" && k <> "error") items))
   | otherwise -> otherwise
 
@@ -496,7 +496,7 @@ exception Lookup_failed
 let lookup token listfn collection query =
   let open Yojson.Basic.Util in
   match%lwt listfn token with
-  | `Success json -> (let candidates = json |> Yojson.Safe.to_basic |> member collection |> to_list |>
+  | `JsonResponse json -> (let candidates = json |> Yojson.Safe.to_basic |> member collection |> to_list |>
     filter_map (fun chan ->
       match (chan |> member "name") with
         (* If a channel matches the name, get its ID *)
@@ -601,7 +601,7 @@ let conversation_of_string s =
 
 let translate_parsing_error = function
   | `Error a -> `ParseFailure a
-  | `Ok a -> `Ok a
+  | `Ok a -> `Success a
 
 (* Slack API begins here *)
 
@@ -649,7 +649,7 @@ let channels_create token name =
 
 let channels_create' token name =
   channels_create token name >|= function
-    | `Success (`Assoc [("channel", d)]) ->
+    | `JsonResponse (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
     | e -> e
 
@@ -670,7 +670,7 @@ let channels_history token
 let channels_history' token
   ?latest ?oldest ?count channel =
   channels_history token ?latest ?oldest ?count channel >|= function
-    | `Success d -> d |> history_obj_of_yojson |> translate_parsing_error
+    | `JsonResponse d -> d |> history_obj_of_yojson |> translate_parsing_error
     | e -> e
 
 let channels_info token channel =
@@ -686,7 +686,7 @@ let channels_info token channel =
 
 let channels_info' token channel =
   channels_info token channel >|= function
-    | `Success (`Assoc [("channel", d)]) ->
+    | `JsonResponse (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
     | e -> e
 
@@ -1226,7 +1226,7 @@ let users_info token user =
 
 let users_info' token user =
   users_info token user >|= function
-    | `Success (`Assoc [("user", d)]) ->
+    | `JsonResponse (`Assoc [("user", d)]) ->
         d |> user_obj_of_yojson |> translate_parsing_error
     | e -> e
 

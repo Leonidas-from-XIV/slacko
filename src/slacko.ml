@@ -175,8 +175,8 @@ type topic_result = [
   | `User_is_restricted
 ]
 
-type history_result = [
-  | authed_result
+type history_error = [
+  | parsed_auth_error
   | channel_error
   | timestamp_error
 ]
@@ -357,6 +357,7 @@ type message_obj = {
   ts: timestamp;
   user: user;
   text: string;
+  is_starred: bool option;
 } [@@deriving yojson]
 
 type history_obj = {
@@ -674,14 +675,9 @@ let channels_history token
     |> optionally_add "count" @@ maybe string_of_int count
     |> query
     >|= function
-    | #history_result as res -> res
-    | _ -> `Unknown_error
-
-let channels_history' token
-  ?latest ?oldest ?count channel =
-  channels_history token ?latest ?oldest ?count channel >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
-    | e -> e
+    | #history_error as res -> res
+    | _ -> `Unknown_error
 
 let channels_info token channel =
   let%lwt channel_id = id_of_channel token channel in
@@ -990,7 +986,8 @@ let groups_history token ?latest ?oldest ?count group =
     |> optionally_add "count" @@ maybe string_of_int count
     |> query
     >|= function
-    | #history_result as res -> res
+    | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
+    | #history_error as res -> res
     | _ -> `Unknown_error
 
 let groups_invite token group user =
@@ -1138,7 +1135,8 @@ let im_history token ?latest ?oldest ?count channel =
     |> optionally_add "count" @@ maybe string_of_int count
     |> query
     >|= function
-    | #history_result as res -> res
+    | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
+    | #history_error as res -> res
     | _ -> `Unknown_error
 
 let im_list token =

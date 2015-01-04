@@ -258,8 +258,8 @@ type topic_result = [
 ]
 
 (** Return value of a history related request. *)
-type history_result = [
-  | authed_result
+type history_error = [
+  | parsed_auth_error
   | channel_error
   | timestamp_error
 ]
@@ -353,6 +353,7 @@ type message_obj = {
   ts: timestamp;
   user: user;
   text: string;
+  is_starred: bool option;
 }
 
 type history_obj = {
@@ -428,10 +429,7 @@ val channels_create: token -> string -> [> `Success of channel_obj | parsed_auth
     @param oldest The oldest message from history to be returned.
     @param count The number of messages to be returned.
     @param channel The Slack channel from which to get the history. *)
-val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> history_result ] Lwt.t
-
-(** TODO: Temporary, experimental API *)
-val channels_history': token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> `Success of history_obj | `ParseFailure of string | history_result ] Lwt.t
+val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> `Success of history_obj | history_error ] Lwt.t
 
 (** Gets information about a channel. *)
 val channels_info: token -> channel -> [> authed_result | channel_error ] Lwt.t
@@ -503,7 +501,7 @@ val groups_create: token -> group -> [> authed_result | name_error | restriction
 val groups_create_child: token -> group -> [> authed_result | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Fetches history of messages and events from a private group. *)
-val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> [> history_result ] Lwt.t
+val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> [> `Success of history_obj | history_error ] Lwt.t
 
 (** Invites a user to a private group. *)
 val groups_invite: token -> group -> user -> [> authed_result | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted ] Lwt.t
@@ -539,7 +537,7 @@ val groups_unarchive: token -> group -> [> authed_result | channel_error | `Not_
 val im_close: token -> conversation -> [> authed_result | channel_error | `User_does_not_own_channel ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
-val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> [> history_result ] Lwt.t
+val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> [> `Success of history_obj | history_error ] Lwt.t
 
 (** Lists direct message channels for the calling user. *)
 val im_list: token -> [> authed_result ] Lwt.t

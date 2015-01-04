@@ -38,15 +38,26 @@
     the exact error types.
 *)
 
+type api_error = [
+  | `Unhandled_error of string
+  | `Unknown_error
+]
+
+type parsed_api_error = [
+  | `ParseFailure of string
+  | api_error
+]
+
 (** The basic type that each API endpoint will return at least. This type
     includes the case that the request succeeded as well as the case that an
     error happened that the binding didn't know how to handle. It gets
     composed into {e every other} API return type. *)
+
 type api_result = [
-  | `JsonResponse of Yojson.Safe.json
-  | `Unhandled_error of string
-  | `Unknown_error
+  | `Json_response of Yojson.Safe.json
+  | api_error
 ]
+
 
 (** API calls that require authentication (a {!token}) might fail with one of
     these errors, so functions that take {!token} arguments will return
@@ -231,6 +242,11 @@ type authed_result = [
   | auth_error
 ]
 
+type parsed_auth_error = [
+  | parsed_api_error
+  | auth_error
+]
+
 (** Setting topics or purposes will result either in a success or one of these
     errors. Convenience type composed of subtypes. *)
 type topic_result = [
@@ -404,10 +420,7 @@ val auth_test: token -> [> authed_result ] Lwt.t
 val channels_archive: token -> channel -> [> authed_result | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Creates a channel. *)
-val channels_create: token -> string -> [> authed_result | name_error | `User_is_restricted ] Lwt.t
-
-(** TODO: Temporary, experimental API *)
-val channels_create': token -> string -> [> `Success of channel_obj | `ParseFailure of string | authed_result | name_error | `User_is_restricted ] Lwt.t
+val channels_create: token -> string -> [> `Success of channel_obj | parsed_auth_error | name_error | `User_is_restricted ] Lwt.t
 
 (** Fetches history of messages and events from a channel.
     @param token The authentication token that was issued by Slack.

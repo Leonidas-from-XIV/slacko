@@ -21,10 +21,19 @@
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
-type api_result = [
-  | `JsonResponse of Yojson.Safe.json
+type api_error = [
   | `Unhandled_error of string
   | `Unknown_error
+]
+
+type parsed_api_error = [
+  | `ParseFailure of string
+  | api_error
+]
+
+type api_result = [
+  | `Json_response of Yojson.Safe.json
+  | api_error
 ]
 
 type auth_error = [
@@ -150,6 +159,11 @@ type invalid_name_error = [
 
 type authed_result = [
   | api_result
+  | auth_error
+]
+
+type parsed_auth_error = [
+  | parsed_api_error
   | auth_error
 ]
 
@@ -373,7 +387,7 @@ let definitely_add key value = optionally_add key (Some value)
 let validate json =
   let open Yojson.Basic.Util in
   match json |> Yojson.Safe.to_basic |> member "ok" |> to_bool with
-    | true -> `JsonResponse json
+    | true -> `Json_response json
     | false -> let error = json |> Yojson.Safe.to_basic |> member "error" in
       match error with
       | `String "account_inactive" -> `Account_inactive
@@ -433,7 +447,7 @@ let validate json =
 
 (* filter out "ok" and "error" keys *)
 let filter_useless = function
-  | `JsonResponse `Assoc items -> `JsonResponse (
+  | `Json_response `Assoc items -> `Json_response (
       `Assoc (List.filter (fun (k, _) -> k <> "ok" && k <> "error") items))
   | otherwise -> otherwise
 
@@ -496,7 +510,7 @@ exception Lookup_failed
 let lookup token listfn collection query =
   let open Yojson.Basic.Util in
   match%lwt listfn token with
-  | `JsonResponse json -> (let candidates = json |> Yojson.Safe.to_basic |> member collection |> to_list |>
+  | `Json_response json -> (let candidates = json |> Yojson.Safe.to_basic |> member collection |> to_list |>
     filter_map (fun chan ->
       match (chan |> member "name") with
         (* If a channel matches the name, get its ID *)
@@ -642,16 +656,12 @@ let channels_create token name =
     |> definitely_add "name" name
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("channel", d)]) ->
+        d |> channel_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #name_error
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
-
-let channels_create' token name =
-  channels_create token name >|= function
-    | `JsonResponse (`Assoc [("channel", d)]) ->
-        d |> channel_obj_of_yojson |> translate_parsing_error
-    | e -> e
 
 let channels_history token
   ?latest ?oldest ?count channel =
@@ -670,7 +680,7 @@ let channels_history token
 let channels_history' token
   ?latest ?oldest ?count channel =
   channels_history token ?latest ?oldest ?count channel >|= function
-    | `JsonResponse d -> d |> history_obj_of_yojson |> translate_parsing_error
+    | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
     | e -> e
 
 let channels_info token channel =
@@ -686,7 +696,7 @@ let channels_info token channel =
 
 let channels_info' token channel =
   channels_info token channel >|= function
-    | `JsonResponse (`Assoc [("channel", d)]) ->
+    | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
     | e -> e
 
@@ -1226,7 +1236,7 @@ let users_info token user =
 
 let users_info' token user =
   users_info token user >|= function
-    | `JsonResponse (`Assoc [("user", d)]) ->
+    | `Json_response (`Assoc [("user", d)]) ->
         d |> user_obj_of_yojson |> translate_parsing_error
     | e -> e
 

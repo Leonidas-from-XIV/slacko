@@ -175,12 +175,6 @@ type topic_result = [
   | `User_is_restricted
 ]
 
-type history_error = [
-  | parsed_auth_error
-  | channel_error
-  | timestamp_error
-]
-
 type timestamp = float
 
 type token = string
@@ -365,6 +359,13 @@ type history_obj = {
   messages: message_obj list;
   has_more: bool;
 } [@@deriving yojson]
+
+type history_result = [
+  | `Success of history_obj
+  | parsed_auth_error
+  | channel_error
+  | timestamp_error
+]
 
 (* some useful Lwt operators: *)
 (* Lwt.map *)
@@ -676,7 +677,7 @@ let channels_history token
     |> query
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
-    | #history_error as res -> res
+    | #history_result as res -> res
     | _ -> `Unknown_error
 
 let channels_info token channel =
@@ -987,7 +988,7 @@ let groups_history token ?latest ?oldest ?count group =
     |> query
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
-    | #history_error as res -> res
+    | #history_result as res -> res
     | _ -> `Unknown_error
 
 let groups_invite token group user =
@@ -1136,7 +1137,7 @@ let im_history token ?latest ?oldest ?count channel =
     |> query
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
-    | #history_error as res -> res
+    | #history_result as res -> res
     | _ -> `Unknown_error
 
 let im_list token =

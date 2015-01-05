@@ -1,6 +1,6 @@
 (*
 * Slacko - Binding to the Slack API
-* Copyright (C) 2014 Marek Kubica <marek@xivilization.net>
+* Copyright (C) 2014-2015 Marek Kubica <marek@xivilization.net>
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -368,6 +368,17 @@ type authed_obj = {
   user_id: user;
 } [@@deriving yojson]
 
+type channel_leave_obj = {
+  not_in_channel: bool option
+} [@@deriving yojson]
+
+type channel_rename_obj = {
+  id: channel;
+  is_channel: bool;
+  name: string;
+  created: timestamp;
+} [@@deriving yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -492,12 +503,23 @@ let maybe fn = function
   | Some v -> Some (fn v)
   | None -> None
 
+(* nonpublic type for conversion in channels_list *)
+type channels_list_obj = {
+  channels: channel_obj list
+} [@@deriving yojson]
+
 let channels_list ?exclude_archived token =
   endpoint "channels.list"
     |> definitely_add "token" token
     |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_response d ->
+      (match d |> channels_list_obj_of_yojson with
+        | `Ok x -> `Success x.channels
+        | `Error x -> `ParseFailure x)
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let users_list token =
   endpoint "users.list"
@@ -644,7 +666,7 @@ let auth_test token =
     |> definitely_add "token" token
     |> query
     >|= function
-    | `Json_resoponse d -> d |> authed_obj_of_yojson |> translate_parsing_error
+    | `Json_response d -> d |> authed_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -768,7 +790,8 @@ let channels_leave token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d -> d |> channel_leave_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #archive_error
     | #leave_general_error
@@ -783,7 +806,8 @@ let channels_mark token channel ts =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success ()
+    | #parsed_auth_error
     | #channel_error
     | #archive_error
     | #not_in_channel_error as res -> res
@@ -797,7 +821,9 @@ let channels_rename token channel name =
     |> definitely_add "name" name
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("channel", d)]) ->
+        d |> channel_rename_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #not_in_channel_error
     | #name_error
@@ -814,6 +840,8 @@ let channels_set_purpose token channel purpose =
     |> definitely_add "purpose" purpose
     |> query
     >|= function
+    (* | `Json_response (`Assoc [("purpose", `String d)]) -> *)
+    (*   `Success d *)
     | #topic_result as res -> res
     | _ -> `Unknown_error
 

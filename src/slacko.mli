@@ -1,6 +1,6 @@
 (*
 * Slacko - Binding to the Slack API
-* Copyright (C) 2014 Marek Kubica <marek@xivilization.net>
+* Copyright (C) 2014-2015 Marek Kubica <marek@xivilization.net>
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -363,6 +363,17 @@ type authed_obj = {
   user_id: user;
 }
 
+type channel_leave_obj = {
+  not_in_channel: bool option
+}
+
+type channel_rename_obj = {
+  id: channel;
+  is_channel: bool;
+  name: string;
+  created: timestamp;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -453,16 +464,16 @@ val channels_join: token -> channel -> [> `Success of channel_obj | parsed_auth_
 val channels_kick: token -> channel -> user -> [> `Success of unit | parsed_auth_error | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Leaves a channel. *)
-val channels_leave: token -> channel -> [> authed_result | channel_error | archive_error | leave_general_error | `User_is_restricted ] Lwt.t
+val channels_leave: token -> channel -> [> `Success of channel_leave_obj | parsed_auth_error | channel_error | archive_error | leave_general_error | `User_is_restricted ] Lwt.t
 
 (** Lists all channels in a Slack team. *)
-val channels_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
+val channels_list: ?exclude_archived:bool -> token -> [> `Success of channel_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a channel. *)
-val channels_mark: token -> channel -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
+val channels_mark: token -> channel -> timestamp -> [> `Success of unit | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
 (** Renames a team channel. *)
-val channels_rename: token -> channel -> string -> [> authed_result | channel_error | not_in_channel_error | name_error | invalid_name_error | `Not_authorized | `User_is_restricted ] Lwt.t
+val channels_rename: token -> channel -> string -> [> `Success of channel_rename_obj | parsed_auth_error | channel_error | not_in_channel_error | name_error | invalid_name_error | `Not_authorized | `User_is_restricted ] Lwt.t
 
 (** Sets the purpose for a channel. *)
 val channels_set_purpose: token -> channel -> topic -> [> topic_result ] Lwt.t

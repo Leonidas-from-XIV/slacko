@@ -250,7 +250,8 @@ type parsed_auth_error = [
 (** Setting topics or purposes will result either in a success or one of these
     errors. Convenience type composed of subtypes. *)
 type topic_result = [
-  | authed_result
+  | `Success of string
+  | parsed_auth_error
   | channel_error
   | archive_error
   | not_in_channel_error
@@ -482,7 +483,7 @@ val channels_set_purpose: token -> channel -> topic -> [> topic_result ] Lwt.t
 val channels_set_topic: token -> channel -> topic -> [> topic_result ] Lwt.t
 
 (** Unarchives a channel. *)
-val channels_unarchive: token -> channel -> [> authed_result | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
+val channels_unarchive: token -> channel -> [> `Success of unit | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
 (** Deletes a message. *)
 val chat_delete: token -> timestamp -> chat -> [> authed_result | channel_error | message_error ] Lwt.t

@@ -168,7 +168,8 @@ type parsed_auth_error = [
 ]
 
 type topic_result = [
-  | authed_result
+  | `Success of string
+  | parsed_auth_error
   | channel_error
   | archive_error
   | not_in_channel_error
@@ -840,8 +841,8 @@ let channels_set_purpose token channel purpose =
     |> definitely_add "purpose" purpose
     |> query
     >|= function
-    (* | `Json_response (`Assoc [("purpose", `String d)]) -> *)
-    (*   `Success d *)
+    | `Json_response (`Assoc [("purpose", `String d)]) ->
+      `Success d
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -853,6 +854,8 @@ let channels_set_topic token channel topic =
     |> definitely_add "topic" topic
     |> query
     >|= function
+    | `Json_response (`Assoc [("topic", `String d)]) ->
+      `Success d
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -863,7 +866,8 @@ let channels_unarchive token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success ()
+    | #parsed_auth_error
     | #channel_error
     | `Not_archived
     | `User_is_restricted as res -> res

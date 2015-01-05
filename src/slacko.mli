@@ -355,6 +355,14 @@ type history_obj = {
   has_more: bool;
 }
 
+type authed_obj = {
+  url: string;
+  team: string;
+  user: string;
+  team_id: string;
+  user_id: user;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -412,11 +420,11 @@ val conversation_of_string: string -> conversation
 (** Checks API calling code.
     @param foo A dummy value that will be returned by the API.
     @param error If set, will return a specific kind of error. *)
-val api_test: ?foo:string -> ?error:string -> unit -> [> api_result ] Lwt.t
+val api_test: ?foo:string -> ?error:string -> unit -> [> `Success of Yojson.Safe.json | api_error ] Lwt.t
 
 (** Checks authentication & identity.
     @param token The authentication token that was issued by Slack. *)
-val auth_test: token -> [> authed_result ] Lwt.t
+val auth_test: token -> [> `Success of authed_obj | parsed_auth_error ] Lwt.t
 
 (** Archives a channel. *)
 val channels_archive: token -> channel -> [> authed_result | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted ] Lwt.t

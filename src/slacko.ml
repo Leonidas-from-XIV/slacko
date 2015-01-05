@@ -360,6 +360,14 @@ type history_obj = {
   has_more: bool;
 } [@@deriving yojson]
 
+type authed_obj = {
+  url: string;
+  team: string;
+  user: string;
+  team_id: string;
+  user_id: user;
+} [@@deriving yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -627,14 +635,18 @@ let api_test ?foo ?error () =
     |> optionally_add "error" error
     |> query
     >|= function
-    | #api_result as res -> res
+    | `Json_response x -> `Success x
+    | #api_error as res -> res
     | _ -> `Unknown_error
 
 let auth_test token =
   endpoint "auth.test"
     |> definitely_add "token" token
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_resoponse d -> d |> authed_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let channels_archive token channel =
   let%lwt channel_id = id_of_channel token channel in

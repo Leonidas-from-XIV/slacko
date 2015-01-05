@@ -655,7 +655,8 @@ let channels_archive token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success ()
+    | #parsed_auth_error
     | #channel_error
     | #already_archived_error
     | `Cant_archive_general
@@ -699,15 +700,11 @@ let channels_info token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | #authed_result
-    | #channel_error as res -> res
-    | _ -> `Unknown_error
-
-let channels_info' token channel =
-  channels_info token channel >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
-    | e -> e
+    | #parsed_auth_error
+    | #channel_error as res -> res
+    | _ -> `Unknown_error
 
 let channels_invite token channel user =
   let%lwt channel_id = id_of_channel token channel and
@@ -718,7 +715,9 @@ let channels_invite token channel user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("channel", d)]) ->
+        d |> channel_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #user_error
     | #invite_error
@@ -734,7 +733,9 @@ let channels_join token name =
     |> definitely_add "name" @@ string_of_channel name
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("channel", d)]) ->
+        d |> channel_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #name_error
     | #archive_error
@@ -750,7 +751,8 @@ let channels_kick token channel user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success ()
+    | #parsed_auth_error
     | #channel_error
     | #user_error
     | #channel_kick_error

@@ -427,7 +427,7 @@ val api_test: ?foo:string -> ?error:string -> unit -> [> `Success of Yojson.Safe
 val auth_test: token -> [> `Success of authed_obj | parsed_auth_error ] Lwt.t
 
 (** Archives a channel. *)
-val channels_archive: token -> channel -> [> authed_result | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted ] Lwt.t
+val channels_archive: token -> channel -> [> `Success of unit | parsed_auth_error | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Creates a channel. *)
 val channels_create: token -> string -> [> `Success of channel_obj | parsed_auth_error | name_error | `User_is_restricted ] Lwt.t
@@ -441,19 +441,16 @@ val channels_create: token -> string -> [> `Success of channel_obj | parsed_auth
 val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> history_result ] Lwt.t
 
 (** Gets information about a channel. *)
-val channels_info: token -> channel -> [> authed_result | channel_error ] Lwt.t
-
-(** TODO: Temporary, experimental API *)
-val users_info': token -> channel -> [> `ParseFailure of string | `Success of channel_obj | authed_result | channel_error ] Lwt.t
+val channels_info: token -> channel -> [> `Success of channel_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Invites a user to a channel. *)
-val channels_invite: token -> channel -> user -> [> authed_result | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted ] Lwt.t
+val channels_invite: token -> channel -> user -> [> `Success of channel_obj | parsed_auth_error | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Joins a channel, creating it if needed. *)
-val channels_join: token -> channel -> [> authed_result | channel_error | name_error | archive_error | `User_is_restricted ] Lwt.t
+val channels_join: token -> channel -> [> `Success of channel_obj | parsed_auth_error | channel_error | name_error | archive_error | `User_is_restricted ] Lwt.t
 
 (** Removes a user from a channel. *)
-val channels_kick: token -> channel -> user -> [> authed_result | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error | `User_is_restricted ] Lwt.t
+val channels_kick: token -> channel -> user -> [> `Success of unit | parsed_auth_error | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Leaves a channel. *)
 val channels_leave: token -> channel -> [> authed_result | channel_error | archive_error | leave_general_error | `User_is_restricted ] Lwt.t

@@ -376,9 +376,10 @@ type channel_rename_obj = {
   created: timestamp;
 }
 
-type chat_delete_obj = {
+type chat_obj = {
   ts: timestamp;
   chat: chat;
+  text: string option;
 }
 
 (** Return value of a history related request. *)
@@ -492,13 +493,13 @@ val channels_set_topic: token -> channel -> topic -> [> topic_result ] Lwt.t
 val channels_unarchive: token -> channel -> [> `Success of unit | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
 (** Deletes a message. *)
-val chat_delete: token -> timestamp -> chat -> [> `Success of chat_delete_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
+val chat_delete: token -> timestamp -> chat -> [> `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
 
 (** Sends a message to a channel. *)
-val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> message -> [> authed_result | channel_error | archive_error | message_length_error | rate_error ] Lwt.t
+val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> message -> [> `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | rate_error ] Lwt.t
 
 (** Updates a message. *)
-val chat_update: token -> timestamp -> chat -> message -> [> authed_result | channel_error | message_update_error | message_length_error ] Lwt.t
+val chat_update: token -> timestamp -> chat -> message -> [> `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error ] Lwt.t
 
 (** Lists custom emoji for a team. *)
 val emoji_list: token -> [> authed_result ] Lwt.t

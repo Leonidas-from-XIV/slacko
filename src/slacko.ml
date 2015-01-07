@@ -391,9 +391,10 @@ let chat_of_yojson = function
     | _ -> `Error "Failed to parse chat")
   | _ -> `Error "Failed to parse chat"
 
-type chat_delete_obj = {
+type chat_obj = {
   ts: timestamp;
   chat [@key "channel"]: chat;
+  text: string option;
 } [@@deriving of_yojson]
 
 type history_result = [
@@ -891,7 +892,7 @@ let chat_delete token ts chat =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
     >|= function
-    | `Json_response d -> d |> chat_delete_obj_of_yojson |> translate_parsing_error
+    | `Json_response d -> d |> chat_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error
     | #message_error as res -> res
@@ -910,7 +911,9 @@ let chat_post_message token chat
     |> optionally_add "icon_emoji" icon_emoji
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> chat_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #archive_error
     | #message_length_error
@@ -926,7 +929,9 @@ let chat_update token ts chat text =
     |> definitely_add "text" text
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> chat_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #message_update_error
     | #message_length_error as res -> res

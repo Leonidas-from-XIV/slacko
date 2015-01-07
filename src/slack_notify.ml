@@ -1,6 +1,6 @@
 (*
 * slack-notify - Posts messages to Slack channels
-* Copyright (C) 2014 Marek Kubica <marek@xivilization.net>
+* Copyright (C) 2014-2015 Marek Kubica <marek@xivilization.net>
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -52,7 +52,7 @@ let execute token username channel icon_url icon_emoji msg =
     |> print_endline;
 
   let string_or_bust = function
-    | `Success json -> Yojson.Safe.pretty_to_string json
+    | `Success x -> "Message posted"
     | `Invalid_auth -> "Invalid token"
     | `Channel_not_found -> "Channel unknown"
     | `Is_archived -> "Channel is archived"

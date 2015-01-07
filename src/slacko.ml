@@ -18,6 +18,7 @@
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *)
 
+open Lwt.Infix
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt_body
 
@@ -401,12 +402,6 @@ type history_result = [
   | channel_error
   | timestamp_error
 ]
-
-(* some useful Lwt operators: *)
-(* Lwt.map *)
-let (>|=) = Lwt.(>|=)
-(* Lwt.bind *)
-let (>>=) = Lwt.(>>=)
 
 let base_url = "https://slack.com/api/"
 

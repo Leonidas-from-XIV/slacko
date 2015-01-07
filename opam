@@ -14,7 +14,7 @@ depends: [
   "ocamlfind"
   "cmdliner"
   "yojson"
-  "lwt" {>= "2.4.6"}
+  "lwt" {>= "2.4.7"}
   "tls" | "ssl"
   "cohttp" {>= "0.13.0"}
   "ppx_deriving_yojson"

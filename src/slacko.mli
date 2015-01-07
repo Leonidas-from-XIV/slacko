@@ -317,6 +317,7 @@ type user_obj = {
   is_restricted: bool;
   is_ultra_restricted: bool;
   is_bot: bool;
+  has_files: bool;
 }
 
 type topic_obj = {

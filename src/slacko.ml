@@ -282,6 +282,7 @@ type user_obj = {
   is_restricted: bool;
   is_ultra_restricted: bool;
   is_bot: bool;
+  has_files: bool;
 } [@@deriving yojson { strict = false } ]
 
 type group_obj = {

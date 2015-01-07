@@ -397,6 +397,11 @@ type chat_obj = {
   text: string option;
 } [@@deriving of_yojson]
 
+type emoji = (string * string)
+type emoji_list_obj = {
+  emoji: (string * string) list;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -941,7 +946,13 @@ let emoji_list token =
   endpoint "emoji.list"
     |> definitely_add "token" token
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_response d ->
+      (match d |> emoji_list_obj_of_yojson with
+      | `Ok x -> `Success x.emoji
+      | `Error x -> `ParseFailure x)
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let files_info token ?count ?page file =
   endpoint "files.info"

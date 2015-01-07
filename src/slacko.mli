@@ -382,6 +382,8 @@ type chat_obj = {
   text: string option;
 }
 
+type emoji = (string * string)
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -502,7 +504,7 @@ val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?ic
 val chat_update: token -> timestamp -> chat -> message -> [> `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error ] Lwt.t
 
 (** Lists custom emoji for a team. *)
-val emoji_list: token -> [> authed_result ] Lwt.t
+val emoji_list: token -> [> `Success of emoji list | parsed_auth_error ] Lwt.t
 
 (** Gets information about a team file. *)
 val files_info: token -> ?count:int -> ?page:int -> string -> [> authed_result | file_error ] Lwt.t

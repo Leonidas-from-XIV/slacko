@@ -192,6 +192,7 @@ type user = UserId of string | UserName of string
 
 type group = GroupId of string | GroupName of string
 
+(* TODO: Sure about user? *)
 type chat = Channel of channel | Im of conversation | User of user | Group of group
 
 type sort_criterion = Score | Timestamp
@@ -379,6 +380,19 @@ type channel_rename_obj = {
   name: string;
   created: timestamp;
 } [@@deriving yojson]
+
+let chat_of_yojson = function
+  | `String c -> (match c.[0] with
+    | 'C' -> `Ok (Channel (ChannelId c))
+    | 'D' -> `Ok (Im c)
+    | 'G' -> `Ok (Group (GroupId c))
+    | _ -> `Error "Failed to parse chat")
+  | _ -> `Error "Failed to parse chat"
+
+type chat_delete_obj = {
+  ts: timestamp;
+  chat [@key "channel"]: chat;
+} [@@deriving of_yojson]
 
 type history_result = [
   | `Success of history_obj
@@ -881,7 +895,8 @@ let chat_delete token ts chat =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d -> d |> chat_delete_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #message_error as res -> res
     | _ -> `Unknown_error

@@ -384,6 +384,11 @@ type chat_obj = {
 
 type emoji = (string * string)
 
+type groups_close_obj = {
+  no_op: bool option;
+  already_closed: bool option;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -519,7 +524,7 @@ val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string
 val groups_archive: token -> group -> [> `Success | parsed_auth_error | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Closes a private group. *)
-val groups_close: token -> group -> [> authed_result | channel_error ] Lwt.t
+val groups_close: token -> group -> [> `Success of groups_close_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Creates a private group. *)
 val groups_create: token -> group -> [> authed_result | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t

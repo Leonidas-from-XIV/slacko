@@ -402,6 +402,11 @@ type emoji_list_obj = {
   emoji: (string * string) list;
 } [@@deriving of_yojson]
 
+type groups_close_obj = {
+  no_op: bool option;
+  already_closed: bool option;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1021,7 +1026,9 @@ let groups_close token group =
     |> definitely_add "channel" group_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> groups_close_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error as res -> res
     | _ -> `Unknown_error
 

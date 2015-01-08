@@ -694,7 +694,7 @@ let channels_archive token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | `Json_response (`Assoc []) -> `Success ()
+    | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
     | #already_archived_error
@@ -790,7 +790,7 @@ let channels_kick token channel user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | `Json_response (`Assoc []) -> `Success ()
+    | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
     | #user_error
@@ -823,7 +823,7 @@ let channels_mark token channel ts =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
     >|= function
-    | `Json_response (`Assoc []) -> `Success ()
+    | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
     | #archive_error
@@ -882,7 +882,7 @@ let channels_unarchive token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | `Json_response (`Assoc []) -> `Success ()
+    | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
     | `Not_archived
@@ -1004,7 +1004,8 @@ let groups_archive token group =
     |> definitely_add "channel" group_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #channel_error
     | #already_archived_error
     | `Group_contains_others

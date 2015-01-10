@@ -243,9 +243,9 @@ let conversation_of_yojson = function
   | _ -> `Error "Couldn't parse conversation type"
 
 type topic_obj = {
-    value: string;
-    creator: user;
-    last_set: timestamp;
+  value: string;
+  creator: user;
+  last_set: timestamp;
 } [@@deriving yojson]
 
 type channel_obj = {
@@ -1038,7 +1038,9 @@ let groups_create token name =
     |> definitely_add "name" @@ name_of_group name
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("group", d)]) ->
+      d |> group_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #name_error
     | #restriction_error
     | `User_is_ultra_restricted as res -> res

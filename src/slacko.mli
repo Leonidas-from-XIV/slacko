@@ -299,6 +299,12 @@ type sort_direction = Ascending | Descending
 (** Presence can either be active or away. *)
 type presence = Auto | Away
 
+type topic_obj = {
+  value: string;
+  creator: user;
+  last_set: timestamp;
+}
+
 type user_obj = {
   id: user;
   name: string;
@@ -320,10 +326,20 @@ type user_obj = {
   has_files: bool;
 }
 
-type topic_obj = {
-    value: string;
-    creator: user;
-    last_set: timestamp;
+type group_obj = {
+  id: group;
+  name: string;
+  is_group: bool;
+  created: timestamp;
+  creator: user;
+  is_archived: bool;
+  members: user list;
+  topic: topic_obj;
+  purpose: topic_obj;
+  is_open: bool option;
+  last_read: timestamp option;
+  unread_count: int option;
+  latest: Yojson.Safe.json option;
 }
 
 type channel_obj = {
@@ -527,7 +543,7 @@ val groups_archive: token -> group -> [> `Success | parsed_auth_error | channel_
 val groups_close: token -> group -> [> `Success of groups_close_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Creates a private group. *)
-val groups_create: token -> group -> [> authed_result | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
+val groups_create: token -> group -> [> `Success of group_obj | parsed_auth_error | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Clones and archives a private group. *)
 val groups_create_child: token -> group -> [> authed_result | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted ] Lwt.t

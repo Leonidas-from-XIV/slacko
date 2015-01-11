@@ -407,6 +407,11 @@ type groups_close_obj = {
   already_closed: bool option;
 } [@@deriving of_yojson]
 
+type groups_invite_obj = {
+  already_in_group: bool option;
+  group: group_obj;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1053,7 +1058,9 @@ let groups_create_child token group =
     |> definitely_add "channel" group_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("group", d)]) ->
+      d |> group_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #already_archived_error
     | #restriction_error
@@ -1083,7 +1090,9 @@ let groups_invite token group user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> groups_invite_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #user_error
     | #invite_error
@@ -1100,7 +1109,8 @@ let groups_kick token group user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #channel_error
     | #user_error
     | #kick_error
@@ -1116,7 +1126,8 @@ let groups_leave token group =
     |> definitely_add "channel" group_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #channel_error
     | #archive_error
     | #leave_last_channel_error

@@ -405,6 +405,11 @@ type groups_close_obj = {
   already_closed: bool option;
 }
 
+type groups_invite_obj = {
+  already_in_group: bool option;
+  group: group_obj;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -546,19 +551,19 @@ val groups_close: token -> group -> [> `Success of groups_close_obj | parsed_aut
 val groups_create: token -> group -> [> `Success of group_obj | parsed_auth_error | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Clones and archives a private group. *)
-val groups_create_child: token -> group -> [> authed_result | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
+val groups_create_child: token -> group -> [> `Success of group_obj | parsed_auth_error | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Fetches history of messages and events from a private group. *)
 val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> [> history_result ] Lwt.t
 
 (** Invites a user to a private group. *)
-val groups_invite: token -> group -> user -> [> authed_result | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted ] Lwt.t
+val groups_invite: token -> group -> user -> [> `Success of groups_invite_obj | parsed_auth_error | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Removes a user from a private group. *)
-val groups_kick: token -> group -> user -> [> authed_result | channel_error | user_error | kick_error | not_in_group_error | restriction_error | `User_is_restricted ] Lwt.t
+val groups_kick: token -> group -> user -> [> `Success | parsed_auth_error | channel_error | user_error | kick_error | not_in_group_error | restriction_error | `User_is_restricted ] Lwt.t
 
 (** Leaves a private group. *)
-val groups_leave: token -> group -> [> authed_result | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted ] Lwt.t
+val groups_leave: token -> group -> [> `Success | parsed_auth_error | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Lists private groups that the calling user has access to. *)
 val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t

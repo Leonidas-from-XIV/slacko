@@ -410,6 +410,18 @@ type groups_invite_obj = {
   group: group_obj;
 }
 
+type groups_open_obj = {
+  no_op: bool option;
+  already_open: bool option;
+}
+
+type groups_rename_obj = {
+  id: channel;
+  is_group: bool;
+  name: string;
+  created: timestamp
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -569,13 +581,13 @@ val groups_leave: token -> group -> [> `Success | parsed_auth_error | channel_er
 val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
 
 (** Sets the read cursor in a private group. *)
-val groups_mark: token -> group -> timestamp -> [> authed_result | channel_error | archive_error | not_in_channel_error ] Lwt.t
+val groups_mark: token -> group -> timestamp -> [> `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
 (** Opens a private group. *)
-val groups_open: token -> group -> [> authed_result | channel_error ] Lwt.t
+val groups_open: token -> group -> [> `Success of groups_open_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Renames a private group. *)
-val groups_rename: token -> group -> string -> [> authed_result | channel_error | name_error | invalid_name_error | `User_is_restricted ] Lwt.t
+val groups_rename: token -> group -> string -> [> `Success of groups_rename_obj | parsed_auth_error | channel_error | name_error | invalid_name_error | `User_is_restricted ] Lwt.t
 
 (** Sets the purpose for a private group. *)
 val groups_set_purpose: token -> group -> topic -> [> topic_result ] Lwt.t
@@ -584,7 +596,7 @@ val groups_set_purpose: token -> group -> topic -> [> topic_result ] Lwt.t
 val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
 
 (** Unarchives a private group. *)
-val groups_unarchive: token -> group -> [> authed_result | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
+val groups_unarchive: token -> group -> [> `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
 (** Close a direct message channel. *)
 val im_close: token -> conversation -> [> authed_result | channel_error | `User_does_not_own_channel ] Lwt.t

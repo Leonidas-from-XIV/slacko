@@ -412,6 +412,18 @@ type groups_invite_obj = {
   group: group_obj;
 } [@@deriving of_yojson]
 
+type groups_open_obj = {
+  no_op: bool option;
+  already_open: bool option;
+} [@@deriving of_yojson]
+
+type groups_rename_obj = {
+  id: channel;
+  is_group: bool;
+  name: string;
+  created: timestamp
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1143,7 +1155,8 @@ let groups_mark token group ts =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #channel_error
     | #archive_error
     | #not_in_channel_error as res -> res
@@ -1156,7 +1169,9 @@ let groups_open token group =
     |> definitely_add "channel" group_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> groups_open_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error as res -> res
     | _ -> `Unknown_error
 
@@ -1168,7 +1183,9 @@ let groups_rename token group name =
     |> definitely_add "name" name
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("channel", d)]) ->
+      d |> groups_rename_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | #name_error
     | #invalid_name_error
@@ -1183,6 +1200,8 @@ let groups_set_purpose token group purpose =
     |> definitely_add "purpose" purpose
     |> query
     >|= function
+    | `Json_response (`Assoc [("purpose", `String d)]) ->
+      `Success d
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -1194,6 +1213,8 @@ let groups_set_topic token group topic =
     |> definitely_add "topic" topic
     |> query
     >|= function
+    | `Json_response (`Assoc [("topic", `String d)]) ->
+      `Success d
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -1204,7 +1225,8 @@ let groups_unarchive token group =
     |> definitely_add "channel" group_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #channel_error
     | `Not_archived
     | `User_is_restricted as res -> res

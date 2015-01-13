@@ -402,7 +402,7 @@ type emoji_list_obj = {
   emoji: (string * string) list;
 } [@@deriving of_yojson]
 
-type groups_close_obj = {
+type chat_close_obj = {
   no_op: bool option;
   already_closed: bool option;
 } [@@deriving of_yojson]
@@ -1044,7 +1044,7 @@ let groups_close token group =
     |> query
     >|= function
     | `Json_response d ->
-      d |> groups_close_obj_of_yojson |> translate_parsing_error
+      d |> chat_close_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error as res -> res
     | _ -> `Unknown_error
@@ -1238,7 +1238,9 @@ let im_close token channel =
     |> definitely_add "channel" channel
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> chat_close_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #channel_error
     | `User_does_not_own_channel as res -> res
     | _ -> `Unknown_error
@@ -1269,7 +1271,8 @@ let im_mark token channel ts =
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #channel_error
     | #not_in_channel_error as res -> res
     | _ -> `Unknown_error

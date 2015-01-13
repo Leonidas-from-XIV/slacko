@@ -400,7 +400,7 @@ type chat_obj = {
 
 type emoji = (string * string)
 
-type groups_close_obj = {
+type chat_close_obj = {
   no_op: bool option;
   already_closed: bool option;
 }
@@ -557,7 +557,7 @@ val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string
 val groups_archive: token -> group -> [> `Success | parsed_auth_error | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Closes a private group. *)
-val groups_close: token -> group -> [> `Success of groups_close_obj | parsed_auth_error | channel_error ] Lwt.t
+val groups_close: token -> group -> [> `Success of chat_close_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Creates a private group. *)
 val groups_create: token -> group -> [> `Success of group_obj | parsed_auth_error | name_error | restriction_error | `User_is_ultra_restricted ] Lwt.t
@@ -599,7 +599,7 @@ val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
 val groups_unarchive: token -> group -> [> `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted ] Lwt.t
 
 (** Close a direct message channel. *)
-val im_close: token -> conversation -> [> authed_result | channel_error | `User_does_not_own_channel ] Lwt.t
+val im_close: token -> conversation -> [> `Success of chat_close_obj | parsed_auth_error | channel_error | `User_does_not_own_channel ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
 val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> [> history_result ] Lwt.t
@@ -608,7 +608,7 @@ val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int ->
 val im_list: token -> [> authed_result ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
-val im_mark: token -> conversation -> timestamp -> [> authed_result | channel_error | not_in_channel_error ] Lwt.t
+val im_mark: token -> conversation -> timestamp -> [> `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t
 
 (** Opens a direct message channel. *)
 val im_open: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t

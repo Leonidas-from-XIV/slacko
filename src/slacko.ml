@@ -542,10 +542,14 @@ let maybe fn = function
   | Some v -> Some (fn v)
   | None -> None
 
-(* nonpublic type for conversion in channels_list *)
+(* nonpublic types for conversion in list types *)
 type channels_list_obj = {
   channels: channel_obj list
-} [@@deriving yojson]
+} [@@deriving of_yojson]
+
+type groups_list_obj = {
+  groups: group_obj list;
+} [@@deriving of_yojson]
 
 let channels_list ?exclude_archived token =
   endpoint "channels.list"
@@ -571,7 +575,13 @@ let groups_list ?exclude_archived token =
     |> definitely_add "token" token
     |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_response d ->
+      (match d |> groups_list_obj_of_yojson with
+        | `Ok x -> `Success x.groups
+        | `Error x -> `ParseFailure x)
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 exception No_matches
 exception No_unique_matches

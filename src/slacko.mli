@@ -578,7 +578,7 @@ val groups_kick: token -> group -> user -> [> `Success | parsed_auth_error | cha
 val groups_leave: token -> group -> [> `Success | parsed_auth_error | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted ] Lwt.t
 
 (** Lists private groups that the calling user has access to. *)
-val groups_list: ?exclude_archived:bool -> token -> [> authed_result ] Lwt.t
+val groups_list: ?exclude_archived:bool -> token -> [> `Success of group_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a private group. *)
 val groups_mark: token -> group -> timestamp -> [> `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t

@@ -424,6 +424,14 @@ type groups_rename_obj = {
   created: timestamp
 } [@@deriving of_yojson]
 
+type im_obj = {
+  id: string;
+  is_im: bool;
+  user: user;
+  created: timestamp;
+  is_user_deleted: bool;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -549,6 +557,10 @@ type channels_list_obj = {
 
 type groups_list_obj = {
   groups: group_obj list;
+} [@@deriving of_yojson]
+
+type im_list_obj = {
+  ims: im_obj list;
 } [@@deriving of_yojson]
 
 let channels_list ?exclude_archived token =
@@ -1272,7 +1284,13 @@ let im_list token =
   endpoint "im.list"
     |> definitely_add "token" token
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_response d ->
+      (match d |> im_list_obj_of_yojson with
+        | `Ok x -> `Success x.ims
+        | `Error x -> `ParseFailure x)
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let im_mark token channel ts =
   endpoint "im.mark"

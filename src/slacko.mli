@@ -422,6 +422,14 @@ type groups_rename_obj = {
   created: timestamp
 }
 
+type im_obj = {
+  id: string;
+  is_im: bool;
+  user: user;
+  created: timestamp;
+  is_user_deleted: bool;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -605,7 +613,7 @@ val im_close: token -> conversation -> [> `Success of chat_close_obj | parsed_au
 val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> [> history_result ] Lwt.t
 
 (** Lists direct message channels for the calling user. *)
-val im_list: token -> [> authed_result ] Lwt.t
+val im_list: token -> [> `Success of im_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
 val im_mark: token -> conversation -> timestamp -> [> `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t

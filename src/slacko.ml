@@ -432,6 +432,16 @@ type im_obj = {
   is_user_deleted: bool;
 } [@@deriving of_yojson]
 
+type im_channel_obj = {
+  id: string;
+} [@@deriving of_yojson]
+
+type im_open_obj = {
+  no_op: bool option;
+  already_open: bool option;
+  channel: im_channel_obj;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1312,7 +1322,9 @@ let im_open token user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> im_open_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #user_error
     | #user_visibility_error as res -> res
     | _ -> `Unknown_error

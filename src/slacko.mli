@@ -430,6 +430,16 @@ type im_obj = {
   is_user_deleted: bool;
 }
 
+type im_channel_obj = {
+  id: string;
+}
+
+type im_open_obj = {
+  no_op: bool option;
+  already_open: bool option;
+  channel: im_channel_obj;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -619,7 +629,7 @@ val im_list: token -> [> `Success of im_obj list | parsed_auth_error ] Lwt.t
 val im_mark: token -> conversation -> timestamp -> [> `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t
 
 (** Opens a direct message channel. *)
-val im_open: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t
+val im_open: token -> user -> [> `Success of im_open_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
 
 (** Exchanges a temporary OAuth code for an API token. *)
 val oauth_access: string -> string -> ?redirect_url:string -> string -> [> api_result | oauth_error ] Lwt.t

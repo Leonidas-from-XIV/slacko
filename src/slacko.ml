@@ -144,6 +144,7 @@ type oauth_error = [
   | `Bad_client_secret
   | `Invalid_code
   | `Bad_redirect_uri
+  | `Unknown_error
 ]
 
 type presence_error = [
@@ -241,6 +242,10 @@ let conversation_to_yojson x =
 let conversation_of_yojson = function
   | `String x -> `Ok x
   | _ -> `Error "Couldn't parse conversation type"
+
+let token_of_yojson = function
+  | `String x -> `Ok x
+  | _ -> `Error "Couldn't parse token"
 
 type topic_obj = {
   value: string;
@@ -440,6 +445,11 @@ type im_open_obj = {
   no_op: bool option;
   already_open: bool option;
   channel: im_channel_obj;
+} [@@deriving of_yojson]
+
+type oauth_obj = {
+  access_token: token;
+  scope: string;
 } [@@deriving of_yojson]
 
 type history_result = [
@@ -1337,7 +1347,8 @@ let oauth_access client_id client_secret ?redirect_url code =
     |> optionally_add "redirect_url" redirect_url
     |> query
     >|= function
-    | #api_result
+    | `Json_response d ->
+      d |> oauth_obj_of_yojson |> translate_parsing_error
     | #oauth_error as res -> res
     | _ -> `Unknown_error
 

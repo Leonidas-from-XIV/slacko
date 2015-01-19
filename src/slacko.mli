@@ -653,7 +653,7 @@ val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -
 val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [> authed_result | user_error ] Lwt.t
 
 (** Gets user presence information. *)
-val users_get_presence: token -> user -> [> authed_result ] Lwt.t
+val users_get_presence: token -> user -> [> `Success of presence | parsed_auth_error ] Lwt.t
 
 (** Gets information about a user. *)
 val users_info: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t

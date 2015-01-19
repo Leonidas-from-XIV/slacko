@@ -311,8 +311,8 @@ type file_obj = {
   (* TODO file id type *)
   id: string;
   created: timestamp;
-  (* deliberately omitted b/c deprecated *)
-  (*timestamp: timestamp;*)
+  (* deprecated *)
+  timestamp: timestamp;
 
   name: string option;
   title: string;
@@ -1389,7 +1389,14 @@ let users_get_presence token user =
     |> definitely_add "token" token
     |> definitely_add "user" user_id
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    (* TODO parse more out of this *)
+    | `Json_response (`Assoc [("presence", `String d)]) -> (match d with
+      | "active" -> `Success Auto
+      | "away" -> `Success Away
+      | _ -> `ParseFailure "Invalid presence")
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let users_info token user =
   let%lwt user_id = id_of_user token user in

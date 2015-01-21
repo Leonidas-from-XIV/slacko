@@ -1405,22 +1405,21 @@ let users_info token user =
     |> definitely_add "user" user_id
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc [("user", d)]) ->
+        d |> user_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #user_error
     | #user_visibility_error as res -> res
     | _ -> `Unknown_error
-
-let users_info' token user =
-  users_info token user >|= function
-    | `Json_response (`Assoc [("user", d)]) ->
-        d |> user_obj_of_yojson |> translate_parsing_error
-    | e -> e
 
 let users_set_active token =
   endpoint "users.setActive"
     |> definitely_add "token" token
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let users_set_presence token presence =
   endpoint "users.setPresence"

@@ -656,16 +656,13 @@ val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [> authed_resu
 val users_get_presence: token -> user -> [> `Success of presence | parsed_auth_error ] Lwt.t
 
 (** Gets information about a user. *)
-val users_info: token -> user -> [> authed_result | user_error | user_visibility_error ] Lwt.t
-
-(** TODO: Temporary, experimental API *)
-val users_info': token -> user -> [> `ParseFailure of string | `Success of user_obj | authed_result | user_error | user_visibility_error ] Lwt.t
+val users_info: token -> user -> [> `Success of user_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
 
 (** Lists all users in a Slack team. *)
 val users_list: token -> [> authed_result ] Lwt.t
 
 (** Marks a user as active. *)
-val users_set_active: token -> [> authed_result ] Lwt.t
+val users_set_active: token -> [> `Success | parsed_auth_error ] Lwt.t
 
 (** Manually sets user presence. *)
 val users_set_presence: token -> presence -> [> authed_result | presence_error ] Lwt.t

@@ -1427,6 +1427,7 @@ let users_set_presence token presence =
     |> definitely_add "presence" @@ string_of_presence presence
     |> query
     >|= function
-    | #authed_result
+    | `Json_response (`Assoc []) -> `Success
+    | #parsed_auth_error
     | #presence_error as res -> res
     | _ -> `Unknown_error

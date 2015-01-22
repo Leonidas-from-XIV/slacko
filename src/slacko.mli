@@ -665,4 +665,4 @@ val users_list: token -> [> authed_result ] Lwt.t
 val users_set_active: token -> [> `Success | parsed_auth_error ] Lwt.t
 
 (** Manually sets user presence. *)
-val users_set_presence: token -> presence -> [> authed_result | presence_error ] Lwt.t
+val users_set_presence: token -> presence -> [> `Success | parsed_auth_error | presence_error ] Lwt.t

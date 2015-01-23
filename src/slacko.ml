@@ -159,6 +159,10 @@ type invalid_name_error = [
   | `Invalid_name
 ]
 
+type bot_error = [
+  | `User_is_bot
+]
+
 type authed_result = [
   | api_result
   | auth_error
@@ -521,6 +525,7 @@ let validate json =
       | `String "restricted_action" -> `Restricted_action
       | `String "too_long" -> `Too_long
       | `String "unknown_type" -> `Unknown_type
+      | `String "user_is_bot" -> `User_is_bot
       | `String "user_not_found" -> `User_not_found
       | `String "user_not_visible" -> `User_not_visible
       | `String "not_authorized" -> `Not_authorized
@@ -612,6 +617,7 @@ let groups_list ?exclude_archived token =
       (match d |> groups_list_obj_of_yojson with
         | `Ok x -> `Success x.groups
         | `Error x -> `ParseFailure x)
+    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -761,6 +767,7 @@ let channels_archive token channel =
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #already_archived_error
     | `Cant_archive_general
     | `Last_restricted_channel
@@ -777,6 +784,7 @@ let channels_create token name =
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
+    | #bot_error
     | #name_error
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
@@ -823,6 +831,7 @@ let channels_invite token channel user =
     | #parsed_auth_error
     | #channel_error
     | #user_error
+    | #bot_error
     | #invite_error
     | #not_in_channel_error
     | #already_in_channel_error
@@ -842,6 +851,7 @@ let channels_join token name =
     | #channel_error
     | #name_error
     | #archive_error
+    | #bot_error
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
@@ -858,6 +868,7 @@ let channels_kick token channel user =
     | #parsed_auth_error
     | #channel_error
     | #user_error
+    | #bot_error
     | #channel_kick_error
     | #not_in_channel_error
     | #restriction_error
@@ -871,9 +882,11 @@ let channels_leave token channel =
     |> definitely_add "channel" channel_id
     |> query
     >|= function
-    | `Json_response d -> d |> channel_leave_obj_of_yojson |> translate_parsing_error
+    | `Json_response d ->
+      d |> channel_leave_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #archive_error
     | #leave_general_error
     | `User_is_restricted as res -> res
@@ -906,6 +919,7 @@ let channels_rename token channel name =
         d |> channel_rename_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #not_in_channel_error
     | #name_error
     | #invalid_name_error
@@ -923,6 +937,7 @@ let channels_set_purpose token channel purpose =
     >|= function
     | `Json_response (`Assoc [("purpose", `String d)]) ->
       `Success d
+    | #bot_error
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -949,6 +964,7 @@ let channels_unarchive token channel =
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | `Not_archived
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
@@ -984,6 +1000,7 @@ let chat_post_message token chat
       d |> chat_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #archive_error
     | #message_length_error
     | #rate_error as res -> res
@@ -1027,6 +1044,7 @@ let files_info token ?count ?page file =
     |> query
     >|= function
     | #authed_result
+    | #bot_error
     | #file_error as res -> res
     | _ -> `Unknown_error
 
@@ -1046,6 +1064,7 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
     >|= function
     | #authed_result
     | #user_error
+    | #bot_error
     | #unknown_type_error as res -> res
     | _ -> `Unknown_error
 
@@ -1059,7 +1078,10 @@ let files_upload token
     |> optionally_add "initial_comment" initial_comment
     |> optionally_add "channels" channels
     |> query_post content
-    >|= only_auth_can_fail
+    >|= function
+    | #authed_result
+    | #bot_error as res -> res
+    | _ -> `Unknown_error
 
 let groups_archive token group =
   let%lwt group_id = id_of_group token group in
@@ -1071,6 +1093,7 @@ let groups_archive token group =
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #already_archived_error
     | `Group_contains_others
     | `Last_restricted_channel
@@ -1100,6 +1123,7 @@ let groups_create token name =
     | `Json_response (`Assoc [("group", d)]) ->
       d |> group_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
+    | #bot_error
     | #name_error
     | #restriction_error
     | `User_is_ultra_restricted as res -> res
@@ -1116,6 +1140,7 @@ let groups_create_child token group =
       d |> group_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #already_archived_error
     | #restriction_error
     | `User_is_ultra_restricted as res -> res
@@ -1149,6 +1174,7 @@ let groups_invite token group user =
     | #parsed_auth_error
     | #channel_error
     | #user_error
+    | #bot_error
     | #invite_error
     | #archive_error
     | `User_is_ultra_restricted as res -> res
@@ -1167,6 +1193,7 @@ let groups_kick token group user =
     | #parsed_auth_error
     | #channel_error
     | #user_error
+    | #bot_error
     | #kick_error
     | #not_in_group_error
     | #restriction_error
@@ -1183,6 +1210,7 @@ let groups_leave token group =
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #archive_error
     | #leave_last_channel_error
     | #last_member_error
@@ -1229,6 +1257,7 @@ let groups_rename token group name =
       d |> groups_rename_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | #name_error
     | #invalid_name_error
     | `User_is_restricted as res -> res
@@ -1244,6 +1273,7 @@ let groups_set_purpose token group purpose =
     >|= function
     | `Json_response (`Assoc [("purpose", `String d)]) ->
       `Success d
+    | #bot_error
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -1270,6 +1300,7 @@ let groups_unarchive token group =
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
     | #channel_error
+    | #bot_error
     | `Not_archived
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
@@ -1309,6 +1340,7 @@ let im_list token =
       (match d |> im_list_obj_of_yojson with
         | `Ok x -> `Success x.ims
         | `Error x -> `ParseFailure x)
+    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -1362,7 +1394,10 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | #authed_result
+    | #bot_error as res -> res
+    | _ -> `Unknown_error
 
 let search_all = search @@ endpoint "search.all"
 let search_files = search @@ endpoint "search.files"
@@ -1380,6 +1415,7 @@ let stars_list ?user ?count ?page token =
     |> query
     >|= function
     | #authed_result
+    | #bot_error
     | #user_error as res -> res
     | _ -> `Unknown_error
 
@@ -1418,6 +1454,7 @@ let users_set_active token =
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success
+    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 

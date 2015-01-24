@@ -552,7 +552,7 @@ val channels_mark: token -> channel -> timestamp -> [> `Success | parsed_auth_er
 val channels_rename: token -> channel -> string -> [> `Success of channel_rename_obj | parsed_auth_error | channel_error | not_in_channel_error | name_error | invalid_name_error | `Not_authorized | `User_is_restricted | bot_error ] Lwt.t
 
 (** Sets the purpose for a channel. *)
-val channels_set_purpose: token -> channel -> topic -> [> topic_result | bot_error ] Lwt.t
+val channels_set_purpose: token -> channel -> topic -> topic_result Lwt.t
 
 (** Sets the topic for a channel. *)
 val channels_set_topic: token -> channel -> topic -> [> topic_result ] Lwt.t
@@ -618,7 +618,7 @@ val groups_open: token -> group -> [> `Success of groups_open_obj | parsed_auth_
 val groups_rename: token -> group -> string -> [> `Success of groups_rename_obj | parsed_auth_error | channel_error | name_error | invalid_name_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Sets the purpose for a private group. *)
-val groups_set_purpose: token -> group -> topic -> [> topic_result | bot_error ] Lwt.t
+val groups_set_purpose: token -> group -> topic -> topic_result Lwt.t
 
 (** Sets the topic for a private group. *)
 val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t

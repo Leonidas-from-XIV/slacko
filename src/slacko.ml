@@ -937,7 +937,6 @@ let channels_set_purpose token channel purpose =
     >|= function
     | `Json_response (`Assoc [("purpose", `String d)]) ->
       `Success d
-    | #bot_error
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
@@ -1273,7 +1272,6 @@ let groups_set_purpose token group purpose =
     >|= function
     | `Json_response (`Assoc [("purpose", `String d)]) ->
       `Success d
-    | #bot_error
     | #topic_result as res -> res
     | _ -> `Unknown_error
 

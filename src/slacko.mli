@@ -507,17 +507,17 @@ val conversation_of_string: string -> conversation
 (** Checks API calling code.
     @param foo A dummy value that will be returned by the API.
     @param error If set, will return a specific kind of error. *)
-val api_test: ?foo:string -> ?error:string -> unit -> [> `Success of Yojson.Safe.json | api_error ] Lwt.t
+val api_test: ?foo:string -> ?error:string -> unit -> [ `Success of Yojson.Safe.json | api_error ] Lwt.t
 
 (** Checks authentication & identity.
     @param token The authentication token that was issued by Slack. *)
-val auth_test: token -> [> `Success of authed_obj | parsed_auth_error ] Lwt.t
+val auth_test: token -> [ `Success of authed_obj | parsed_auth_error ] Lwt.t
 
 (** Archives a channel. *)
-val channels_archive: token -> channel -> [> `Success | parsed_auth_error | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted | bot_error ] Lwt.t
+val channels_archive: token -> channel -> [ `Success | parsed_auth_error | channel_error | already_archived_error | `Cant_archive_general | `Last_restricted_channel | restriction_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Creates a channel. *)
-val channels_create: token -> string -> [> `Success of channel_obj | parsed_auth_error | name_error | `User_is_restricted | bot_error ] Lwt.t
+val channels_create: token -> string -> [ `Success of channel_obj | parsed_auth_error | name_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Fetches history of messages and events from a channel.
     @param token The authentication token that was issued by Slack.
@@ -525,148 +525,148 @@ val channels_create: token -> string -> [> `Success of channel_obj | parsed_auth
     @param oldest The oldest message from history to be returned.
     @param count The number of messages to be returned.
     @param channel The Slack channel from which to get the history. *)
-val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> [> history_result ] Lwt.t
+val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> history_result Lwt.t
 
 (** Gets information about a channel. *)
-val channels_info: token -> channel -> [> `Success of channel_obj | parsed_auth_error | channel_error ] Lwt.t
+val channels_info: token -> channel -> [ `Success of channel_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Invites a user to a channel. *)
-val channels_invite: token -> channel -> user -> [> `Success of channel_obj | parsed_auth_error | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted | bot_error ] Lwt.t
+val channels_invite: token -> channel -> user -> [ `Success of channel_obj | parsed_auth_error | channel_error | user_error | invite_error | not_in_channel_error | already_in_channel_error | archive_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Joins a channel, creating it if needed. *)
-val channels_join: token -> channel -> [> `Success of channel_obj | parsed_auth_error | channel_error | name_error | archive_error | `User_is_restricted | bot_error ] Lwt.t
+val channels_join: token -> channel -> [ `Success of channel_obj | parsed_auth_error | channel_error | name_error | archive_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Removes a user from a channel. *)
-val channels_kick: token -> channel -> user -> [> `Success | parsed_auth_error | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error | `User_is_restricted | bot_error ] Lwt.t
+val channels_kick: token -> channel -> user -> [ `Success | parsed_auth_error | channel_error | user_error | channel_kick_error | not_in_channel_error | restriction_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Leaves a channel. *)
-val channels_leave: token -> channel -> [> `Success of channel_leave_obj | parsed_auth_error | channel_error | archive_error | leave_general_error | `User_is_restricted | bot_error ] Lwt.t
+val channels_leave: token -> channel -> [ `Success of channel_leave_obj | parsed_auth_error | channel_error | archive_error | leave_general_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Lists all channels in a Slack team. *)
-val channels_list: ?exclude_archived:bool -> token -> [> `Success of channel_obj list | parsed_auth_error ] Lwt.t
+val channels_list: ?exclude_archived:bool -> token -> [ `Success of channel_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a channel. *)
-val channels_mark: token -> channel -> timestamp -> [> `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
+val channels_mark: token -> channel -> timestamp -> [ `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
 (** Renames a team channel. *)
-val channels_rename: token -> channel -> string -> [> `Success of channel_rename_obj | parsed_auth_error | channel_error | not_in_channel_error | name_error | invalid_name_error | `Not_authorized | `User_is_restricted | bot_error ] Lwt.t
+val channels_rename: token -> channel -> string -> [ `Success of channel_rename_obj | parsed_auth_error | channel_error | not_in_channel_error | name_error | invalid_name_error | `Not_authorized | `User_is_restricted | bot_error ] Lwt.t
 
 (** Sets the purpose for a channel. *)
 val channels_set_purpose: token -> channel -> topic -> topic_result Lwt.t
 
 (** Sets the topic for a channel. *)
-val channels_set_topic: token -> channel -> topic -> [> topic_result ] Lwt.t
+val channels_set_topic: token -> channel -> topic -> topic_result Lwt.t
 
 (** Unarchives a channel. *)
-val channels_unarchive: token -> channel -> [> `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted | bot_error ] Lwt.t
+val channels_unarchive: token -> channel -> [ `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted | bot_error ] Lwt.t
 
 (** Deletes a message. *)
-val chat_delete: token -> timestamp -> chat -> [> `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
+val chat_delete: token -> timestamp -> chat -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
 
 (** Sends a message to a channel. *)
-val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> message -> [> `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | rate_error | bot_error ] Lwt.t
+val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | rate_error | bot_error ] Lwt.t
 
 (** Updates a message. *)
-val chat_update: token -> timestamp -> chat -> message -> [> `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error ] Lwt.t
+val chat_update: token -> timestamp -> chat -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error ] Lwt.t
 
 (** Lists custom emoji for a team. *)
-val emoji_list: token -> [> `Success of emoji list | parsed_auth_error ] Lwt.t
+val emoji_list: token -> [ `Success of emoji list | parsed_auth_error ] Lwt.t
 
 (** Gets information about a team file. *)
-val files_info: token -> ?count:int -> ?page:int -> string -> [> authed_result | file_error | bot_error ] Lwt.t
+val files_info: token -> ?count:int -> ?page:int -> string -> [ authed_result | file_error | bot_error ] Lwt.t
 
 (** Lists & filters team files. *)
-val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:string -> ?count:int -> ?page:int -> token -> [> authed_result | user_error | unknown_type_error | bot_error ] Lwt.t
+val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:string -> ?count:int -> ?page:int -> token -> [ authed_result | user_error | unknown_type_error | bot_error ] Lwt.t
 
 (** Uploads or creates a file. *)
-val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string -> ?initial_comment:string -> ?channels:string -> Cohttp_lwt_body.t -> [> authed_result | bot_error ] Lwt.t
+val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string -> ?initial_comment:string -> ?channels:string -> Cohttp_lwt_body.t -> [ authed_result | bot_error ] Lwt.t
 
 (** Archives a private group. *)
-val groups_archive: token -> group -> [> `Success | parsed_auth_error | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
+val groups_archive: token -> group -> [ `Success | parsed_auth_error | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Closes a private group. *)
-val groups_close: token -> group -> [> `Success of chat_close_obj | parsed_auth_error | channel_error ] Lwt.t
+val groups_close: token -> group -> [ `Success of chat_close_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Creates a private group. *)
-val groups_create: token -> group -> [> `Success of group_obj | parsed_auth_error | name_error | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
+val groups_create: token -> group -> [ `Success of group_obj | parsed_auth_error | name_error | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Clones and archives a private group. *)
-val groups_create_child: token -> group -> [> `Success of group_obj | parsed_auth_error | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
+val groups_create_child: token -> group -> [ `Success of group_obj | parsed_auth_error | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Fetches history of messages and events from a private group. *)
-val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> [> history_result ] Lwt.t
+val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> history_result Lwt.t
 
 (** Invites a user to a private group. *)
-val groups_invite: token -> group -> user -> [> `Success of groups_invite_obj | parsed_auth_error | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted | bot_error ] Lwt.t
+val groups_invite: token -> group -> user -> [ `Success of groups_invite_obj | parsed_auth_error | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Removes a user from a private group. *)
-val groups_kick: token -> group -> user -> [> `Success | parsed_auth_error | channel_error | user_error | kick_error | not_in_group_error | restriction_error | `User_is_restricted | bot_error ] Lwt.t
+val groups_kick: token -> group -> user -> [ `Success | parsed_auth_error | channel_error | user_error | kick_error | not_in_group_error | restriction_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Leaves a private group. *)
-val groups_leave: token -> group -> [> `Success | parsed_auth_error | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted | bot_error ] Lwt.t
+val groups_leave: token -> group -> [ `Success | parsed_auth_error | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Lists private groups that the calling user has access to. *)
-val groups_list: ?exclude_archived:bool -> token -> [> `Success of group_obj list | parsed_auth_error | bot_error ] Lwt.t
+val groups_list: ?exclude_archived:bool -> token -> [ `Success of group_obj list | parsed_auth_error | bot_error ] Lwt.t
 
 (** Sets the read cursor in a private group. *)
-val groups_mark: token -> group -> timestamp -> [> `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
+val groups_mark: token -> group -> timestamp -> [ `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
 
 (** Opens a private group. *)
-val groups_open: token -> group -> [> `Success of groups_open_obj | parsed_auth_error | channel_error ] Lwt.t
+val groups_open: token -> group -> [ `Success of groups_open_obj | parsed_auth_error | channel_error ] Lwt.t
 
 (** Renames a private group. *)
-val groups_rename: token -> group -> string -> [> `Success of groups_rename_obj | parsed_auth_error | channel_error | name_error | invalid_name_error | `User_is_restricted | bot_error ] Lwt.t
+val groups_rename: token -> group -> string -> [ `Success of groups_rename_obj | parsed_auth_error | channel_error | name_error | invalid_name_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Sets the purpose for a private group. *)
 val groups_set_purpose: token -> group -> topic -> topic_result Lwt.t
 
 (** Sets the topic for a private group. *)
-val groups_set_topic: token -> group -> topic -> [> topic_result ] Lwt.t
+val groups_set_topic: token -> group -> topic -> topic_result Lwt.t
 
 (** Unarchives a private group. *)
-val groups_unarchive: token -> group -> [> `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted | bot_error ] Lwt.t
+val groups_unarchive: token -> group -> [ `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted | bot_error ] Lwt.t
 
 (** Close a direct message channel. *)
-val im_close: token -> conversation -> [> `Success of chat_close_obj | parsed_auth_error | channel_error | `User_does_not_own_channel ] Lwt.t
+val im_close: token -> conversation -> [ `Success of chat_close_obj | parsed_auth_error | channel_error | `User_does_not_own_channel ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
-val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> [> history_result ] Lwt.t
+val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> history_result Lwt.t
 
 (** Lists direct message channels for the calling user. *)
-val im_list: token -> [> `Success of im_obj list | parsed_auth_error | bot_error ] Lwt.t
+val im_list: token -> [ `Success of im_obj list | parsed_auth_error | bot_error ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
-val im_mark: token -> conversation -> timestamp -> [> `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t
+val im_mark: token -> conversation -> timestamp -> [ `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t
 
 (** Opens a direct message channel. *)
-val im_open: token -> user -> [> `Success of im_open_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
+val im_open: token -> user -> [ `Success of im_open_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
 
 (** Exchanges a temporary OAuth code for an API token. *)
-val oauth_access: string -> string -> ?redirect_url:string -> string -> [> `Success of oauth_obj | `ParseFailure of string | oauth_error ] Lwt.t
+val oauth_access: string -> string -> ?redirect_url:string -> string -> [ `Success of oauth_obj | `ParseFailure of string | oauth_error ] Lwt.t
 
 (** Searches for messages and files matching a query. *)
-val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result | bot_error ] Lwt.t
+val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
 
 (** Searches for files matching a query. *)
-val search_files: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result | bot_error ] Lwt.t
+val search_files: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
 
 (** Searches for messages matching a query. *)
-val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [> authed_result | bot_error ] Lwt.t
+val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
 
 (** Lists stars for a user. *)
-val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [> authed_result | user_error | bot_error ] Lwt.t
+val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [ authed_result | user_error | bot_error ] Lwt.t
 
 (** Gets user presence information. *)
-val users_get_presence: token -> user -> [> `Success of presence | parsed_auth_error ] Lwt.t
+val users_get_presence: token -> user -> [ `Success of presence | parsed_auth_error ] Lwt.t
 
 (** Gets information about a user. *)
-val users_info: token -> user -> [> `Success of user_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
+val users_info: token -> user -> [ `Success of user_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
 
 (** Lists all users in a Slack team. *)
-val users_list: token -> [> authed_result ] Lwt.t
+val users_list: token -> authed_result Lwt.t
 
 (** Marks a user as active. *)
-val users_set_active: token -> [> `Success | parsed_auth_error | bot_error ] Lwt.t
+val users_set_active: token -> [ `Success | parsed_auth_error | bot_error ] Lwt.t
 
 (** Manually sets user presence. *)
-val users_set_presence: token -> presence -> [> `Success | parsed_auth_error | presence_error ] Lwt.t
+val users_set_presence: token -> presence -> [ `Success | parsed_auth_error | presence_error ] Lwt.t

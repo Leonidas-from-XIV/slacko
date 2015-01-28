@@ -215,33 +215,17 @@ let timestamp_of_yojson = function
   | `String x -> `Ok (float_of_string x)
   | _ -> `Error "Couldn't parse timestamp type"
 
-let user_to_yojson = function
-  | UserId id -> `String id
-  | UserName name -> `String name
-
 let user_of_yojson = function
   | `String x -> `Ok (UserId x)
   | _ -> `Error "Couldn't parse user type"
-
-let channel_to_yojson = function
-  | ChannelId id -> `String id
-  (* TODO: better solution *)
-  | _ -> failwith "Can't convert"
 
 let channel_of_yojson = function
   | `String x -> `Ok (ChannelId x)
   | _ -> `Error "Couldn't parse channel type"
 
-let group_to_yojson = function
-  | GroupId id -> `String id
-  | _ -> failwith "Can't convert"
-
 let group_of_yojson = function
   | `String x -> `Ok (GroupId x)
   | _ -> `Error "Couldn't parse group type"
-
-let conversation_to_yojson x =
-  `String x
 
 let conversation_of_yojson = function
   | `String x -> `Ok x
@@ -255,7 +239,7 @@ type topic_obj = {
   value: string;
   creator: user;
   last_set: timestamp;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type channel_obj = {
   id: channel;
@@ -272,7 +256,7 @@ type channel_obj = {
   last_read: timestamp option;
   latest: Yojson.Safe.json option;
   unread_count: int option;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type user_obj = {
   id: user;
@@ -293,7 +277,7 @@ type user_obj = {
   is_ultra_restricted: bool;
   is_bot: bool;
   has_files: bool;
-} [@@deriving yojson { strict = false } ]
+} [@@deriving of_yojson { strict = false } ]
 
 type group_obj = {
   id: group;
@@ -309,7 +293,7 @@ type group_obj = {
   last_read: timestamp option;
   unread_count: int option;
   latest: Yojson.Safe.json option;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type file_obj = {
   (* TODO file id type *)
@@ -357,7 +341,7 @@ type file_obj = {
   ims: conversation list;
   initial_comment: Yojson.Safe.json;
   num_strats: int option;
-} [@@deriving yojson { strict = false }]
+} [@@deriving of_yojson { strict = false }]
 
 type message_obj = {
   type' [@key "type"]: string;
@@ -365,13 +349,13 @@ type message_obj = {
   user: user;
   text: string;
   is_starred: bool option;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type history_obj = {
   latest: timestamp;
   messages: message_obj list;
   has_more: bool;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type authed_obj = {
   url: string;
@@ -379,18 +363,18 @@ type authed_obj = {
   user: string;
   team_id: string;
   user_id: user;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type channel_leave_obj = {
   not_in_channel: bool option
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 type channel_rename_obj = {
   id: channel;
   is_channel: bool;
   name: string;
   created: timestamp;
-} [@@deriving yojson]
+} [@@deriving of_yojson]
 
 let chat_of_yojson = function
   | `String c -> (match c.[0] with

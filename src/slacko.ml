@@ -474,6 +474,7 @@ let validate json =
       | `String "cant_archive_general" -> `Cant_archive_general
       | `String "cant_invite" -> `Cant_invite
       | `String "cant_invite_self" -> `Cant_invite_self
+      | `String "cant_delete_file" -> `Cant_delete_file
       | `String "cant_delete_message" -> `Cant_delete_message
       | `String "cant_kick_from_general" -> `Cant_kick_from_general
       | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
@@ -1016,6 +1017,19 @@ let emoji_list token =
       | `Ok x -> `Success x.emoji
       | `Error x -> `ParseFailure x)
     | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
+
+let files_delete token file =
+  endpoint "files.delete"
+    |> definitely_add "token" token
+    |> definitely_add "file" file
+    |> query
+    >|= function
+    | `Json_response (`Assoc []) -> `Success
+    | #authed_result
+    | #bot_error
+    | `Cant_delete_file
+    | #file_error as res -> res
     | _ -> `Unknown_error
 
 let files_info token ?count ?page file =

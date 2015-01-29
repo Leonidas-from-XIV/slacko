@@ -572,6 +572,8 @@ val chat_update: token -> timestamp -> chat -> message -> [ `Success of chat_obj
 (** Lists custom emoji for a team. *)
 val emoji_list: token -> [ `Success of emoji list | parsed_auth_error ] Lwt.t
 
+val files_delete: token -> string -> [ `Success | authed_result | `Cant_delete_file | file_error | bot_error ] Lwt.t
+
 (** Gets information about a team file. *)
 val files_info: token -> ?count:int -> ?page:int -> string -> [ authed_result | file_error | bot_error ] Lwt.t
 

@@ -440,6 +440,26 @@ type oauth_obj = {
   scope: string;
 } [@@deriving of_yojson]
 
+type comment_obj = {
+  id: string;
+  timestamp: timestamp;
+  user: user;
+  comment: string;
+} [@@deriving of_yojson]
+
+type paging_obj = {
+  count: int;
+  total: int;
+  page: int;
+  pages: int;
+} [@@deriving of_yojson]
+
+type files_info_obj = {
+  file: file_obj;
+  comments: comment_obj list;
+  paging: paging_obj;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1040,7 +1060,9 @@ let files_info token ?count ?page file =
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> files_info_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #bot_error
     | #file_error as res -> res
     | _ -> `Unknown_error

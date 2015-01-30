@@ -450,6 +450,74 @@ type oauth_obj = {
   scope: string;
 }
 
+type comment_obj = {
+  id: string;
+  timestamp: timestamp;
+  user: user;
+  comment: string;
+}
+
+type paging_obj = {
+  count: int;
+  total: int;
+  page: int;
+  pages: int;
+}
+
+type file_obj = {
+  (* TODO file id type *)
+  id: string;
+  created: timestamp;
+  (* deprecated *)
+  timestamp: timestamp;
+
+  name: string option;
+  title: string;
+  mimetype: string;
+  pretty_type: string;
+  user: user;
+
+  mode: string;
+  editable: bool;
+  is_external: bool;
+  external_type: string;
+
+  size: int;
+
+  url: string;
+  url_download: string;
+  url_private: string;
+  url_private_download: string;
+
+  thumb_64: string;
+  thunb_80: string;
+  thumb_360: string;
+  thumb_360_gif: string;
+  thumb_360_w: int;
+  thumb_360_h: int;
+
+  permalink: string;
+  edit_link: string;
+  preview: string;
+  preview_highlight: string;
+  lines: int;
+  lines_more: int;
+
+  is_public: bool;
+  (*public_url_shared: ???;*)
+  channels: channel list;
+  groups: group list;
+  ims: conversation list;
+  initial_comment: Yojson.Safe.json;
+  num_strats: int option;
+}
+
+type files_info_obj = {
+  file: file_obj;
+  comments: comment_obj list;
+  paging: paging_obj;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -575,7 +643,7 @@ val emoji_list: token -> [ `Success of emoji list | parsed_auth_error ] Lwt.t
 val files_delete: token -> string -> [ `Success | authed_result | `Cant_delete_file | file_error | bot_error ] Lwt.t
 
 (** Gets information about a team file. *)
-val files_info: token -> ?count:int -> ?page:int -> string -> [ authed_result | file_error | bot_error ] Lwt.t
+val files_info: token -> ?count:int -> ?page:int -> string -> [ `Success of files_info_obj | parsed_auth_error | file_error | bot_error ] Lwt.t
 
 (** Lists & filters team files. *)
 val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:string -> ?count:int -> ?page:int -> token -> [ authed_result | user_error | unknown_type_error | bot_error ] Lwt.t

@@ -518,6 +518,11 @@ type files_info_obj = {
   paging: paging_obj;
 }
 
+type files_list_obj = {
+  files: file_obj list;
+  paging: paging_obj;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -646,7 +651,7 @@ val files_delete: token -> string -> [ `Success | authed_result | `Cant_delete_f
 val files_info: token -> ?count:int -> ?page:int -> string -> [ `Success of files_info_obj | parsed_auth_error | file_error | bot_error ] Lwt.t
 
 (** Lists & filters team files. *)
-val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:string -> ?count:int -> ?page:int -> token -> [ authed_result | user_error | unknown_type_error | bot_error ] Lwt.t
+val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:string -> ?count:int -> ?page:int -> token -> [ `Success of files_list_obj | parsed_auth_error | user_error | unknown_type_error | bot_error ] Lwt.t
 
 (** Uploads or creates a file. *)
 val files_upload: token -> ?filetype:string -> ?filename:string -> ?title:string -> ?initial_comment:string -> ?channels:string -> Cohttp_lwt_body.t -> [ authed_result | bot_error ] Lwt.t

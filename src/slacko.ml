@@ -460,6 +460,11 @@ type files_info_obj = {
   paging: paging_obj;
 } [@@deriving of_yojson]
 
+type files_list_obj = {
+  files: file_obj list;
+  paging: paging_obj;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1081,7 +1086,9 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> files_list_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #user_error
     | #bot_error
     | #unknown_type_error as res -> res

@@ -465,6 +465,12 @@ type files_list_obj = {
   paging: paging_obj;
 } [@@deriving of_yojson]
 
+type stars_list_obj = {
+  (* TODO proper types *)
+  items: Yojson.Safe.json list;
+  paging: paging_obj;
+} [@@deriving of_yojson]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1439,7 +1445,9 @@ let stars_list ?user ?count ?page token =
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> stars_list_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #bot_error
     | #user_error as res -> res
     | _ -> `Unknown_error

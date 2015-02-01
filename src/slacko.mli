@@ -523,6 +523,11 @@ type files_list_obj = {
   paging: paging_obj;
 }
 
+type stars_list_obj = {
+  items: Yojson.Safe.json list;
+  paging: paging_obj;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -729,7 +734,7 @@ val search_files: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?
 val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
 
 (** Lists stars for a user. *)
-val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [ authed_result | user_error | bot_error ] Lwt.t
+val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [ `Success of stars_list_obj | parsed_auth_error | user_error | bot_error ] Lwt.t
 
 (** Gets user presence information. *)
 val users_get_presence: token -> user -> [ `Success of presence | parsed_auth_error ] Lwt.t

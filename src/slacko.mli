@@ -304,12 +304,14 @@ type sort_direction = Ascending | Descending
 (** Presence can either be active or away. *)
 type presence = Auto | Away
 
+(** A topic or purpose object. *)
 type topic_obj = {
   value: string;
   creator: user;
   last_set: timestamp;
 }
 
+(** Object representing lots of information about a Slack user. *)
 type user_obj = {
   id: user;
   name: string;
@@ -331,6 +333,7 @@ type user_obj = {
   has_files: bool;
 }
 
+(** Object representing information about a Slack group. *)
 type group_obj = {
   id: group;
   name: string;
@@ -347,6 +350,7 @@ type group_obj = {
   latest: Yojson.Safe.json option;
 }
 
+(** Object representing information about a Slack channel. *)
 type channel_obj = {
   id: channel;
   name: string;
@@ -364,6 +368,7 @@ type channel_obj = {
   unread_count: int option;
 }
 
+(** Object representing a message. Can be of a number of types. *)
 type message_obj = {
   type': string;
   ts: timestamp;
@@ -372,6 +377,7 @@ type message_obj = {
   is_starred: bool option;
 }
 
+(* The message history of a channel or group conversation. *)
 type history_obj = {
   latest: timestamp;
   messages: message_obj list;

@@ -384,6 +384,7 @@ type history_obj = {
   has_more: bool;
 }
 
+(** Authentication information from the current user. *)
 type authed_obj = {
   url: string;
   team: string;
@@ -392,10 +393,12 @@ type authed_obj = {
   user_id: user;
 }
 
+(** Response to a channel leave request. *)
 type channel_leave_obj = {
   not_in_channel: bool option
 }
 
+(** Response to renaming of a channel. *)
 type channel_rename_obj = {
   id: channel;
   is_channel: bool;
@@ -409,6 +412,7 @@ type chat_obj = {
   text: string option;
 }
 
+(** A single emoji. *)
 type emoji = (string * string)
 
 type chat_close_obj = {
@@ -416,16 +420,19 @@ type chat_close_obj = {
   already_closed: bool option;
 }
 
+(** Response to a channel invite. *)
 type groups_invite_obj = {
   already_in_group: bool option;
   group: group_obj;
 }
 
+(** Response to opening a group. *)
 type groups_open_obj = {
   no_op: bool option;
   already_open: bool option;
 }
 
+(** Response to rename of a group *)
 type groups_rename_obj = {
   id: channel;
   is_group: bool;
@@ -451,11 +458,14 @@ type im_open_obj = {
   channel: im_channel_obj;
 }
 
+(** When requesting an OAuth token, you get a token and the scope for which
+    this token is valid. *)
 type oauth_obj = {
   access_token: token;
   scope: string;
 }
 
+(** Represents a comment on an item. *)
 type comment_obj = {
   id: string;
   timestamp: timestamp;
@@ -463,6 +473,7 @@ type comment_obj = {
   comment: string;
 }
 
+(** Paging information for requests that might have multi page results. *)
 type paging_obj = {
   count: int;
   total: int;

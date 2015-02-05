@@ -440,6 +440,7 @@ type groups_rename_obj = {
   created: timestamp
 }
 
+(** Information about a direct conversation with a person. *)
 type im_obj = {
   id: string;
   is_im: bool;
@@ -452,6 +453,7 @@ type im_channel_obj = {
   id: string;
 }
 
+(** Information about an direct conversation channel. *)
 type im_open_obj = {
   no_op: bool option;
   already_open: bool option;
@@ -481,6 +483,7 @@ type paging_obj = {
   pages: int;
 }
 
+(** Information about a file. *)
 type file_obj = {
   (* TODO file id type *)
   id: string;
@@ -529,17 +532,20 @@ type file_obj = {
   num_strats: int option;
 }
 
+(** Metainformation about a file. *)
 type files_info_obj = {
   file: file_obj;
   comments: comment_obj list;
   paging: paging_obj;
 }
 
+(** A list of files. *)
 type files_list_obj = {
   files: file_obj list;
   paging: paging_obj;
 }
 
+(** Information about starred items. *)
 type stars_list_obj = {
   items: Yojson.Safe.json list;
   paging: paging_obj;

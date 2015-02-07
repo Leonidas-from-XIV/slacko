@@ -347,6 +347,7 @@ type group_obj = {
   is_open: bool option;
   last_read: timestamp option;
   unread_count: int option;
+  unread_count_display: int option;
   latest: Yojson.Safe.json option;
 }
 
@@ -366,6 +367,7 @@ type channel_obj = {
   last_read: timestamp option;
   latest: Yojson.Safe.json option;
   unread_count: int option;
+  unread_count_display: int option;
 }
 
 (** Object representing a message. Can be of a number of types. *)
@@ -447,6 +449,8 @@ type im_obj = {
   user: user;
   created: timestamp;
   is_user_deleted: bool;
+  unread_count: int option;
+  unread_count_display: int option;
 }
 
 type im_channel_obj = {

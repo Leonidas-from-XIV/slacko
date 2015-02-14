@@ -57,7 +57,7 @@ How do I even use this thing?
 -----------------------------
 
 The workflow is always very simple: you get a token from Slack either manually
-or my quwerying the OAuth API. Then you can instantly use any API method that
+or my querying the OAuth API. Then you can instantly use any API method that
 Slacko supports. If you want, you can look at snapshot of
 [the Slacko docs](http://leonidas-from-xiv.github.io/slacko/) to see what
 functions are available (hint: all of them).
@@ -107,11 +107,12 @@ But I do want to code my own stuff!
 -----------------------------------
 
 You know, Slacko is a nice gal/guy. So you can just plug together whatever you
-want with it, since it currently implements
-[100% of the Slack API](https://api.slack.com/methods)! How neat is this? And
-you can use it in your own code without worrying about the license one bit,
-since the [LGPL 3.0](https://www.gnu.org/licenses/lgpl.html) is liberal for
-re-use, coupled with the
+want with it, since it currently implements [100% of the Slack
+API](https://api.slack.com/methods)! Well, except for the Real-Time-Messaging
+part, which is on our TODO! How neat is this? And you can use it in your own
+code without worrying about the license one bit, since the
+[LGPL 3.0](https://www.gnu.org/licenses/lgpl.html) is liberal for re-use,
+coupled with the
 [OCaml linking exception](http://caml.inria.fr/pub/old_caml_site/ocaml/LICENSE.html).
 For realz!
 

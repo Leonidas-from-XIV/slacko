@@ -495,12 +495,60 @@ let optionally_add key value uri = match value with
 
 let definitely_add key value = optionally_add key (Some value)
 
+(* Minimal clone of Yojson.Basic.Util as Yojson.Safe.Util *)
+module Safe = struct
+  module Util : sig
+
+    type t = Yojson.Safe.json
+    exception Type_error of string * t
+
+    val member : string -> t -> t
+    val to_bool : t -> bool
+    val to_list : t -> t list
+    val to_string : t -> string
+    val filter_map : ('a -> 'b option) -> 'a list -> 'b list
+
+    end = struct
+
+    type t = Yojson.Safe.json
+    exception Type_error of string * t
+
+    let rec find_key name = function
+      | [] -> None
+      | (k, v)::xs when k = name -> Some v
+      | _::xs -> find_key name xs
+
+    let member name = function
+      | `Assoc bindings -> (match find_key name bindings with
+        | Some v -> v
+        | None -> `Null)
+      | _ -> `Null
+
+    let to_bool = function
+      | `Bool v -> v
+      | v -> raise (Type_error ("Not a bool", v))
+
+    let to_list = function
+      | `List v -> v
+      | v -> raise (Type_error ("Not a list", v))
+
+    let to_string = function
+      | `String v -> v
+      | v -> raise (Type_error ("Not a string", v))
+
+    let rec filter_map fn = function
+      | [] -> []
+      | x::xs -> match fn x with
+        | Some v -> v::filter_map fn xs
+        | None -> filter_map fn xs
+  end
+end
+
 let validate json =
-  let open Yojson.Basic.Util in
-  match json |> Yojson.Safe.to_basic |> member "ok" |> to_bool with
+  let open Safe.Util in
+  match json |> member "ok" |> to_bool with
     | true -> `Json_response json
-    | false -> let error = json |> Yojson.Safe.to_basic |> member "error" in
-      match error with
+    | false -> match json |> member "error" with
       | `String "account_inactive" -> `Account_inactive
       | `String "already_archived" -> `Already_archived
       | `String "already_in_channel" -> `Already_in_channel
@@ -647,9 +695,9 @@ exception Lookup_failed
 
 (* look up the id of query from results provided by the listfn *)
 let lookup token listfn collection query =
-  let open Yojson.Basic.Util in
+  let open Safe.Util in
   match%lwt listfn token with
-  | `Json_response json -> (let candidates = json |> Yojson.Safe.to_basic |> member collection |> to_list |>
+  | `Json_response json -> (let candidates = json |> member collection |> to_list |>
     filter_map (fun chan ->
       match (chan |> member "name") with
         (* If a channel matches the name, get its ID *)

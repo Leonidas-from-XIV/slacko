@@ -649,6 +649,10 @@ type channels_list_obj = {
   channels: channel_obj list
 } [@@deriving of_yojson]
 
+type users_list_obj = {
+  members: user_obj list
+} [@@deriving of_yojson]
+
 type groups_list_obj = {
   groups: group_obj list;
 } [@@deriving of_yojson]
@@ -670,12 +674,17 @@ let channels_list ?exclude_archived token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-(* TODO convert to struct *)
 let users_list token =
   endpoint "users.list"
     |> definitely_add "token" token
     |> query
-    >|= only_auth_can_fail
+    >|= function
+    | `Json_response d ->
+      (match d |> users_list_obj_of_yojson with
+        | `Ok x -> `Success x.members
+        | `Error x -> `ParseFailure x)
+    | #parsed_auth_error as res -> res
+    | _ -> `Unknown_error
 
 let groups_list ?exclude_archived token =
   endpoint "groups.list"
@@ -696,22 +705,6 @@ exception No_unique_matches
 exception Lookup_failed
 
 (* look up the id of query from results provided by the listfn *)
-let lookup token listfn collection query =
-  let open Safe.Util in
-  match%lwt listfn token with
-  | `Success json -> (let candidates = json |> member collection |> to_list |>
-    filter_map (fun chan ->
-      match (chan |> member "name") with
-        (* If a channel matches the name, get its ID *)
-        | `String q when q = query -> Some (chan |> member "id" |> to_string)
-        | _ -> None) in
-    (* make sure we have only one candidate *)
-    match candidates with
-      | [] -> Lwt.fail No_matches
-      | [x] -> Lwt.return x
-      | _ -> Lwt.fail No_unique_matches)
-  | _ -> Lwt.fail Lookup_failed
-
 let lookupk token listfn filterfn k =
   match%lwt listfn token with
   | `Success channels -> (match List.filter filterfn channels with
@@ -724,7 +717,7 @@ let id_of_channel token = function
   | ChannelId id -> Lwt.return id
   | ChannelName name ->
     let base = String.sub name 1 @@ String.length name - 1 in
-    lookupk token channels_list (fun (c:channel_obj) -> c.name = base) @@ function
+    lookupk token channels_list (fun (x:channel_obj) -> x.name = base) @@ function
     | {id = ChannelId s; _} -> Lwt.return s
     | {id = ChannelName _; _} -> Lwt.fail Lookup_failed
 
@@ -735,12 +728,15 @@ let string_of_channel = function
 
 let id_of_user token = function
   | UserId id -> Lwt.return id
-  | UserName name -> lookup token users_list "members" name
+  | UserName name ->
+    lookupk token users_list (fun (x:user_obj) -> x.name = name) @@ function
+    | {id = UserId s; _} -> Lwt.return s
+    | {id = UserName _; _} -> Lwt.fail Lookup_failed
 
 let id_of_group token = function
   | GroupId id -> Lwt.return id
   | GroupName name ->
-    lookupk token groups_list (fun (g:group_obj) -> g.name = name) @@ function
+    lookupk token groups_list (fun (x:group_obj) -> x.name = name) @@ function
     | {id = GroupId s; _} -> Lwt.return s
     | {id = GroupName _; _} -> Lwt.fail Lookup_failed
 

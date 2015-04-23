@@ -771,7 +771,7 @@ val users_get_presence: token -> user -> [ `Success of presence | parsed_auth_er
 val users_info: token -> user -> [ `Success of user_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t
 
 (** Lists all users in a Slack team. *)
-val users_list: token -> authed_result Lwt.t
+val users_list: token -> [ `Success of user_obj list | parsed_auth_error ] Lwt.t
 
 (** Marks a user as active. *)
 val users_set_active: token -> [ `Success | parsed_auth_error | bot_error ] Lwt.t

@@ -266,8 +266,6 @@ type user_obj = {
   deleted: bool;
   color: string;
   real_name: string;
-  skype: string option;
-  phone: string option;
   tz: string;
   tz_label: string;
   tz_offset: int;
@@ -496,116 +494,75 @@ let optionally_add key value uri = match value with
 
 let definitely_add key value = optionally_add key (Some value)
 
-(* Minimal clone of Yojson.Basic.Util as Yojson.Safe.Util *)
-module Safe = struct
-  module Util : sig
-
-    type t = Yojson.Safe.json
-    exception Type_error of string * t
-
-    val member : string -> t -> t
-    val to_bool : t -> bool
-    val to_list : t -> t list
-    val to_string : t -> string
-    val filter_map : ('a -> 'b option) -> 'a list -> 'b list
-
-    end = struct
-
-    type t = Yojson.Safe.json
-    exception Type_error of string * t
-
-    let rec find_key name = function
-      | [] -> None
-      | (k, v)::xs when k = name -> Some v
-      | _::xs -> find_key name xs
-
-    let member name = function
-      | `Assoc bindings -> (match find_key name bindings with
-        | Some v -> v
-        | None -> `Null)
-      | _ -> `Null
-
-    let to_bool = function
-      | `Bool v -> v
-      | v -> raise (Type_error ("Not a bool", v))
-
-    let to_list = function
-      | `List v -> v
-      | v -> raise (Type_error ("Not a list", v))
-
-    let to_string = function
-      | `String v -> v
-      | v -> raise (Type_error ("Not a string", v))
-
-    let rec filter_map fn = function
-      | [] -> []
-      | x::xs -> match fn x with
-        | Some v -> v::filter_map fn xs
-        | None -> filter_map fn xs
-  end
-end
+(* private API return type *)
+(* the strict is important here, because we just match ok & error and
+ * deliberately ignore the rest *)
+type api_answer = {
+  ok: bool;
+  error: string option [@default None]
+} [@@deriving of_yojson { strict = false }]
 
 let validate json =
-  let open Safe.Util in
-  match json |> member "ok" |> to_bool with
-    | true -> `Json_response json
-    | false -> match json |> member "error" with
-      | `String "account_inactive" -> `Account_inactive
-      | `String "already_archived" -> `Already_archived
-      | `String "already_in_channel" -> `Already_in_channel
-      | `String "bad_client_secret" -> `Bad_client_secret
-      | `String "bad_redirect_uri" -> `Bad_redirect_uri
-      | `String "cant_archive_general" -> `Cant_archive_general
-      | `String "cant_invite" -> `Cant_invite
-      | `String "cant_invite_self" -> `Cant_invite_self
-      | `String "cant_delete_file" -> `Cant_delete_file
-      | `String "cant_delete_message" -> `Cant_delete_message
-      | `String "cant_kick_from_general" -> `Cant_kick_from_general
-      | `String "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
-      | `String "cant_kick_self" -> `Cant_kick_self
-      | `String "cant_leave_general" -> `Cant_leave_general
-      | `String "cant_leave_last_channel" -> `Cant_leave_last_channel
-      | `String "cant_update_message" -> `Cant_update_message
-      | `String "channel_not_found" -> `Channel_not_found
-      | `String "edit_window_closed" -> `Edit_window_closed
-      | `String "file_deleted" -> `File_deleted
-      | `String "file_not_found" -> `File_not_found
-      | `String "invalid_auth" -> `Invalid_auth
-      | `String "invalid_client_id" -> `Invalid_client_id
-      | `String "invalid_code" -> `Invalid_code
-      | `String "invalid_presence" -> `Invalid_presence
-      | `String "invalid_ts_latest" -> `Invalid_ts_latest
-      | `String "invalid_ts_oldest" -> `Invalid_ts_oldest
-      | `String "is_archived" -> `Is_archived
-      | `String "last_member" -> `Last_member
-      | `String "last_ra_channel" -> `Last_restricted_channel
-      | `String "message_not_found" -> `Message_not_found
-      (* not supposed to happen *)
-      | `String "msg_too_long" -> `Msg_too_long
-      | `String "name_taken" -> `Name_taken
-      (* can't really happen *)
-      | `String "no_channel" -> `No_channel
-      (* can't really happen either *)
-      | `String "no_text" -> `No_text
-      | `String "not_archived" -> `Not_archived
-      | `String "not_authed" -> `Not_authed
-      | `String "not_in_channel" -> `Not_in_channel
-      | `String "rate_limited" -> `Rate_limited
-      | `String "restricted_action" -> `Restricted_action
-      | `String "too_long" -> `Too_long
-      | `String "unknown_type" -> `Unknown_type
-      | `String "user_is_bot" -> `User_is_bot
-      | `String "user_not_found" -> `User_not_found
-      | `String "user_not_visible" -> `User_not_visible
-      | `String "not_authorized" -> `Not_authorized
-      | `String "invalid_name" -> `Invalid_name
-      | `String "user_is_restricted" -> `User_is_restricted
-      (* lolwat, I'm not making this up *)
-      | `String "user_is_ultra_restricted" -> `User_is_ultra_restricted
-      | `String "user_does_not_own_channel" -> `User_does_not_own_channel
-      (* when the API changes and introduces new, yet unhandled error types *)
-      | `String err -> `Unhandled_error err
-      | _ -> `Unknown_error
+  match api_answer_of_yojson json with
+  | `Error str -> `ParseFailure str
+  | `Ok parsed -> match parsed.ok, parsed.error with
+    | true, _ -> `Json_response json
+    | _, Some "account_inactive" -> `Account_inactive
+    | _, Some "already_archived" -> `Already_archived
+    | _, Some "already_in_channel" -> `Already_in_channel
+    | _, Some "bad_client_secret" -> `Bad_client_secret
+    | _, Some "bad_redirect_uri" -> `Bad_redirect_uri
+    | _, Some "cant_archive_general" -> `Cant_archive_general
+    | _, Some "cant_invite" -> `Cant_invite
+    | _, Some "cant_invite_self" -> `Cant_invite_self
+    | _, Some "cant_delete_file" -> `Cant_delete_file
+    | _, Some "cant_delete_message" -> `Cant_delete_message
+    | _, Some "cant_kick_from_general" -> `Cant_kick_from_general
+    | _, Some "cant_kick_from_last_channel" -> `Cant_kick_from_last_channel
+    | _, Some "cant_kick_self" -> `Cant_kick_self
+    | _, Some "cant_leave_general" -> `Cant_leave_general
+    | _, Some "cant_leave_last_channel" -> `Cant_leave_last_channel
+    | _, Some "cant_update_message" -> `Cant_update_message
+    | _, Some "channel_not_found" -> `Channel_not_found
+    | _, Some "edit_window_closed" -> `Edit_window_closed
+    | _, Some "file_deleted" -> `File_deleted
+    | _, Some "file_not_found" -> `File_not_found
+    | _, Some "invalid_auth" -> `Invalid_auth
+    | _, Some "invalid_client_id" -> `Invalid_client_id
+    | _, Some "invalid_code" -> `Invalid_code
+    | _, Some "invalid_presence" -> `Invalid_presence
+    | _, Some "invalid_ts_latest" -> `Invalid_ts_latest
+    | _, Some "invalid_ts_oldest" -> `Invalid_ts_oldest
+    | _, Some "is_archived" -> `Is_archived
+    | _, Some "last_member" -> `Last_member
+    | _, Some "last_ra_channel" -> `Last_restricted_channel
+    | _, Some "message_not_found" -> `Message_not_found
+    (* not supposed to happen *)
+    | _, Some "msg_too_long" -> `Msg_too_long
+    | _, Some "name_taken" -> `Name_taken
+    (* can't really happen *)
+    | _, Some "no_channel" -> `No_channel
+    (* can't really happen either *)
+    | _, Some "no_text" -> `No_text
+    | _, Some "not_archived" -> `Not_archived
+    | _, Some "not_authed" -> `Not_authed
+    | _, Some "not_in_channel" -> `Not_in_channel
+    | _, Some "rate_limited" -> `Rate_limited
+    | _, Some "restricted_action" -> `Restricted_action
+    | _, Some "too_long" -> `Too_long
+    | _, Some "unknown_type" -> `Unknown_type
+    | _, Some "user_is_bot" -> `User_is_bot
+    | _, Some "user_not_found" -> `User_not_found
+    | _, Some "user_not_visible" -> `User_not_visible
+    | _, Some "not_authorized" -> `Not_authorized
+    | _, Some "invalid_name" -> `Invalid_name
+    | _, Some "user_is_restricted" -> `User_is_restricted
+    (* lolwat, I'm not making this up *)
+    | _, Some "user_is_ultra_restricted" -> `User_is_ultra_restricted
+    | _, Some "user_does_not_own_channel" -> `User_does_not_own_channel
+    (* when the API changes and introduces new, yet unhandled error types *)
+    | _, Some err -> `Unhandled_error err
+    | _ -> `Unknown_error
 
 (* filter out "ok" and "error" keys *)
 let filter_useless = function

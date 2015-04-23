@@ -318,8 +318,6 @@ type user_obj = {
   deleted: bool;
   color: string;
   real_name: string;
-  skype: string option;
-  phone: string option;
   tz: string;
   tz_label: string;
   tz_offset: int;

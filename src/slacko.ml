@@ -212,6 +212,7 @@ let timestamp_to_yojson ts =
 
 let timestamp_of_yojson = function
   | `Int x -> `Ok (float_of_int x)
+  | `Intlit x -> `Ok (float_of_string x)
   | `String x -> `Ok (float_of_string x)
   | _ -> `Error "Couldn't parse timestamp type"
 

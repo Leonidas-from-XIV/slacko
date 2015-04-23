@@ -712,18 +712,21 @@ let lookup token listfn collection query =
       | _ -> Lwt.fail No_unique_matches)
   | _ -> Lwt.fail Lookup_failed
 
+let lookupk token listfn filterfn k =
+  match%lwt listfn token with
+  | `Success channels -> (match List.filter filterfn channels with
+    | [] -> Lwt.fail No_matches
+    | [x] -> k x
+    | _ -> Lwt.fail No_unique_matches)
+  | _ -> Lwt.fail Lookup_failed
+
 let id_of_channel token = function
   | ChannelId id -> Lwt.return id
   | ChannelName name ->
     let base = String.sub name 1 @@ String.length name - 1 in
-    match%lwt channels_list token with
-    | `Success channels -> (match List.filter (fun (c:channel_obj) -> c.name = base) channels with
-      | [] -> Lwt.fail No_matches
-      | [x] -> (match x.id with
-        | ChannelId s -> Lwt.return s
-        | ChannelName _ -> Lwt.fail Lookup_failed)
-      | _ -> Lwt.fail No_unique_matches)
-    | _ -> Lwt.fail Lookup_failed
+    lookupk token channels_list (fun (c:channel_obj) -> c.name = base) @@ function
+    | {id = ChannelId s; _} -> Lwt.return s
+    | {id = ChannelName _; _} -> Lwt.fail Lookup_failed
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -737,14 +740,9 @@ let id_of_user token = function
 let id_of_group token = function
   | GroupId id -> Lwt.return id
   | GroupName name ->
-    match%lwt groups_list token with
-    | `Success groups -> (match List.filter (fun (g:group_obj) -> g.name = name) groups with
-      | [] -> Lwt.fail No_matches
-      | [x] -> (match x.id with
-        | GroupId s -> Lwt.return s
-        | GroupName _ -> Lwt.fail Lookup_failed)
-      | _ -> Lwt.fail No_unique_matches)
-    | _ -> Lwt.fail Lookup_failed
+    lookupk token groups_list (fun (g:group_obj) -> g.name = name) @@ function
+    | {id = GroupId s; _} -> Lwt.return s
+    | {id = GroupName _; _} -> Lwt.fail Lookup_failed
 
 let id_of_chat token = function
   | Channel c -> id_of_channel token c

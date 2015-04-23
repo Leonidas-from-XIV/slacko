@@ -2,5 +2,6 @@ S src
 B _build/src
 PKG cmdliner
 PKG lwt
+PKG lwt.ppx
 PKG cohttp.lwt
 PKG yojson

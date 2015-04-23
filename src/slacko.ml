@@ -249,15 +249,16 @@ type channel_obj = {
   creator: user;
   is_archived: bool;
   is_general: bool;
+  is_member: bool;
   members: user list;
   topic: topic_obj;
   purpose: topic_obj;
-  is_member: bool;
-  last_read: timestamp option;
-  latest: Yojson.Safe.json option;
-  unread_count: int option;
-  unread_count_display: int option;
-} [@@deriving of_yojson]
+  last_read: timestamp option [@default None];
+  latest: Yojson.Safe.json option [@default None];
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+  num_members: int option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type user_obj = {
   id: user;
@@ -389,8 +390,8 @@ let chat_of_yojson = function
 type chat_obj = {
   ts: timestamp;
   chat [@key "channel"]: chat;
-  text: string option;
-} [@@deriving of_yojson]
+  text: string option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type emoji = (string * string)
 type emoji_list_obj = {
@@ -669,6 +670,7 @@ let channels_list ?exclude_archived token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
+(* TODO convert to struct *)
 let users_list token =
   endpoint "users.list"
     |> definitely_add "token" token
@@ -697,7 +699,7 @@ exception Lookup_failed
 let lookup token listfn collection query =
   let open Safe.Util in
   match%lwt listfn token with
-  | `Json_response json -> (let candidates = json |> member collection |> to_list |>
+  | `Success json -> (let candidates = json |> member collection |> to_list |>
     filter_map (fun chan ->
       match (chan |> member "name") with
         (* If a channel matches the name, get its ID *)
@@ -712,9 +714,16 @@ let lookup token listfn collection query =
 
 let id_of_channel token = function
   | ChannelId id -> Lwt.return id
-  | ChannelName name -> lookup token channels_list "channels" @@
-      (* Split off the leading '#' *)
-      String.sub name 1 @@ String.length name - 1
+  | ChannelName name ->
+    let base = String.sub name 1 @@ String.length name - 1 in
+    match%lwt channels_list token with
+    | `Success channels -> (match List.filter (fun (c:channel_obj) -> c.name = base) channels with
+      | [] -> Lwt.fail No_matches
+      | [x] -> (match x.id with
+        | ChannelId s -> Lwt.return s
+        | ChannelName _ -> Lwt.fail Lookup_failed)
+      | _ -> Lwt.fail No_unique_matches)
+    | _ -> Lwt.fail Lookup_failed
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -727,7 +736,15 @@ let id_of_user token = function
 
 let id_of_group token = function
   | GroupId id -> Lwt.return id
-  | GroupName name -> lookup token groups_list "groups" name
+  | GroupName name ->
+    match%lwt groups_list token with
+    | `Success groups -> (match List.filter (fun (g:group_obj) -> g.name = name) groups with
+      | [] -> Lwt.fail No_matches
+      | [x] -> (match x.id with
+        | GroupId s -> Lwt.return s
+        | GroupName _ -> Lwt.fail Lookup_failed)
+      | _ -> Lwt.fail No_unique_matches)
+    | _ -> Lwt.fail Lookup_failed
 
 let id_of_chat token = function
   | Channel c -> id_of_channel token c

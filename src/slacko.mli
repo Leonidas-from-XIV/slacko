@@ -360,14 +360,15 @@ type channel_obj = {
   creator: user;
   is_archived: bool;
   is_general: bool;
+  is_member: bool;
   members: user list;
   topic: topic_obj;
   purpose: topic_obj;
-  is_member: bool;
   last_read: timestamp option;
   latest: Yojson.Safe.json option;
   unread_count: int option;
   unread_count_display: int option;
+  num_members: int option;
 }
 
 (** Object representing a message. Can be of a number of types. *)

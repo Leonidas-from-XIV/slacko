@@ -289,12 +289,12 @@ type group_obj = {
   members: user list;
   topic: topic_obj;
   purpose: topic_obj;
-  is_open: bool option;
-  last_read: timestamp option;
-  unread_count: int option;
-  unread_count_display: int option;
-  latest: Yojson.Safe.json option;
-} [@@deriving of_yojson]
+  is_open: bool option [@default None];
+  last_read: timestamp option [@default None];
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+  latest: Yojson.Safe.json option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type file_obj = {
   (* TODO file id type *)
@@ -303,7 +303,7 @@ type file_obj = {
   (* deprecated *)
   timestamp: timestamp;
 
-  name: string option;
+  name: string option [@default None];
   title: string;
   mimetype: string;
   pretty_type: string;
@@ -341,7 +341,7 @@ type file_obj = {
   groups: group list;
   ims: conversation list;
   initial_comment: Yojson.Safe.json;
-  num_strats: int option;
+  num_stars: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
 
 type message_obj = {
@@ -349,14 +349,14 @@ type message_obj = {
   ts: timestamp;
   user: user;
   text: string;
-  is_starred: bool option;
-} [@@deriving of_yojson]
+  is_starred: bool option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type history_obj = {
   latest: timestamp;
   messages: message_obj list;
   has_more: bool;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type authed_obj = {
   url: string;
@@ -364,18 +364,18 @@ type authed_obj = {
   user: string;
   team_id: string;
   user_id: user;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type channel_leave_obj = {
-  not_in_channel: bool option
-} [@@deriving of_yojson]
+  not_in_channel: bool option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type channel_rename_obj = {
   id: channel;
   is_channel: bool;
   name: string;
   created: timestamp;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 let chat_of_yojson = function
   | `String c -> (match c.[0] with
@@ -397,26 +397,26 @@ type emoji_list_obj = {
 } [@@deriving of_yojson]
 
 type chat_close_obj = {
-  no_op: bool option;
-  already_closed: bool option;
-} [@@deriving of_yojson]
+  no_op: bool option [@default None];
+  already_closed: bool option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type groups_invite_obj = {
-  already_in_group: bool option;
+  already_in_group: bool option [@default None];
   group: group_obj;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type groups_open_obj = {
-  no_op: bool option;
-  already_open: bool option;
-} [@@deriving of_yojson]
+  no_op: bool option [@default None];
+  already_open: bool option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type groups_rename_obj = {
   id: channel;
   is_group: bool;
   name: string;
   created: timestamp
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type im_obj = {
   id: string;
@@ -424,55 +424,55 @@ type im_obj = {
   user: user;
   created: timestamp;
   is_user_deleted: bool;
-  unread_count: int option;
-  unread_count_display: int option;
-} [@@deriving of_yojson]
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+} [@@deriving of_yojson { strict = false }]
 
 type im_channel_obj = {
   id: string;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type im_open_obj = {
-  no_op: bool option;
-  already_open: bool option;
+  no_op: bool option [@default None];
+  already_open: bool option [@default None];
   channel: im_channel_obj;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type oauth_obj = {
   access_token: token;
   scope: string;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type comment_obj = {
   id: string;
   timestamp: timestamp;
   user: user;
   comment: string;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type paging_obj = {
   count: int;
   total: int;
   page: int;
   pages: int;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type files_info_obj = {
   file: file_obj;
   comments: comment_obj list;
   paging: paging_obj;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type files_list_obj = {
   files: file_obj list;
   paging: paging_obj;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type stars_list_obj = {
   (* TODO proper types *)
   items: Yojson.Safe.json list;
   paging: paging_obj;
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type history_result = [
   | `Success of history_obj

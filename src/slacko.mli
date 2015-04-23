@@ -532,7 +532,7 @@ type file_obj = {
   groups: group list;
   ims: conversation list;
   initial_comment: Yojson.Safe.json;
-  num_strats: int option;
+  num_stars: int option;
 }
 
 (** Metainformation about a file. *)

@@ -592,10 +592,6 @@ let query_post body uri =
 let string_of_timestamp = Printf.sprintf "%.f"
 
 let identity x = x
-(* Many functions can only succeed or fail due to an auth error *)
-let only_auth_can_fail = function
-  | #authed_result as res -> res
-  | _ -> `Unknown_error
 
 let maybe fn = function
   | Some v -> Some (fn v)

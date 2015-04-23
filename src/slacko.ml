@@ -1127,7 +1127,9 @@ let files_upload token
     |> optionally_add "channels" channels
     |> query_post content
     >|= function
-    | #authed_result
+    | `Json_response `Assoc [("file", d)] ->
+        d |> file_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #bot_error as res -> res
     | _ -> `Unknown_error
 

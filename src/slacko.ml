@@ -1073,7 +1073,7 @@ let files_delete token file =
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success
-    | #authed_result
+    | #parsed_auth_error
     | #bot_error
     | `Cant_delete_file
     | #file_error as res -> res

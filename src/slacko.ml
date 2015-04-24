@@ -483,6 +483,33 @@ type search_obj = {
   files: file_search_obj option [@default None];
 } [@@deriving of_yojson { strict = false }]
 
+type team_obj = {
+  (* TODO team id *)
+  id: string;
+  name: string;
+  domain: string;
+  email_domain: string;
+  icon: Yojson.Safe.json;
+} [@@deriving of_yojson { strict = false }]
+
+type login_obj = {
+  user_id: user;
+  username: string;
+  date_first: timestamp;
+  date_last: timestamp;
+  count: int;
+  ip: string;
+  user_agent: string;
+  isp: string;
+  country: string;
+  region: string;
+} [@@deriving of_yojson { strict = false }]
+
+type team_access_log_obj = {
+  logins: login_obj list;
+  paging: paging_obj;
+} [@@deriving of_yojson { strict = false }]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -556,6 +583,7 @@ let validate json =
     | _, Some "not_archived" -> `Not_archived
     | _, Some "not_authed" -> `Not_authed
     | _, Some "not_in_channel" -> `Not_in_channel
+    | _, Some "paid_only" -> `Paid_only
     | _, Some "rate_limited" -> `Rate_limited
     | _, Some "restricted_action" -> `Restricted_action
     | _, Some "too_long" -> `Too_long
@@ -1479,6 +1507,31 @@ let stars_list ?user ?count ?page token =
     | #parsed_auth_error
     | #bot_error
     | #user_error as res -> res
+    | _ -> `Unknown_error
+
+let team_access_logs ?count ?page token =
+  endpoint "team.accessLogs"
+    |> definitely_add "token" token
+    |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "page" @@ maybe string_of_int page
+    |> query
+    >|= function
+    | `Json_response d ->
+      d |> team_access_log_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
+    | `Paid_only
+    | #bot_error as res -> res
+    | _ -> `Unknown_error
+
+let team_info token =
+  endpoint "team.info"
+    |> definitely_add "token" token
+    |> query
+    >|= function
+    | `Json_response d ->
+      d |> team_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
+    | #bot_error as res -> res
     | _ -> `Unknown_error
 
 let users_get_presence token user =

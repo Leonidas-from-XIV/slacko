@@ -556,6 +556,32 @@ type search_obj = {
   files: file_search_obj option;
 }
 
+type team_obj = {
+  id: string;
+  name: string;
+  domain: string;
+  email_domain: string;
+  icon: Yojson.Safe.json;
+}
+
+type login_obj = {
+  user_id: user;
+  username: string;
+  date_first: timestamp;
+  date_last: timestamp;
+  count: int;
+  ip: string;
+  user_agent: string;
+  isp: string;
+  country: string;
+  region: string;
+}
+
+type team_access_log_obj = {
+  logins: login_obj list;
+  paging: paging_obj;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -763,6 +789,12 @@ val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -
 
 (** Lists stars for a user. *)
 val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [ `Success of stars_list_obj | parsed_auth_error | user_error | bot_error ] Lwt.t
+
+(** Gets the access logs for the current team. *)
+val team_access_logs: ?count:int -> ?page:int -> token -> [ `Success of team_access_log_obj | parsed_auth_error | `Paid_only | bot_error ] Lwt.t
+
+(** Gets information about the current team. *)
+val team_info: token -> [ `Success of team_obj | parsed_auth_error | bot_error ] Lwt.t
 
 (** Gets user presence information. *)
 val users_get_presence: token -> user -> [ `Success of presence | parsed_auth_error ] Lwt.t

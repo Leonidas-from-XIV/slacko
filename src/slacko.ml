@@ -608,21 +608,21 @@ let filter_useless = function
   | otherwise -> otherwise
 
 let query uri =
-  let%lwt (_, body) = Cohttp_unix.Client.get uri in
-  let%lwt content = Cohttp_body.to_string body in
-  Yojson.Safe.from_string content
-    |> validate
-    |> filter_useless
-    |> Lwt.return
+  Cohttp_unix.Client.get uri
+  >|= snd
+  >>= Cohttp_body.to_string
+  >|= Yojson.Safe.from_string
+  >|= validate
+  >|= filter_useless
 
 (* do a POST request *)
 let query_post body uri =
-  let%lwt (_, body) = Cohttp_unix.Client.post ~body uri in
-  let%lwt content = Cohttp_body.to_string body in
-  Yojson.Safe.from_string content
-    |> validate
-    |> filter_useless
-    |> Lwt.return
+  Cohttp_unix.Client.post ~body uri
+  >|= snd
+  >>= Cohttp_body.to_string
+  >|= Yojson.Safe.from_string
+  >|= validate
+  >|= filter_useless
 
 (* like string_of_float, but doesn't truncate numbers to end with '.',
  * e.g. '42.' *)

@@ -554,6 +554,24 @@ type stars_list_obj = {
   paging: paging_obj;
 }
 
+type message_search_obj = {
+  total: int;
+  paging: paging_obj;
+  matches: message_obj list;
+}
+
+type file_search_obj = {
+  total: int;
+  paging: paging_obj;
+  matches: file_obj list;
+}
+
+type search_obj = {
+  query: string;
+  messages: message_search_obj option;
+  files: file_search_obj option;
+}
+
 (** Return value of a history related request. *)
 type history_result = [
   | `Success of history_obj
@@ -751,13 +769,13 @@ val im_open: token -> user -> [ `Success of im_open_obj | parsed_auth_error | us
 val oauth_access: string -> string -> ?redirect_url:string -> string -> [ `Success of oauth_obj | `ParseFailure of string | oauth_error ] Lwt.t
 
 (** Searches for messages and files matching a query. *)
-val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
+val search_all: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ `Success of search_obj | parsed_auth_error | bot_error ] Lwt.t
 
 (** Searches for files matching a query. *)
-val search_files: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
+val search_files: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ `Success of search_obj | parsed_auth_error | bot_error ] Lwt.t
 
 (** Searches for messages matching a query. *)
-val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ authed_result | bot_error ] Lwt.t
+val search_messages: token -> ?sort:sort_criterion -> ?sort_dir:sort_direction -> ?highlight:bool -> ?count:int -> ?page:int -> string -> [ `Success of search_obj | parsed_auth_error | bot_error ] Lwt.t
 
 (** Lists stars for a user. *)
 val stars_list: ?user:user -> ?count:int -> ?page:int -> token -> [ `Success of stars_list_obj | parsed_auth_error | user_error | bot_error ] Lwt.t

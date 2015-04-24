@@ -475,6 +475,24 @@ type stars_list_obj = {
   paging: paging_obj;
 } [@@deriving of_yojson { strict = false }]
 
+type message_search_obj = {
+  total: int;
+  paging: paging_obj;
+  matches: message_obj list;
+} [@@deriving of_yojson { strict = false }]
+
+type file_search_obj = {
+  total: int;
+  paging: paging_obj;
+  matches: file_obj list;
+} [@@deriving of_yojson { strict = false }]
+
+type search_obj = {
+  query: string;
+  messages: message_search_obj option [@default None];
+  files: file_search_obj option [@default None];
+} [@@deriving of_yojson { strict = false }]
+
 type history_result = [
   | `Success of history_obj
   | parsed_auth_error
@@ -1445,7 +1463,9 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
     >|= function
-    | #authed_result
+    | `Json_response d ->
+      d |> search_obj_of_yojson |> translate_parsing_error
+    | #parsed_auth_error
     | #bot_error as res -> res
     | _ -> `Unknown_error
 

@@ -566,6 +566,7 @@ let validate json =
     | _, Some "invalid_auth" -> `Invalid_auth
     | _, Some "invalid_client_id" -> `Invalid_client_id
     | _, Some "invalid_code" -> `Invalid_code
+    | _, Some "invalid_name" -> `Invalid_name
     | _, Some "invalid_presence" -> `Invalid_presence
     | _, Some "invalid_ts_latest" -> `Invalid_ts_latest
     | _, Some "invalid_ts_oldest" -> `Invalid_ts_oldest
@@ -582,21 +583,20 @@ let validate json =
     | _, Some "no_text" -> `No_text
     | _, Some "not_archived" -> `Not_archived
     | _, Some "not_authed" -> `Not_authed
+    | _, Some "not_authorized" -> `Not_authorized
     | _, Some "not_in_channel" -> `Not_in_channel
     | _, Some "paid_only" -> `Paid_only
     | _, Some "rate_limited" -> `Rate_limited
     | _, Some "restricted_action" -> `Restricted_action
     | _, Some "too_long" -> `Too_long
     | _, Some "unknown_type" -> `Unknown_type
+    | _, Some "user_does_not_own_channel" -> `User_does_not_own_channel
     | _, Some "user_is_bot" -> `User_is_bot
-    | _, Some "user_not_found" -> `User_not_found
-    | _, Some "user_not_visible" -> `User_not_visible
-    | _, Some "not_authorized" -> `Not_authorized
-    | _, Some "invalid_name" -> `Invalid_name
     | _, Some "user_is_restricted" -> `User_is_restricted
     (* lolwat, I'm not making this up *)
     | _, Some "user_is_ultra_restricted" -> `User_is_ultra_restricted
-    | _, Some "user_does_not_own_channel" -> `User_does_not_own_channel
+    | _, Some "user_not_found" -> `User_not_found
+    | _, Some "user_not_visible" -> `User_not_visible
     (* when the API changes and introduces new, yet unhandled error types *)
     | _, Some err -> `Unhandled_error err
     | _ -> `Unknown_error

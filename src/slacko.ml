@@ -32,11 +32,6 @@ type parsed_api_error = [
   | api_error
 ]
 
-type api_result = [
-  | `Json_response of Yojson.Safe.json
-  | api_error
-]
-
 type auth_error = [
   | `Not_authed
   | `Invalid_auth
@@ -161,11 +156,6 @@ type invalid_name_error = [
 
 type bot_error = [
   | `User_is_bot
-]
-
-type authed_result = [
-  | api_result
-  | auth_error
 ]
 
 type parsed_auth_error = [

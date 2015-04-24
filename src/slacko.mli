@@ -48,17 +48,6 @@ type parsed_api_error = [
   | api_error
 ]
 
-(** The basic type that each API endpoint will return at least. This type
-    includes the case that the request succeeded as well as the case that an
-    error happened that the binding didn't know how to handle. It gets
-    composed into {e every other} API return type. *)
-
-type api_result = [
-  | `Json_response of Yojson.Safe.json
-  | api_error
-]
-
-
 (** API calls that require authentication (a {!token}) might fail with one of
     these errors, so functions that take {!token} arguments will return
     {e at least} these error variants. *)
@@ -242,11 +231,6 @@ type bot_error = [
 
 (** API calls which require authentication will always return (at least) these
     error types. *)
-type authed_result = [
-  | api_result
-  | auth_error
-]
-
 type parsed_auth_error = [
   | parsed_api_error
   | auth_error

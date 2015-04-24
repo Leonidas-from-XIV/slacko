@@ -607,22 +607,20 @@ let filter_useless = function
       `Assoc (List.filter (fun (k, _) -> k <> "ok" && k <> "error") items))
   | otherwise -> otherwise
 
-let query uri =
-  Cohttp_unix.Client.get uri
+let process request =
+  request
   >|= snd
   >>= Cohttp_body.to_string
   >|= Yojson.Safe.from_string
   >|= validate
   >|= filter_useless
 
+let query uri =
+  process @@ Cohttp_unix.Client.get uri
+
 (* do a POST request *)
 let query_post body uri =
-  Cohttp_unix.Client.post ~body uri
-  >|= snd
-  >>= Cohttp_body.to_string
-  >|= Yojson.Safe.from_string
-  >|= validate
-  >|= filter_useless
+  process @@ Cohttp_unix.Client.post ~body uri
 
 (* like string_of_float, but doesn't truncate numbers to end with '.',
  * e.g. '42.' *)

@@ -3,6 +3,9 @@ maintainer: "marek@xivilization.net"
 homepage: "https://github.com/Leonidas-from-XIV/slacko"
 license: "LGPL-3 with OCaml linking exception"
 build: [
+  # for development. Not to be included in opam-repository
+  ["oasis" "setup"]
+  # /development
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
   ["ocaml" "setup.ml" "-build"]
   ["ocaml" "setup.ml" "-install"]
@@ -18,5 +21,8 @@ depends: [
   "tls" | "ssl"
   "cohttp" {>= "0.13.0"}
   "ppx_deriving_yojson"
+  # for development. Not to be included in opam-repository
+  "oasis" {build & >= "0.4.0"}
+  # /development
 ]
 available: [ ocaml-version >= "4.02.0" ]

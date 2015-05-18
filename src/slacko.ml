@@ -887,7 +887,7 @@ let channels_info token channel =
 let channels_invite token channel user =
   let%lwt channel_id = id_of_channel token channel and
     user_id = id_of_user token user in
-  endpoint "channels.info"
+  endpoint "channels.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id

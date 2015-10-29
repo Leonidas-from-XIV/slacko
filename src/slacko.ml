@@ -616,11 +616,15 @@ let process request =
   >|= filter_useless
 
 let query uri =
-  process @@ Cohttp_unix.Client.get uri
+  uri
+  |> Cohttp_unix.Client.get
+  |> process
 
 (* do a POST request *)
 let query_post body uri =
-  process @@ Cohttp_unix.Client.post ~body uri
+  uri
+  |> Cohttp_unix.Client.post ~body
+  |> process
 
 (* like string_of_float, but doesn't truncate numbers to end with '.',
  * e.g. '42.' *)

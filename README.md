@@ -44,6 +44,7 @@ dependencies that you have to take care of yourself:
   * [Cmdliner](http://erratique.ch/software/cmdliner)
   * [Yojson](http://mjambon.com/yojson.html)
   * [ppx_deriving_yojson](https://github.com/whitequark/ppx_deriving_yojson)
+    >= 2.3
   * [Cohttp](https://github.com/mirage/ocaml-cohttp) >= 0.13.0
 
 Then you can build Slacko by yourself:

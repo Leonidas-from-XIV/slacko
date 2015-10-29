@@ -336,7 +336,7 @@ type file_obj = {
 } [@@deriving of_yojson { strict = false }]
 
 type message_obj = {
-  type' [@key "type"]: string;
+  type': string [@key "type"];
   ts: timestamp;
   user: user;
   text: string;
@@ -378,7 +378,7 @@ let chat_of_yojson = function
 
 type chat_obj = {
   ts: timestamp;
-  chat [@key "channel"]: chat;
+  chat: chat [@key "channel"];
   text: string option [@default None];
 } [@@deriving of_yojson { strict = false }]
 

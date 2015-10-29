@@ -615,16 +615,14 @@ let process request =
   >|= validate
   >|= filter_useless
 
-let query uri =
-  uri
-  |> Cohttp_unix.Client.get
-  |> process
+let (<<) f g x = f @@ g x
+
+let query =
+  process << Cohttp_unix.Client.get
 
 (* do a POST request *)
-let query_post body uri =
-  uri
-  |> Cohttp_unix.Client.post ~body
-  |> process
+let query_post body =
+  process << Cohttp_unix.Client.post ~body
 
 (* like string_of_float, but doesn't truncate numbers to end with '.',
  * e.g. '42.' *)

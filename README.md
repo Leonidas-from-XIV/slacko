@@ -43,6 +43,7 @@ dependencies that you have to take care of yourself:
     [tls](https://github.com/mirleft/ocaml-tls) (for SSL support)
   * [Cmdliner](http://erratique.ch/software/cmdliner)
   * [Yojson](http://mjambon.com/yojson.html)
+  * [ppx_deriving_yojson](https://github.com/whitequark/ppx_deriving_yojson)
   * [Cohttp](https://github.com/mirage/ocaml-cohttp) >= 0.13.0
 
 Then you can build Slacko by yourself:

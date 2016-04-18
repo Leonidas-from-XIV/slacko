@@ -1,5 +1,6 @@
-opam-version: "1"
+opam-version: "1.2"
 maintainer: "marek@xivilization.net"
+author: "Marek Kubica <marek@xivilization.net>"
 homepage: "https://github.com/Leonidas-from-XIV/slacko"
 license: "LGPL-3 with OCaml linking exception"
 build: [
@@ -8,6 +9,8 @@ build: [
   # /development
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
   ["ocaml" "setup.ml" "-build"]
+]
+install: [
   ["ocaml" "setup.ml" "-install"]
 ]
 remove: [
@@ -26,4 +29,5 @@ depends: [
   # /development
 ]
 dev-repo: "git://github.com/Leonidas-from-XIV/slacko"
+bug-reports: "https://github.com/Leonidas-from-XIV/slacko/issues"
 available: [ ocaml-version >= "4.02.0" ]

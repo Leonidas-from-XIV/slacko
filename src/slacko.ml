@@ -859,7 +859,7 @@ let channels_create token name =
     | _ -> `Unknown_error
 
 let channels_history token
-  ?latest ?oldest ?count channel =
+  ?latest ?oldest ?count ?inclusive channel =
   let%lwt channel_id = id_of_channel token channel in
   endpoint "channels.history"
     |> definitely_add "token" token
@@ -867,6 +867,7 @@ let channels_history token
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
     |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
     |> query
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
@@ -1233,7 +1234,7 @@ let groups_create_child token group =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_history token ?latest ?oldest ?count group =
+let groups_history token ?latest ?oldest ?count ?inclusive group =
   let%lwt group_id = id_of_group token group in
   endpoint "groups.history"
     |> definitely_add "token" token
@@ -1241,6 +1242,7 @@ let groups_history token ?latest ?oldest ?count group =
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
     |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
     |> query
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
@@ -1404,13 +1406,14 @@ let im_close token channel =
     | `User_does_not_own_channel as res -> res
     | _ -> `Unknown_error
 
-let im_history token ?latest ?oldest ?count channel =
+let im_history token ?latest ?oldest ?count ?inclusive channel =
   endpoint "im.history"
     |> definitely_add "token" token
     |> definitely_add "channel" channel
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
     |> optionally_add "count" @@ maybe string_of_int count
+    |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
     |> query
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error

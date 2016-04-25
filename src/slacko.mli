@@ -656,8 +656,9 @@ val channels_create: token -> string -> [ `Success of channel_obj | parsed_auth_
     @param latest The newest message from history to be returned.
     @param oldest The oldest message from history to be returned.
     @param count The number of messages to be returned.
+    @param inclusive Include messages with latest or oldest timestamp in results.
     @param channel The Slack channel from which to get the history. *)
-val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> channel -> history_result Lwt.t
+val channels_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> ?inclusive:bool -> channel -> history_result Lwt.t
 
 (** Gets information about a channel. *)
 val channels_info: token -> channel -> [ `Success of channel_obj | parsed_auth_error | channel_error ] Lwt.t
@@ -728,7 +729,7 @@ val groups_create: token -> group -> [ `Success of group_obj | parsed_auth_error
 val groups_create_child: token -> group -> [ `Success of group_obj | parsed_auth_error | channel_error | already_archived_error | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Fetches history of messages and events from a private group. *)
-val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> group -> history_result Lwt.t
+val groups_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> ?inclusive:bool -> group -> history_result Lwt.t
 
 (** Invites a user to a private group. *)
 val groups_invite: token -> group -> user -> [ `Success of groups_invite_obj | parsed_auth_error | channel_error | user_error | invite_error | archive_error | `User_is_ultra_restricted | bot_error ] Lwt.t
@@ -764,7 +765,7 @@ val groups_unarchive: token -> group -> [ `Success | parsed_auth_error | channel
 val im_close: token -> conversation -> [ `Success of chat_close_obj | parsed_auth_error | channel_error | `User_does_not_own_channel ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
-val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> conversation -> history_result Lwt.t
+val im_history: token -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> ?inclusive:bool -> conversation -> history_result Lwt.t
 
 (** Lists direct message channels for the calling user. *)
 val im_list: token -> [ `Success of im_obj list | parsed_auth_error | bot_error ] Lwt.t

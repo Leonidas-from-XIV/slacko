@@ -798,7 +798,7 @@ val team_access_logs: ?count:int -> ?page:int -> token -> [ `Success of team_acc
 val team_info: token -> [ `Success of team_obj | parsed_auth_error | bot_error ] Lwt.t
 
 (** Gets user presence information. *)
-val users_get_presence: token -> user -> [ `Success of presence | parsed_auth_error ] Lwt.t
+val users_get_presence: token -> user -> [ `Success of presence | user_error | parsed_auth_error ] Lwt.t
 
 (** Gets information about a user. *)
 val users_info: token -> user -> [ `Success of user_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t

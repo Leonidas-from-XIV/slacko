@@ -699,17 +699,20 @@ let lookupk token listfn filterfn k =
   match%lwt listfn token with
   | `Success channels -> (match List.filter filterfn channels with
     | [] -> Lwt.fail No_matches
-    | [x] -> k x
+    | [x] -> Lwt.return @@ k x
     | _ -> Lwt.fail No_unique_matches)
   | _ -> Lwt.fail Lookup_failed
 
-let id_of_channel token = function
-  | ChannelId id -> Lwt.return id
+let id_of_channel token : _ -> [ `User_not_found | `Channel_not_found | `Found of string ] Lwt.t = function
+  | ChannelId id -> Lwt.return @@ `Found id
   | ChannelName name ->
     let base = String.sub name 1 @@ String.length name - 1 in
-    lookupk token channels_list (fun (x:channel_obj) -> x.name = base) @@ function
-    | {id = ChannelId s; _} -> Lwt.return s
-    | {id = ChannelName _; _} -> Lwt.fail Lookup_failed
+    match%lwt (lookupk token channels_list (fun (x:channel_obj) -> x.name = base) @@ function
+    | {id = ChannelId s; _} -> Some s
+    | {id = ChannelName _; _} -> None) with
+    | exception _ -> Lwt.return `Channel_not_found
+    | Some v -> Lwt.return @@ `Found v
+    | None -> Lwt.return `Channel_not_found
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -717,22 +720,28 @@ let string_of_channel = function
   | ChannelName name -> name
 
 let id_of_user token = function
-  | UserId id -> Lwt.return id
+  | UserId id -> Lwt.return @@ `Found id
   | UserName name ->
-    lookupk token users_list (fun (x:user_obj) -> x.name = name) @@ function
-    | {id = UserId s; _} -> Lwt.return s
-    | {id = UserName _; _} -> Lwt.fail Lookup_failed
+    match%lwt (lookupk token users_list (fun (x:user_obj) -> x.name = name) @@ function
+    | {id = UserId s; _} -> Some s
+    | {id = UserName _; _} -> None) with
+    | exception _ -> Lwt.return `User_not_found
+    | Some v -> Lwt.return @@ `Found v
+    | None -> Lwt.return `User_not_found
 
 let id_of_group token = function
-  | GroupId id -> Lwt.return id
+  | GroupId id -> Lwt.return @@ `Found id
   | GroupName name ->
-    lookupk token groups_list (fun (x:group_obj) -> x.name = name) @@ function
-    | {id = GroupId s; _} -> Lwt.return s
-    | {id = GroupName _; _} -> Lwt.fail Lookup_failed
+    match%lwt (lookupk token groups_list (fun (x:group_obj) -> x.name = name) @@ function
+    | {id = GroupId s; _} -> Some s
+    | {id = GroupName _; _} -> None) with
+    | exception _ -> Lwt.return `Channel_not_found
+    | Some v -> Lwt.return @@ `Found v
+    | None -> Lwt.return `Channel_not_found
 
-let id_of_chat token = function
+let id_of_chat token : _ -> [ `Found of string | `Channel_not_found | `User_not_found ] Lwt.t = function
   | Channel c -> id_of_channel token c
-  | Im i -> Lwt.return i
+  | Im i -> Lwt.return @@ `Found i
   | User u -> id_of_user token u
   | Group g -> id_of_group token g
 
@@ -826,9 +835,23 @@ let auth_test token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
+(* Operator for unwrapping channel_ids *)
+let (|->) m f =
+  match%lwt m with
+  | `Channel_not_found -> Lwt.return `Channel_not_found
+  | `User_not_found -> Lwt.return `Unknown_error
+  | `Found v -> f v
+
+(* Operator for unwrapping user_ids *)
+let (|+>) m f =
+  match%lwt m with
+  | `Channel_not_found -> Lwt.return `Unknown_error
+  | `User_not_found -> Lwt.return `User_not_found
+  | `Found v -> f v
+
 let channels_archive token channel =
-  let%lwt channel_id = id_of_channel token channel in
-  endpoint "channels.archive"
+  id_of_channel token channel |-> fun channel_id ->
+    endpoint "channels.archive"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
     |> query
@@ -860,8 +883,8 @@ let channels_create token name =
 
 let channels_history token
   ?latest ?oldest ?count ?inclusive channel =
-  let%lwt channel_id = id_of_channel token channel in
-  endpoint "channels.history"
+  id_of_channel token channel |-> fun channel_id ->
+    endpoint "channels.history"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
@@ -875,8 +898,8 @@ let channels_history token
     | _ -> `Unknown_error
 
 let channels_info token channel =
-  let%lwt channel_id = id_of_channel token channel in
-  endpoint "channels.info"
+  id_of_channel token channel |-> fun channel_id ->
+    endpoint "channels.info"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
     |> query
@@ -888,9 +911,9 @@ let channels_info token channel =
     | _ -> `Unknown_error
 
 let channels_invite token channel user =
-  let%lwt channel_id = id_of_channel token channel and
-    user_id = id_of_user token user in
-  endpoint "channels.invite"
+  id_of_channel token channel |-> fun channel_id ->
+  id_of_user token user |+> fun user_id ->
+    endpoint "channels.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
@@ -926,9 +949,9 @@ let channels_join token name =
     | _ -> `Unknown_error
 
 let channels_kick token channel user =
-  let%lwt channel_id = id_of_channel token channel and
-    user_id = id_of_user token user in
-  endpoint "channels.kick"
+  id_of_channel token channel |-> fun channel_id ->
+  id_of_user token user |+> fun user_id ->
+    endpoint "channels.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
@@ -946,7 +969,7 @@ let channels_kick token channel user =
     | _ -> `Unknown_error
 
 let channels_leave token channel =
-  let%lwt channel_id = id_of_channel token channel in
+  id_of_channel token channel |-> fun channel_id ->
   endpoint "channels.leave"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -963,7 +986,7 @@ let channels_leave token channel =
     | _ -> `Unknown_error
 
 let channels_mark token channel ts =
-  let%lwt channel_id = id_of_channel token channel in
+  id_of_channel token channel |-> fun channel_id ->
   endpoint "channels.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -978,7 +1001,7 @@ let channels_mark token channel ts =
     | _ -> `Unknown_error
 
 let channels_rename token channel name =
-  let%lwt channel_id = id_of_channel token channel in
+  id_of_channel token channel |-> fun channel_id ->
   endpoint "channels.rename"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -998,7 +1021,7 @@ let channels_rename token channel name =
     | _ -> `Unknown_error
 
 let channels_set_purpose token channel purpose =
-  let%lwt channel_id = id_of_channel token channel in
+  id_of_channel token channel |-> fun channel_id ->
   endpoint "channels.setPurpose"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -1011,7 +1034,7 @@ let channels_set_purpose token channel purpose =
     | _ -> `Unknown_error
 
 let channels_set_topic token channel topic =
-  let%lwt channel_id = id_of_channel token channel in
+  id_of_channel token channel |-> fun channel_id ->
   endpoint "channels.setTopic"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -1024,7 +1047,7 @@ let channels_set_topic token channel topic =
     | _ -> `Unknown_error
 
 let channels_unarchive token channel =
-  let%lwt channel_id = id_of_channel token channel in
+  id_of_channel token channel |-> fun channel_id ->
   endpoint "channels.unarchive"
     |> definitely_add "token" token
     |> definitely_add "channel" channel_id
@@ -1039,7 +1062,7 @@ let channels_unarchive token channel =
     | _ -> `Unknown_error
 
 let chat_delete token ts chat =
-  let%lwt chat_id = id_of_chat token chat in
+  id_of_chat token chat |-> fun chat_id ->
   endpoint "chat.delete"
     |> definitely_add "token" token
     |> definitely_add "channel" chat_id
@@ -1054,7 +1077,7 @@ let chat_delete token ts chat =
 
 let chat_post_message token chat
   ?username ?parse ?icon_url ?icon_emoji text =
-  let%lwt chat_id = id_of_chat token chat in
+  id_of_chat token chat |-> fun chat_id ->
   endpoint "chat.postMessage"
     |> definitely_add "token" token
     |> definitely_add "channel" chat_id
@@ -1076,7 +1099,7 @@ let chat_post_message token chat
     | _ -> `Unknown_error
 
 let chat_update token ts chat text =
-  let%lwt chat_id = id_of_chat token chat in
+  id_of_chat token chat |-> fun chat_id ->
   endpoint "chat.update"
     |> definitely_add "token" token
     |> definitely_add "channel" chat_id
@@ -1132,10 +1155,19 @@ let files_info token ?count ?page file =
     | #file_error as res -> res
     | _ -> `Unknown_error
 
+type optional_user = Found_user of string | Unknown_user | Not_specified
+
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
   let%lwt user_id = match user with
-    | Some u -> id_of_user token u >|= (fun x -> Some x)
-    | None -> Lwt.return None in
+    | Some u -> id_of_user token u >|= (function
+        | `Found id -> Found_user id
+        | _ -> Unknown_user)
+    | None -> Lwt.return Not_specified in
+  match user_id with
+  | Unknown_user -> Lwt.return `User_not_found
+  | _ -> let user_id = match user_id with
+    | Found_user id -> Some id
+    | _ -> None in
   endpoint "files.list"
     |> definitely_add "token" token
     |> optionally_add "user" user_id
@@ -1172,7 +1204,7 @@ let files_upload token
     | _ -> `Unknown_error
 
 let groups_archive token group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.archive"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1190,7 +1222,7 @@ let groups_archive token group =
     | _ -> `Unknown_error
 
 let groups_close token group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.close"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1218,7 +1250,7 @@ let groups_create token name =
     | _ -> `Unknown_error
 
 let groups_create_child token group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.createChild"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1235,7 +1267,7 @@ let groups_create_child token group =
     | _ -> `Unknown_error
 
 let groups_history token ?latest ?oldest ?count ?inclusive group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.history"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1250,8 +1282,8 @@ let groups_history token ?latest ?oldest ?count ?inclusive group =
     | _ -> `Unknown_error
 
 let groups_invite token group user =
-  let%lwt user_id = id_of_user token user and
-    group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
+  id_of_user token user |+> fun user_id ->
   endpoint "groups.invite"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1270,8 +1302,8 @@ let groups_invite token group user =
     | _ -> `Unknown_error
 
 let groups_kick token group user =
-  let%lwt user_id = id_of_user token user and
-    group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
+  id_of_user token user |+> fun user_id ->
   endpoint "groups.kick"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1290,7 +1322,7 @@ let groups_kick token group user =
     | _ -> `Unknown_error
 
 let groups_leave token group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.leave"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1307,7 +1339,7 @@ let groups_leave token group =
     | _ -> `Unknown_error
 
 let groups_mark token group ts =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.mark"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1322,7 +1354,7 @@ let groups_mark token group ts =
     | _ -> `Unknown_error
 
 let groups_open token group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.open"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1335,7 +1367,7 @@ let groups_open token group =
     | _ -> `Unknown_error
 
 let groups_rename token group name =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.rename"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1353,7 +1385,7 @@ let groups_rename token group name =
     | _ -> `Unknown_error
 
 let groups_set_purpose token group purpose =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.setPurpose"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1366,7 +1398,7 @@ let groups_set_purpose token group purpose =
     | _ -> `Unknown_error
 
 let groups_set_topic token group topic =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.setTopic"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1379,7 +1411,7 @@ let groups_set_topic token group topic =
     | _ -> `Unknown_error
 
 let groups_unarchive token group =
-  let%lwt group_id = id_of_group token group in
+  id_of_group token group |-> fun group_id ->
   endpoint "groups.unarchive"
     |> definitely_add "token" token
     |> definitely_add "channel" group_id
@@ -1447,7 +1479,7 @@ let im_mark token channel ts =
     | _ -> `Unknown_error
 
 let im_open token user =
-  let%lwt user_id = id_of_user token user in
+  id_of_user token user |+> fun user_id ->
   endpoint "im.open"
     |> definitely_add "token" token
     |> definitely_add "user" user_id
@@ -1496,8 +1528,15 @@ let search_messages = search @@ endpoint "search.messages"
 
 let stars_list ?user ?count ?page token =
   let%lwt user_id = match user with
-    | Some u -> id_of_user token u >|= (fun x -> Some x)
-    | None -> Lwt.return None in
+    | Some u -> id_of_user token u >|= (function
+        | `Found id -> Found_user id
+        | _ -> Unknown_user)
+    | None -> Lwt.return Not_specified in
+  match user_id with
+  | Unknown_user -> Lwt.return `User_not_found
+  | _ -> let user_id = match user_id with
+    | Found_user id -> Some id
+    | _ -> None in
   endpoint "stars.list"
     |> definitely_add "token" token
     |> optionally_add "user" user_id
@@ -1538,7 +1577,7 @@ let team_info token =
     | _ -> `Unknown_error
 
 let users_get_presence token user =
-  let%lwt user_id = id_of_user token user in
+  id_of_user token user |+> fun user_id ->
   endpoint "users.getPresence"
     |> definitely_add "token" token
     |> definitely_add "user" user_id
@@ -1553,7 +1592,8 @@ let users_get_presence token user =
     | _ -> `Unknown_error
 
 let users_info token user =
-  let%lwt user_id = id_of_user token user in
+  id_of_user token user
+  |+> fun user_id ->
   endpoint "users.info"
     |> definitely_add "token" token
     |> definitely_add "user" user_id

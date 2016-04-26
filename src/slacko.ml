@@ -1,6 +1,6 @@
 (*
 * Slacko - Binding to the Slack API
-* Copyright (C) 2014-2015 Marek Kubica <marek@xivilization.net>
+* Copyright (C) 2014-2016 Marek Kubica <marek@xivilization.net>
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public

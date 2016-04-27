@@ -1155,19 +1155,15 @@ let files_info token ?count ?page file =
     | #file_error as res -> res
     | _ -> `Unknown_error
 
-type optional_user = Found_user of string | Unknown_user | Not_specified
+let maybe_with_user token user f =
+  match user with
+    | Some u -> id_of_user token u >>= (function
+        | `Found id -> f @@ Some id
+        | _ -> Lwt.return `User_not_found)
+    | None -> f None
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
-  let%lwt user_id = match user with
-    | Some u -> id_of_user token u >|= (function
-        | `Found id -> Found_user id
-        | _ -> Unknown_user)
-    | None -> Lwt.return Not_specified in
-  match user_id with
-  | Unknown_user -> Lwt.return `User_not_found
-  | _ -> let user_id = match user_id with
-    | Found_user id -> Some id
-    | _ -> None in
+  maybe_with_user token user @@ fun user_id ->
   endpoint "files.list"
     |> definitely_add "token" token
     |> optionally_add "user" user_id
@@ -1527,16 +1523,7 @@ let search_files = search @@ endpoint "search.files"
 let search_messages = search @@ endpoint "search.messages"
 
 let stars_list ?user ?count ?page token =
-  let%lwt user_id = match user with
-    | Some u -> id_of_user token u >|= (function
-        | `Found id -> Found_user id
-        | _ -> Unknown_user)
-    | None -> Lwt.return Not_specified in
-  match user_id with
-  | Unknown_user -> Lwt.return `User_not_found
-  | _ -> let user_id = match user_id with
-    | Found_user id -> Some id
-    | _ -> None in
+  maybe_with_user token user @@ fun user_id ->
   endpoint "stars.list"
     |> definitely_add "token" token
     |> optionally_add "user" user_id

@@ -5,3 +5,4 @@ PKG lwt
 PKG lwt.ppx
 PKG cohttp.lwt
 PKG yojson
+PKG ppx_deriving_yojson

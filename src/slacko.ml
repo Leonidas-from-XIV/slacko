@@ -201,30 +201,30 @@ let timestamp_to_yojson ts =
   `Int (int_of_float ts)
 
 let timestamp_of_yojson = function
-  | `Int x -> Ok (float_of_int x)
-  | `Intlit x -> Ok (float_of_string x)
-  | `String x -> Ok (float_of_string x)
-  | _ -> Error "Couldn't parse timestamp type"
+  | `Int x -> Result.Ok (float_of_int x)
+  | `Intlit x -> Result.Ok (float_of_string x)
+  | `String x -> Result.Ok (float_of_string x)
+  | _ -> Result.Error "Couldn't parse timestamp type"
 
 let user_of_yojson = function
-  | `String x -> Ok (UserId x)
-  | _ -> Error "Couldn't parse user type"
+  | `String x -> Result.Ok (UserId x)
+  | _ -> Result.Error "Couldn't parse user type"
 
 let channel_of_yojson = function
-  | `String x -> Ok (ChannelId x)
-  | _ -> Error "Couldn't parse channel type"
+  | `String x -> Result.Ok (ChannelId x)
+  | _ -> Result.Error "Couldn't parse channel type"
 
 let group_of_yojson = function
-  | `String x -> Ok (GroupId x)
-  | _ -> Error "Couldn't parse group type"
+  | `String x -> Result.Ok (GroupId x)
+  | _ -> Result.Error "Couldn't parse group type"
 
 let conversation_of_yojson = function
-  | `String x -> Ok x
-  | _ -> Error "Couldn't parse conversation type"
+  | `String x -> Result.Ok x
+  | _ -> Result.Error "Couldn't parse conversation type"
 
 let token_of_yojson = function
-  | `String x -> Ok x
-  | _ -> Error "Couldn't parse token"
+  | `String x -> Result.Ok x
+  | _ -> Result.Error "Couldn't parse token"
 
 type topic_obj = {
   value: string;
@@ -370,11 +370,11 @@ type channel_rename_obj = {
 
 let chat_of_yojson = function
   | `String c -> (match c.[0] with
-    | 'C' -> Ok (Channel (ChannelId c))
-    | 'D' -> Ok (Im c)
-    | 'G' -> Ok (Group (GroupId c))
-    | _ -> Error "Failed to parse chat")
-  | _ -> Error "Failed to parse chat"
+    | 'C' -> Result.Ok (Channel (ChannelId c))
+    | 'D' -> Result.Ok (Im c)
+    | 'G' -> Result.Ok (Group (GroupId c))
+    | _ -> Result.Error "Failed to parse chat")
+  | _ -> Result.Error "Failed to parse chat"
 
 type chat_obj = {
   ts: timestamp;
@@ -540,8 +540,8 @@ type api_answer = {
 
 let validate json =
   match api_answer_of_yojson json with
-  | Error str -> `ParseFailure str
-  | Ok parsed -> match parsed.ok, parsed.error with
+  | Result.Error str -> `ParseFailure str
+  | Result.Ok parsed -> match parsed.ok, parsed.error with
     | true, _ -> `Json_response json
     | _, Some "account_inactive" -> `Account_inactive
     | _, Some "already_archived" -> `Already_archived
@@ -659,8 +659,8 @@ let channels_list ?exclude_archived token =
     >|= function
     | `Json_response d ->
       (match d |> channels_list_obj_of_yojson with
-        | Ok x -> `Success x.channels
-        | Error x -> `ParseFailure x)
+        | Result.Ok x -> `Success x.channels
+        | Result.Error x -> `ParseFailure x)
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -671,8 +671,8 @@ let users_list token =
     >|= function
     | `Json_response d ->
       (match d |> users_list_obj_of_yojson with
-        | Ok x -> `Success x.members
-        | Error x -> `ParseFailure x)
+        | Result.Ok x -> `Success x.members
+        | Result.Error x -> `ParseFailure x)
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -684,8 +684,8 @@ let groups_list ?exclude_archived token =
     >|= function
     | `Json_response d ->
       (match d |> groups_list_obj_of_yojson with
-        | Ok x -> `Success x.groups
-        | Error x -> `ParseFailure x)
+        | Result.Ok x -> `Success x.groups
+        | Result.Error x -> `ParseFailure x)
     | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
@@ -811,8 +811,8 @@ let conversation_of_string s =
   if s.[0] = 'D' then s else failwith "Not an IM channel"
 
 let translate_parsing_error = function
-  | Error a -> `ParseFailure a
-  | Ok a -> `Success a
+  | Result.Error a -> `ParseFailure a
+  | Result.Ok a -> `Success a
 
 (* Slack API begins here *)
 
@@ -1122,8 +1122,8 @@ let emoji_list token =
     >|= function
     | `Json_response d ->
       (match d |> emoji_list_obj_of_yojson with
-      | Ok x -> `Success x.emoji
-      | Error x -> `ParseFailure x)
+      | Result.Ok x -> `Success x.emoji
+      | Result.Error x -> `ParseFailure x)
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -1455,8 +1455,8 @@ let im_list token =
     >|= function
     | `Json_response d ->
       (match d |> im_list_obj_of_yojson with
-        | Ok x -> `Success x.ims
-        | Error x -> `ParseFailure x)
+        | Result.Ok x -> `Success x.ims
+        | Result.Error x -> `ParseFailure x)
     | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error

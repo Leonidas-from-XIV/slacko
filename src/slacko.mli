@@ -353,6 +353,33 @@ type channel_obj = {
   num_members: int option;
 }
 
+(** Object representing a message attachment field. *)
+type field_obj = {
+  title: string option;
+  value: string option;
+  short: bool option;
+}
+
+(** Object representing a message attachment. *)
+type attachment_obj = {
+  fallback: string option;
+  color: string option;
+  pretext: string option;
+  author_name: string option;
+  author_link: string option;
+  author_icon: string option;
+  title: string option;
+  title_link: string option;
+  text: string option;
+  fields: field_obj list option;
+  image_url: string option;
+  thumb_url: string option;
+  footer: string option;
+  footer_icon: string option;
+  ts: timestamp option;
+  mrkdwn_in: string list option;
+}
+
 (** Object representing a message. Can be of a number of types. *)
 type message_obj = {
   type': string;
@@ -598,6 +625,19 @@ type history_result = [
 (** Converts a string into a token. *)
 val token_of_string: string -> token
 
+val field: ?title:string -> ?value:string -> ?short:bool -> unit -> field_obj
+
+val attachment:
+  ?fallback:string -> ?color:string -> ?pretext:string ->
+  ?author_name:string -> ?author_link:string -> ?author_icon:string ->
+  ?title:string -> ?title_link:string ->
+  ?text:string -> ?fields:field_obj list ->
+  ?image_url:string -> ?thumb_url:string ->
+  ?footer:string -> ?footer_icon:string ->
+  ?ts:timestamp -> ?mrkdwn_in:string list ->
+  unit ->
+  attachment_obj
+
 (** Build a message from a string. *)
 val message_of_string: string -> message
 
@@ -697,7 +737,7 @@ val channels_unarchive: token -> channel -> [ `Success | parsed_auth_error | cha
 val chat_delete: token -> timestamp -> chat -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
 
 (** Sends a message to a channel. *)
-val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | rate_error | bot_error ] Lwt.t
+val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | rate_error | bot_error ] Lwt.t
 
 (** Updates a message. *)
 val chat_update: token -> timestamp -> chat -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error ] Lwt.t

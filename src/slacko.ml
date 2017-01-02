@@ -335,6 +335,64 @@ type file_obj = {
   num_stars: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
 
+type field_obj = {
+  title: string option [@default None];
+  value: string option [@default None];
+  short: bool option [@default None];
+} [@@deriving yojson { strict = false }]
+
+let field ?title ?value ?short () = {
+  title;
+  value;
+  short;
+}
+
+type attachment_obj = {
+  fallback: string option [@default None];
+  color: string option [@default None];
+  pretext: string option [@default None];
+  author_name: string option [@default None];
+  author_link: string option [@default None];
+  author_icon: string option [@default None];
+  title: string option [@default None];
+  title_link: string option [@default None];
+  text: string option [@default None];
+  fields: field_obj list option [@default None];
+  image_url: string option [@default None];
+  thumb_url: string option [@default None];
+  footer: string option [@default None];
+  footer_icon: string option [@default None];
+  ts: timestamp option [@default None];
+  mrkdwn_in: string list option [@default None];
+} [@@deriving yojson { strict = false }]
+
+let attachment
+    ?fallback ?color ?pretext
+    ?author_name ?author_link ?author_icon
+    ?title ?title_link
+    ?text ?fields
+    ?image_url ?thumb_url
+    ?footer ?footer_icon
+    ?ts ?mrkdwn_in
+    () = {
+  fallback = (match fallback with Some _ -> fallback | None -> text);
+  color;
+  pretext;
+  author_name;
+  author_link;
+  author_icon;
+  title;
+  title_link;
+  text;
+  fields;
+  image_url;
+  thumb_url;
+  footer;
+  footer_icon;
+  ts;
+  mrkdwn_in;
+}
+
 type message_obj = {
   type': string [@key "type"];
   ts: timestamp;
@@ -1075,8 +1133,14 @@ let chat_delete token ts chat =
     | #message_error as res -> res
     | _ -> `Unknown_error
 
+let jsonify_attachments = function
+  | None -> None
+  | Some attachments ->
+    Some (`List (List.map (fun a -> attachment_obj_to_yojson a) attachments) |>
+          Yojson.Safe.to_string)
+
 let chat_post_message token chat
-  ?username ?parse ?icon_url ?icon_emoji text =
+  ?username ?parse ?icon_url ?icon_emoji ?attachments text =
   id_of_chat token chat |-> fun chat_id ->
   endpoint "chat.postMessage"
     |> definitely_add "token" token
@@ -1086,6 +1150,7 @@ let chat_post_message token chat
     |> optionally_add "parse" parse
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
+    |> optionally_add "attachments" (jsonify_attachments attachments)
     |> query
     >|= function
     | `Json_response d ->

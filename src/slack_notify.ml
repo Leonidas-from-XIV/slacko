@@ -50,7 +50,7 @@ let info =
   let doc = "Posts messages to Slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
-let execute token username channel icon_url icon_emoji atxt msg =
+let execute token username channel icon_url icon_emoji attachment_text msg =
   "Your token is " ^ token ^ ", the channel is " ^ channel
     ^ " and the message is '" ^ msg ^ "'."
     |> print_endline;
@@ -71,9 +71,9 @@ let execute token username channel icon_url icon_emoji atxt msg =
   let chat = Slacko.Channel channel in
   let msg = Slacko.message_of_string msg in
   let attachments =
-    match atxt with
+    match attachment_text with
     | None -> None
-    | Some txt -> Some ([Slacko.attachment ~text:txt ()])
+    | Some text -> Some [Slacko.attachment ~text ()]
   in
   Slacko.chat_post_message token chat
     ?username:(username)
@@ -85,7 +85,9 @@ let execute token username channel icon_url icon_emoji atxt msg =
     print_endline @@ string_or_bust c)
   |> Lwt_main.run
 
-let execute_t = Cmdliner.Term.(pure execute $ token $ username $ channel $ icon_url $ icon_emoji $ attachment $ message)
+let execute_t = Cmdliner.Term.(
+    pure execute $ token $ username $ channel $ icon_url $ icon_emoji
+    $ attachment $ message)
 
 let () =
   match Cmdliner.Term.eval (execute_t, info) with

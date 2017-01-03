@@ -337,11 +337,11 @@ type file_obj = {
 
 type field_obj = {
   title: string option [@default None];
-  value: string option [@default None];
+  value: string [@default ""];
   short: bool option [@default None];
 } [@@deriving yojson { strict = false }]
 
-let field ?title ?value ?short () = {
+let field ?title ?short value = {
   title;
   value;
   short;
@@ -366,6 +366,8 @@ type attachment_obj = {
   mrkdwn_in: string list option [@default None];
 } [@@deriving yojson { strict = false }]
 
+let ifnone a b = match a with Some v -> Some v | None -> b
+
 let attachment
     ?fallback ?color ?pretext
     ?author_name ?author_link ?author_icon
@@ -375,7 +377,7 @@ let attachment
     ?footer ?footer_icon
     ?ts ?mrkdwn_in
     () = {
-  fallback = (match fallback with Some _ -> fallback | None -> text);
+  fallback = ifnone fallback text;
   color;
   pretext;
   author_name;
@@ -1133,11 +1135,9 @@ let chat_delete token ts chat =
     | #message_error as res -> res
     | _ -> `Unknown_error
 
-let jsonify_attachments = function
-  | None -> None
-  | Some attachments ->
-    Some (`List (List.map (fun a -> attachment_obj_to_yojson a) attachments) |>
-          Yojson.Safe.to_string)
+let jsonify_attachments attachments =
+  `List (List.map (fun a -> attachment_obj_to_yojson a) attachments)
+  |> Yojson.Safe.to_string
 
 let chat_post_message token chat
   ?username ?parse ?icon_url ?icon_emoji ?attachments text =
@@ -1150,7 +1150,7 @@ let chat_post_message token chat
     |> optionally_add "parse" parse
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
-    |> optionally_add "attachments" (jsonify_attachments attachments)
+    |> optionally_add "attachments" @@ maybe jsonify_attachments attachments
     |> query
     >|= function
     | `Json_response d ->

@@ -356,7 +356,7 @@ type channel_obj = {
 (** Object representing a message attachment field. *)
 type field_obj = {
   title: string option;
-  value: string option;
+  value: string;
   short: bool option;
 }
 
@@ -625,7 +625,7 @@ type history_result = [
 (** Converts a string into a token. *)
 val token_of_string: string -> token
 
-val field: ?title:string -> ?value:string -> ?short:bool -> unit -> field_obj
+val field: ?title:string -> ?short:bool -> string -> field_obj
 
 val attachment:
   ?fallback:string -> ?color:string -> ?pretext:string ->

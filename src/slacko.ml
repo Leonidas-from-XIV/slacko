@@ -99,6 +99,10 @@ type message_length_error = [
   | `Msg_too_long
 ]
 
+type attachments_error = [
+  | `Too_many_attachments
+]
+
 type rate_error = [
   | `Rate_limited
 ]
@@ -639,6 +643,7 @@ let validate json =
     | _, Some "message_not_found" -> `Message_not_found
     (* not supposed to happen *)
     | _, Some "msg_too_long" -> `Msg_too_long
+    | _, Some "too_many_attachments" -> `Too_many_attachments
     | _, Some "name_taken" -> `Name_taken
     (* can't really happen *)
     | _, Some "no_channel" -> `No_channel
@@ -1163,6 +1168,7 @@ let chat_post_message token chat
     | #bot_error
     | #archive_error
     | #message_length_error
+    | #attachments_error
     | #rate_error as res -> res
     | _ -> `Unknown_error
 
@@ -1180,7 +1186,8 @@ let chat_update token ts chat text =
     | #parsed_auth_error
     | #channel_error
     | #message_update_error
-    | #message_length_error as res -> res
+    | #message_length_error
+    | #attachments_error as res -> res
     | _ -> `Unknown_error
 
 let emoji_list token =

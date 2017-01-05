@@ -149,6 +149,14 @@ type message_length_error = [
   | `Msg_too_long
 ]
 
+(** When posting a message with attachments, you may receive this error if you
+    post too many. The Slack API documentation states that a maximum of 100
+    attachments are allowed, but that no message should ever have more than 20.
+    Slacko doesn't check the number of attachments sent. *)
+type attachments_error = [
+  | `Too_many_attachments
+]
+
 (** Doing too many API requests in a certain timespan might cause a rate
     limitation to be applied by Slack. This is the error that results in
     that case. *)
@@ -737,10 +745,10 @@ val channels_unarchive: token -> channel -> [ `Success | parsed_auth_error | cha
 val chat_delete: token -> timestamp -> chat -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
 
 (** Sends a message to a channel. *)
-val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | rate_error | bot_error ] Lwt.t
+val chat_post_message: token -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | attachments_error | rate_error | bot_error ] Lwt.t
 
 (** Updates a message. *)
-val chat_update: token -> timestamp -> chat -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error ] Lwt.t
+val chat_update: token -> timestamp -> chat -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error | attachments_error ] Lwt.t
 
 (** Lists custom emoji for a team. *)
 val emoji_list: token -> [ `Success of emoji list | parsed_auth_error ] Lwt.t

@@ -338,10 +338,10 @@ type file_obj = {
 type field_obj = {
   title: string option [@default None];
   value: string [@default ""];
-  short: bool option [@default None];
+  short: bool [@default false];
 } [@@deriving yojson { strict = false }]
 
-let field ?title ?short value = {
+let field ?title ?(short=false) value = {
   title;
   value;
   short;
@@ -366,7 +366,10 @@ type attachment_obj = {
   mrkdwn_in: string list option [@default None];
 } [@@deriving yojson { strict = false }]
 
-let ifnone a b = match a with Some v -> Some v | None -> b
+let if_none a b =
+  match a with
+  | Some v -> Some v
+  | None -> b
 
 let attachment
     ?fallback ?color ?pretext
@@ -377,7 +380,7 @@ let attachment
     ?footer ?footer_icon
     ?ts ?mrkdwn_in
     () = {
-  fallback = ifnone fallback text;
+  fallback = if_none fallback text;
   color;
   pretext;
   author_name;
@@ -1140,7 +1143,7 @@ let jsonify_attachments attachments =
   |> Yojson.Safe.to_string
 
 let chat_post_message token chat
-  ?username ?parse ?icon_url ?icon_emoji ?attachments text =
+  ?username ?parse ?icon_url ?icon_emoji ?(attachments=[]) text =
   id_of_chat token chat |-> fun chat_id ->
   endpoint "chat.postMessage"
     |> definitely_add "token" token
@@ -1150,7 +1153,7 @@ let chat_post_message token chat
     |> optionally_add "parse" parse
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
-    |> optionally_add "attachments" @@ maybe jsonify_attachments attachments
+    |> definitely_add "attachments" @@ jsonify_attachments attachments
     |> query
     >|= function
     | `Json_response d ->

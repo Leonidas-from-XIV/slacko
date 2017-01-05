@@ -357,7 +357,7 @@ type channel_obj = {
 type field_obj = {
   title: string option;
   value: string;
-  short: bool option;
+  short: bool;
 }
 
 (** Object representing a message attachment. *)

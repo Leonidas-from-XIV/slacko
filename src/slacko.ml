@@ -99,6 +99,10 @@ type message_length_error = [
   | `Msg_too_long
 ]
 
+type attachments_error = [
+  | `Too_many_attachments
+]
+
 type rate_error = [
   | `Rate_limited
 ]
@@ -334,6 +338,69 @@ type file_obj = {
   initial_comment: Yojson.Safe.json;
   num_stars: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
+
+type field_obj = {
+  title: string option [@default None];
+  value: string [@default ""];
+  short: bool [@default false];
+} [@@deriving yojson { strict = false }]
+
+let field ?title ?(short=false) value = {
+  title;
+  value;
+  short;
+}
+
+type attachment_obj = {
+  fallback: string option [@default None];
+  color: string option [@default None];
+  pretext: string option [@default None];
+  author_name: string option [@default None];
+  author_link: string option [@default None];
+  author_icon: string option [@default None];
+  title: string option [@default None];
+  title_link: string option [@default None];
+  text: string option [@default None];
+  fields: field_obj list option [@default None];
+  image_url: string option [@default None];
+  thumb_url: string option [@default None];
+  footer: string option [@default None];
+  footer_icon: string option [@default None];
+  ts: timestamp option [@default None];
+  mrkdwn_in: string list option [@default None];
+} [@@deriving yojson { strict = false }]
+
+let if_none a b =
+  match a with
+  | Some v -> Some v
+  | None -> b
+
+let attachment
+    ?fallback ?color ?pretext
+    ?author_name ?author_link ?author_icon
+    ?title ?title_link
+    ?text ?fields
+    ?image_url ?thumb_url
+    ?footer ?footer_icon
+    ?ts ?mrkdwn_in
+    () = {
+  fallback = if_none fallback text;
+  color;
+  pretext;
+  author_name;
+  author_link;
+  author_icon;
+  title;
+  title_link;
+  text;
+  fields;
+  image_url;
+  thumb_url;
+  footer;
+  footer_icon;
+  ts;
+  mrkdwn_in;
+}
 
 type message_obj = {
   type': string [@key "type"];
@@ -576,6 +643,7 @@ let validate json =
     | _, Some "message_not_found" -> `Message_not_found
     (* not supposed to happen *)
     | _, Some "msg_too_long" -> `Msg_too_long
+    | _, Some "too_many_attachments" -> `Too_many_attachments
     | _, Some "name_taken" -> `Name_taken
     (* can't really happen *)
     | _, Some "no_channel" -> `No_channel
@@ -1075,8 +1143,12 @@ let chat_delete token ts chat =
     | #message_error as res -> res
     | _ -> `Unknown_error
 
+let jsonify_attachments attachments =
+  `List (List.map (fun a -> attachment_obj_to_yojson a) attachments)
+  |> Yojson.Safe.to_string
+
 let chat_post_message token chat
-  ?username ?parse ?icon_url ?icon_emoji text =
+  ?username ?parse ?icon_url ?icon_emoji ?(attachments=[]) text =
   id_of_chat token chat |-> fun chat_id ->
   endpoint "chat.postMessage"
     |> definitely_add "token" token
@@ -1086,6 +1158,7 @@ let chat_post_message token chat
     |> optionally_add "parse" parse
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
+    |> definitely_add "attachments" @@ jsonify_attachments attachments
     |> query
     >|= function
     | `Json_response d ->
@@ -1095,6 +1168,7 @@ let chat_post_message token chat
     | #bot_error
     | #archive_error
     | #message_length_error
+    | #attachments_error
     | #rate_error as res -> res
     | _ -> `Unknown_error
 
@@ -1112,7 +1186,8 @@ let chat_update token ts chat text =
     | #parsed_auth_error
     | #channel_error
     | #message_update_error
-    | #message_length_error as res -> res
+    | #message_length_error
+    | #attachments_error as res -> res
     | _ -> `Unknown_error
 
 let emoji_list token =

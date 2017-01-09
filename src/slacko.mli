@@ -150,9 +150,10 @@ type message_length_error = [
 ]
 
 (** When posting a message with attachments, you may receive this error if you
-    post too many. The Slack API documentation states that a maximum of 100
-    attachments are allowed, but that no message should ever have more than 20.
-    Slacko doesn't check the number of attachments sent. *)
+    post too many. The Slack API documentation states that attempting to post a
+    message with more than 100 attachments will fail with this error, but also
+    that no message should ever have more than 20 attachments. Slacko doesn't
+    check the number of attachments sent. *)
 type attachments_error = [
   | `Too_many_attachments
 ]

@@ -83,14 +83,44 @@ let get_success = function
   | _ -> assert_failure "Unexpected failure."
 
 
+(* api_test *)
+
+let test_api_test_nodata tctx =
+  Slacko.api_test () >|= get_success >|= fun json ->
+  assert_equal ~printer:Yojson.Safe.to_string
+    (`Assoc [])
+    json
+
+let test_api_test_foo tctx =
+  Slacko.api_test ~foo:"hello" () >|= get_success >|= fun json ->
+  assert_equal ~printer:Yojson.Safe.to_string
+    (`Assoc ["args", `Assoc ["foo", `String "hello"]])
+    json
+
+let test_api_test_err tctx =
+  Slacko.api_test ~error:"badthing" () >|= fun resp ->
+  assert_equal (`Unhandled_error "badthing") resp
+
+let test_api_test_err_foo tctx =
+  Slacko.api_test ~foo:"goodbye" ~error:"badthing" () >|= fun resp ->
+  assert_equal (`Unhandled_error "badthing") resp
+
+(* channels_list *)
+
 let test_channels_list tctx =
   Slacko.channels_list token >|= get_success >|=
   List.map abbreviate_channel_obj >|= fun channels ->
-  assert_equal ~printer:show_abbreviated_channel_obj_list channels channels_obj
+  assert_equal ~printer:show_abbreviated_channel_obj_list
+    channels_obj
+    channels
 
 
-let suite = "tests" >::: [
-    "test_channels_list" >:: fake_slack_test test_channels_list;
+let suite = "tests" >::: List.map (fun (l, f) -> l >:: fake_slack_test f) [
+    "test_api_test_nodata", test_api_test_nodata;
+    "test_api_test_foo", test_api_test_foo;
+    "test_api_test_err", test_api_test_err;
+    "test_api_test_err_foo", test_api_test_err_foo;
+    "test_channels_list", test_channels_list;
   ]
 
 

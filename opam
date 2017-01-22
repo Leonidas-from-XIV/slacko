@@ -10,6 +10,7 @@ build: [
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
   ["ocaml" "setup.ml" "-build"]
 ]
+build-test: [make "test"]
 install: [
   ["ocaml" "setup.ml" "-install"]
 ]

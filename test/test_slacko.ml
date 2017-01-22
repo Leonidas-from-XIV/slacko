@@ -3,9 +3,17 @@ open Slounit
 open Lwt
 
 
-let token =
-  Slacko.token_of_string @@
+let token_str =
   try Sys.getenv "SLACKO_TEST_TOKEN" with Not_found -> "token"
+
+let token = Slacko.token_of_string token_str
+
+(* If we have a non-default token, assume we want to talk to real slack. If
+   not, use our local fake instead. *)
+let () = match token_str with
+  | "token" -> Slacko.set_base_url "http://127.0.0.1:7357/api/"
+  | _ -> print_endline "NOTE: Because an API token has been provided, tests will run against the real slack API."
+
 
 let deopt default = function
   | Some x -> x

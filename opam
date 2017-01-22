@@ -26,6 +26,10 @@ depends: [
   "ppx_deriving_yojson" {>= "3.0"}
   # for development. Not to be included in opam-repository
   "oasis" {build & >= "0.4.0"}
+  "ounit" {test}
+  # conduit is pulled in by cohttp, but for tests we need the server stop
+  # fixes in 0.14.0
+  "conduit" {test & >= "0.14.0"}
   # /development
 ]
 conflicts: [

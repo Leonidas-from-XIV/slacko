@@ -14,7 +14,15 @@ let token = Slacko.token_of_string token_str
    not, use our local fake instead. *)
 let () = match token_str with
   | "xoxp-testtoken" -> Slacko.set_base_url "http://127.0.0.1:7357/api/"
-  | _ -> print_endline "NOTE: Because an API token has been provided, tests will run against the real slack API."
+  | _ ->
+    print_endline ("NOTE: Because an API token has been provided, " ^
+                   "tests will run against the real slack API.");
+    try
+      (* We may want to talk to a proxy or a different fake slack. *)
+      let base_url = Sys.getenv "SLACKO_TEST_BASE_URL" in
+      Slacko.set_base_url base_url;
+      print_endline @@ "NOTE: Overriding slack base URL to " ^ base_url
+    with Not_found -> ()
 
 
 let abbr_json abbr_of_yojson json =

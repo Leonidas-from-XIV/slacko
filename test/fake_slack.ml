@@ -6,6 +6,11 @@ open Cohttp_lwt_unix
 
 
 let channels_json = Yojson.Safe.from_file "channels.json"
+let authed_json = Yojson.Safe.from_file "authed.json"
+
+let json_fields = function
+  | `Assoc fields -> fields
+  | _ -> failwith "Can't parse test json."
 
 
 let resp ok fields =
@@ -15,6 +20,19 @@ let resp ok fields =
 let ok_resp fields = resp true fields
 
 let err_resp err fields = resp false (("error", `String err) :: fields)
+
+let get_arg_opt arg req =
+  Uri.get_query_param (Request.uri req) arg
+
+let get_arg_default arg default req =
+  match get_arg_opt arg req with
+  | Some x -> x
+  | None -> default
+
+let get_arg arg req =
+  match get_arg_opt arg req with
+  | Some x -> x
+  | None -> failwith @@ "Mandatory arg " ^ arg ^ " not given."
 
 (* Request handlers *)
 
@@ -33,6 +51,11 @@ let api_test req body =
   | None -> ok_resp fields
   | Some err -> err_resp err fields
 
+let auth_test req body =
+  match get_arg "token" req with
+  | "xoxp-testtoken" -> ok_resp (json_fields authed_json)
+  | _ -> err_resp "invalid_auth" []
+
 let channels_list req body =
   ok_resp ["channels", channels_json]
 
@@ -42,6 +65,7 @@ let server ?(port=7357) ~stop () =
   let callback _conn req body =
     let handler = match req |> Request.uri |> Uri.path with
       | "/api/api.test" -> api_test
+      | "/api/auth.test" -> auth_test
       | "/api/channels.list" -> channels_list
       | _ -> bad_path
     in

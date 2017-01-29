@@ -138,6 +138,7 @@ let test_channels_create_existing tctx =
   assert_equal `Name_taken resp
 
 let channels_create_tests = fake_slack_tests "channels_create" [
+  "test_bad_auth", test_channels_create_bad_auth;
   "test_new", test_channels_create_new;
   "test_existing", test_channels_create_existing;
 ]

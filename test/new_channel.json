@@ -1,0 +1,28 @@
+{
+  "created": 1485611957,
+  "creator": "U3UMJU868",
+  "id": "C3X3D0K88",
+  "is_archived": false,
+  "is_channel": true,
+  "is_general": false,
+  "is_member": true,
+  "last_read": "0000000000.000000",
+  "latest": null,
+  "members": [
+    "U3UMJU868"
+  ],
+  "name": "new_channel",
+  "previous_names": [],
+  "purpose": {
+    "creator": "",
+    "last_set": 0,
+    "value": ""
+  },
+  "topic": {
+    "creator": "",
+    "last_set": 0,
+    "value": ""
+  },
+  "unread_count": 0,
+  "unread_count_display": 0
+}

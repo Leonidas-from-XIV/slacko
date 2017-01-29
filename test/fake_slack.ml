@@ -6,6 +6,7 @@ open Cohttp_lwt_unix
 
 
 let channels_json = Yojson.Safe.from_file "channels.json"
+let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
 
 let json_fields = function
@@ -34,6 +35,11 @@ let get_arg arg req =
   | Some x -> x
   | None -> failwith @@ "Mandatory arg " ^ arg ^ " not given."
 
+let check_auth f req body =
+  match get_arg "token" req with
+  | "xoxp-testtoken" -> f req body
+  | _ -> err_resp "invalid_auth" []
+
 (* Request handlers *)
 
 let bad_path req body =
@@ -52,9 +58,19 @@ let api_test req body =
   | Some err -> err_resp err fields
 
 let auth_test req body =
-  match get_arg "token" req with
-  | "xoxp-testtoken" -> ok_resp (json_fields authed_json)
-  | _ -> err_resp "invalid_auth" []
+  ok_resp (json_fields authed_json)
+
+let channels_archive req body =
+  match get_arg "channel" req with
+  | "C3UK9TS3C" -> err_resp "cant_archive_general" []
+  | "C3XTJPLFL" -> ok_resp []
+  | "C3XTHDCTC" -> err_resp "already_archived" []
+  | _ -> err_resp "channel_not_found" []
+
+let channels_create req body =
+  match get_arg "name" req with
+  | "#general" | "#random" -> err_resp "name_taken" []
+  | "#new_channel" | _ -> ok_resp ["channel", new_channel_json]
 
 let channels_list req body =
   ok_resp ["channels", channels_json]
@@ -65,8 +81,10 @@ let server ?(port=7357) ~stop () =
   let callback _conn req body =
     let handler = match req |> Request.uri |> Uri.path with
       | "/api/api.test" -> api_test
-      | "/api/auth.test" -> auth_test
-      | "/api/channels.list" -> channels_list
+      | "/api/auth.test" -> check_auth auth_test
+      | "/api/channels.archive" -> check_auth channels_archive
+      | "/api/channels.create" -> check_auth channels_create
+      | "/api/channels.list" -> check_auth channels_list
       | _ -> bad_path
     in
     handler req body

@@ -1,5 +1,53 @@
 [
   {
+    "id": "C3XTJPLFL",
+    "name": "archivable_channel",
+    "is_channel": true,
+    "created": 1485679967,
+    "creator": "U3UMJU868",
+    "is_archived": false,
+    "is_general": false,
+    "is_member": true,
+    "members": [
+      "U3UMJU868"
+    ],
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "previous_names": [],
+    "num_members": 1
+  },
+  {
+    "id": "C3XTHDCTC",
+    "name": "archived_channel",
+    "is_channel": true,
+    "created": 1485678562,
+    "creator": "U3UMJU868",
+    "is_archived": true,
+    "is_general": false,
+    "is_member": false,
+    "members": [],
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "purpose": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "previous_names": [],
+    "num_members": 0
+  },
+  {
     "id": "C3UK9TS3C",
     "name": "general",
     "is_channel": true,

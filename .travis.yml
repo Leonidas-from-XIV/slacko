@@ -4,7 +4,11 @@ install:
   - wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-opam.sh
   - if [ -n "$COVERAGE" ]; then wget https://raw.githubusercontent.com/simonjbeaumont/ocaml-travis-coveralls/master/travis-coveralls.sh; fi
 script: bash -ex .travis-opam.sh
-after_success: if [ -n "$COVERAGE" ]; then bash -ex travis-coveralls.sh; fi
+after_success: |
+  if [ -n "$COVERAGE" ]; then
+    opam install slacko --deps-only --yes --build-test
+    bash -ex travis-coveralls.sh
+  fi
 env:
   global:
     - PACKAGE=slacko

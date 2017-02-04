@@ -18,6 +18,10 @@
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *)
 
+let base_url =
+  let doc = "The Slack API base URL" in
+  Cmdliner.Arg.(value & opt (some string) None & info ["base-url"] ~docv:"URL" ~doc)
+
 let token =
   let doc = "The Slack API access token" in
   Cmdliner.Arg.(required & opt (some string) None & info ["t"; "token"] ~docv:"TOKEN" ~doc)
@@ -50,7 +54,7 @@ let info =
   let doc = "Posts messages to Slack" in
   Cmdliner.Term.info "slack-notify" ~doc
 
-let execute token username channel icon_url icon_emoji attachment_text msg =
+let execute base_url token username channel icon_url icon_emoji attachment_text msg =
   "Your token is " ^ token ^ ", the channel is " ^ channel
     ^ " and the message is '" ^ msg ^ "'."
     |> print_endline;
@@ -66,7 +70,7 @@ let execute token username channel icon_url icon_emoji attachment_text msg =
   in
 
   let open Lwt in
-  let token = Slacko.token_of_string token in
+  let session = Slacko.make_session ?base_url token in
   let channel = Slacko.channel_of_string channel in
   let chat = Slacko.Channel channel in
   let msg = Slacko.message_of_string msg in
@@ -75,7 +79,7 @@ let execute token username channel icon_url icon_emoji attachment_text msg =
     | None -> None
     | Some text -> Some [Slacko.attachment ~text ()]
   in
-  Slacko.chat_post_message token chat
+  Slacko.chat_post_message session chat
     ?username:(username)
     ?icon_emoji:(icon_emoji)
     ?icon_url:(icon_url)
@@ -86,7 +90,7 @@ let execute token username channel icon_url icon_emoji attachment_text msg =
   |> Lwt_main.run
 
 let execute_t = Cmdliner.Term.(
-    pure execute $ token $ username $ channel $ icon_url $ icon_emoji
+    pure execute $ base_url $ token $ username $ channel $ icon_url $ icon_emoji
     $ attachment $ message)
 
 let () =

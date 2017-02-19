@@ -5,25 +5,24 @@ open Slounit
 open Abbrtypes
 
 
-let token_str =
+let token =
   try Sys.getenv "SLACKO_TEST_TOKEN" with Not_found -> "xoxp-testtoken"
 
-let token = Slacko.token_of_string token_str
-let badtoken = Slacko.token_of_string "badtoken"
+let badtoken = "badtoken"
 
 (* If we have a non-default token, assume we want to talk to real slack. If
    not, use our local fake instead. *)
-let () = match token_str with
-  | "xoxp-testtoken" -> Slacko.set_base_url "http://127.0.0.1:7357/api/"
+let base_url = match token with
+  | "xoxp-testtoken" -> Some "http://127.0.0.1:7357/api/"
   | _ ->
     print_endline ("NOTE: Because an API token has been provided, " ^
                    "tests will run against the real slack API.");
     try
       (* We may want to talk to a proxy or a different fake slack. *)
       let base_url = Sys.getenv "SLACKO_TEST_BASE_URL" in
-      Slacko.set_base_url base_url;
-      print_endline @@ "NOTE: Overriding slack base URL to " ^ base_url
-    with Not_found -> ()
+      print_endline @@ "NOTE: Overriding slack base URL to " ^ base_url;
+      Some base_url;
+    with Not_found -> None
 
 
 let abbr_json abbr_of_yojson json =
@@ -39,23 +38,23 @@ let get_success = function
 (* api_test *)
 
 let test_api_test_nodata tctx =
-  Slacko.api_test () >|= get_success >|= fun json ->
+  Slacko.api_test ?base_url () >|= get_success >|= fun json ->
   assert_equal ~printer:Yojson.Safe.to_string
     (`Assoc [])
     json
 
 let test_api_test_foo tctx =
-  Slacko.api_test ~foo:"hello" () >|= get_success >|= fun json ->
+  Slacko.api_test ?base_url ~foo:"hello" () >|= get_success >|= fun json ->
   assert_equal ~printer:Yojson.Safe.to_string
     (`Assoc ["args", `Assoc ["foo", `String "hello"]])
     json
 
 let test_api_test_err tctx =
-  Slacko.api_test ~error:"badthing" () >|= fun resp ->
+  Slacko.api_test ?base_url ~error:"badthing" () >|= fun resp ->
   assert_equal (`Unhandled_error "badthing") resp
 
 let test_api_test_err_foo tctx =
-  Slacko.api_test ~foo:"goodbye" ~error:"badthing" () >|= fun resp ->
+  Slacko.api_test ?base_url ~foo:"goodbye" ~error:"badthing" () >|= fun resp ->
   assert_equal (`Unhandled_error "badthing") resp
 
 let api_test_tests = fake_slack_tests "api_test" [
@@ -68,14 +67,16 @@ let api_test_tests = fake_slack_tests "api_test" [
 (* auth_test *)
 
 let test_auth_test_valid tctx =
-  Slacko.auth_test token >|= get_success >|=
+  let session = Slacko.make_session ?base_url token in
+  Slacko.auth_test session >|= get_success >|=
   abbr_authed_obj >|= fun authed ->
   assert_equal ~printer:show_abbr_authed_obj
     (abbr_json abbr_authed_obj_of_yojson Fake_slack.authed_json)
     authed
 
 let test_auth_test_invalid tctx =
-  Slacko.auth_test badtoken >|= fun resp ->
+  let session = Slacko.make_session ?base_url badtoken in
+  Slacko.auth_test session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let auth_test_tests = fake_slack_tests "test_auth" [
@@ -87,28 +88,33 @@ let auth_test_tests = fake_slack_tests "test_auth" [
 
 let test_channels_archive_bad_auth tctx =
   skip_if true "TODO: Channel lookup swallows all sorts of things.";
+  let session = Slacko.make_session ?base_url badtoken in
   let new_channel = Slacko.channel_of_string "#new_channel" in
-  Slacko.channels_archive badtoken new_channel >|= fun resp ->
+  Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_channels_archive_existing tctx =
+  let session = Slacko.make_session ?base_url token in
   let new_channel = Slacko.channel_of_string "#archivable_channel" in
-  Slacko.channels_archive token new_channel >|= fun resp ->
+  Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Success resp
 
 let test_channels_archive_missing tctx =
+  let session = Slacko.make_session ?base_url token in
   let missing_channel = Slacko.channel_of_string "#missing_channel" in
-  Slacko.channels_archive token missing_channel >|= fun resp ->
+  Slacko.channels_archive session missing_channel >|= fun resp ->
   assert_equal `Channel_not_found resp
 
 let test_channels_archive_archived tctx =
+  let session = Slacko.make_session ?base_url token in
   let archived_channel = Slacko.channel_of_string "#archived_channel" in
-  Slacko.channels_archive token archived_channel >|= fun resp ->
+  Slacko.channels_archive session archived_channel >|= fun resp ->
   assert_equal `Already_archived resp
 
 let test_channels_archive_general tctx =
+  let session = Slacko.make_session ?base_url token in
   let general = Slacko.channel_of_string "#general" in
-  Slacko.channels_archive token general >|= fun resp ->
+  Slacko.channels_archive session general >|= fun resp ->
   assert_equal `Cant_archive_general resp
 
 let channels_archive_tests = fake_slack_tests "channels_archive" [
@@ -122,19 +128,22 @@ let channels_archive_tests = fake_slack_tests "channels_archive" [
 (* channels_create *)
 
 let test_channels_create_bad_auth tctx =
-  Slacko.channels_create badtoken "#new_channel" >|= fun resp ->
+  let session = Slacko.make_session ?base_url badtoken in
+  Slacko.channels_create session "#new_channel" >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_channels_create_new tctx =
   skip_if true "TODO: Fix parsing of last_read field.";
-  Slacko.channels_create token "#new_channel" >|= get_success >|=
+  let session = Slacko.make_session ?base_url token in
+  Slacko.channels_create session "#new_channel" >|= get_success >|=
   abbr_channel_obj >|= fun channel ->
   assert_equal ~printer:show_abbr_channel_obj
     (abbr_json abbr_channel_obj_of_yojson Fake_slack.new_channel_json)
     channel
 
 let test_channels_create_existing tctx =
-  Slacko.channels_create token "#general" >|= fun resp ->
+  let session = Slacko.make_session ?base_url token in
+  Slacko.channels_create session "#general" >|= fun resp ->
   assert_equal `Name_taken resp
 
 let channels_create_tests = fake_slack_tests "channels_create" [
@@ -146,11 +155,13 @@ let channels_create_tests = fake_slack_tests "channels_create" [
 (* channels_list *)
 
 let test_channels_list_bad_auth tctx =
-  Slacko.channels_list badtoken >|= fun resp ->
+  let session = Slacko.make_session ?base_url badtoken in
+  Slacko.channels_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_channels_list tctx =
-  Slacko.channels_list token >|= get_success >|=
+  let session = Slacko.make_session ?base_url token in
+  Slacko.channels_list session >|= get_success >|=
   List.map abbr_channel_obj >|= fun channels ->
   assert_equal ~printer:show_abbr_channel_obj_list
     (abbr_json abbr_channel_obj_list_of_yojson Fake_slack.channels_json)

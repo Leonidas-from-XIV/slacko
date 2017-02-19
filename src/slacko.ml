@@ -599,12 +599,16 @@ let optionally_add key value uri = match value with
 
 let definitely_add key value = optionally_add key (Some value)
 
-let unauthed_endpoint ?(base_url=default_base_url) e =
+let unauthed_endpoint ~base_url e =
+  let base_url = match base_url with
+    | None -> default_base_url
+    | Some base_url -> base_url
+  in
   base_url ^ e
   |> Uri.of_string
 
 let endpoint session e =
-  unauthed_endpoint ~base_url:session.base_url e
+  unauthed_endpoint ~base_url:(Some session.base_url) e
   |> definitely_add "token" session.token
 
 (* private API return type *)
@@ -896,7 +900,7 @@ let translate_parsing_error = function
 (* Slack API begins here *)
 
 let api_test ?base_url ?foo ?error () =
-  unauthed_endpoint "api.test"
+  unauthed_endpoint ~base_url "api.test"
     |> optionally_add "foo" foo
     |> optionally_add "error" error
     |> query
@@ -1534,7 +1538,7 @@ let im_open session user =
     | _ -> `Unknown_error
 
 let oauth_access ?base_url client_id client_secret ?redirect_url code =
-  unauthed_endpoint ?base_url "oauth.access"
+  unauthed_endpoint ~base_url "oauth.access"
     |> definitely_add "client_id" client_id
     |> definitely_add "client_secret" client_secret
     |> definitely_add "code" code

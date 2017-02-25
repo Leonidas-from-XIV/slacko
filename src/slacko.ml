@@ -178,7 +178,13 @@ type topic_result = [
 
 type timestamp = float
 
-type token = string
+type session = {
+  base_url: string;
+  token: string;
+  (* Mutable id cache goes here? *)
+}
+
+type token = session
 
 type topic = string
 
@@ -497,7 +503,7 @@ type im_open_obj = {
 } [@@deriving of_yojson { strict = false }]
 
 type oauth_obj = {
-  access_token: token;
+  access_token: string;
   scope: string;
 } [@@deriving of_yojson { strict = false }]
 
@@ -584,18 +590,26 @@ type history_result = [
   | timestamp_error
 ]
 
-let base_url = "https://slack.com/api/"
-
-let endpoint e =
-  base_url ^ e
-  |> Uri.of_string
-
 (* internal *)
+let default_base_url = "https://slack.com/api/"
+
 let optionally_add key value uri = match value with
   | None -> uri
   | Some value -> Uri.add_query_param' uri (key, value)
 
 let definitely_add key value = optionally_add key (Some value)
+
+let unauthed_endpoint ~base_url method' =
+  let base_url = match base_url with
+    | None -> default_base_url
+    | Some base_url -> base_url
+  in
+  base_url ^ method'
+  |> Uri.of_string
+
+let endpoint method' session =
+  unauthed_endpoint ~base_url:(Some session.base_url) method'
+  |> definitely_add "token" session.token
 
 (* private API return type *)
 (* the strict is important here, because we just match ok & error and
@@ -719,9 +733,8 @@ type im_list_obj = {
   ims: im_obj list;
 } [@@deriving of_yojson]
 
-let channels_list ?exclude_archived token =
-  endpoint "channels.list"
-    |> definitely_add "token" token
+let channels_list ?exclude_archived session =
+  endpoint "channels.list" session
     |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
     |> query
     >|= function
@@ -732,9 +745,8 @@ let channels_list ?exclude_archived token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-let users_list token =
-  endpoint "users.list"
-    |> definitely_add "token" token
+let users_list session =
+  endpoint "users.list" session
     |> query
     >|= function
     | `Json_response d ->
@@ -744,9 +756,8 @@ let users_list token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-let groups_list ?exclude_archived token =
-  endpoint "groups.list"
-    |> definitely_add "token" token
+let groups_list ?exclude_archived session =
+  endpoint "groups.list" session
     |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
     |> query
     >|= function
@@ -763,19 +774,19 @@ exception No_unique_matches
 exception Lookup_failed
 
 (* look up the id of query from results provided by the listfn *)
-let lookupk token listfn filterfn k =
-  match%lwt listfn token with
+let lookupk session listfn filterfn k =
+  match%lwt listfn session with
   | `Success channels -> (match List.filter filterfn channels with
     | [] -> Lwt.fail No_matches
     | [x] -> Lwt.return @@ k x
     | _ -> Lwt.fail No_unique_matches)
   | _ -> Lwt.fail Lookup_failed
 
-let id_of_channel token : _ -> [ `User_not_found | `Channel_not_found | `Found of string ] Lwt.t = function
+let id_of_channel session : _ -> [ `User_not_found | `Channel_not_found | `Found of string ] Lwt.t = function
   | ChannelId id -> Lwt.return @@ `Found id
   | ChannelName name ->
     let base = String.sub name 1 @@ String.length name - 1 in
-    match%lwt (lookupk token channels_list (fun (x:channel_obj) -> x.name = base) @@ function
+    match%lwt (lookupk session channels_list (fun (x:channel_obj) -> x.name = base) @@ function
     | {id = ChannelId s; _} -> Some s
     | {id = ChannelName _; _} -> None) with
     | exception _ -> Lwt.return `Channel_not_found
@@ -787,31 +798,31 @@ let string_of_channel = function
   | ChannelId id -> id
   | ChannelName name -> name
 
-let id_of_user token = function
+let id_of_user session = function
   | UserId id -> Lwt.return @@ `Found id
   | UserName name ->
-    match%lwt (lookupk token users_list (fun (x:user_obj) -> x.name = name) @@ function
+    match%lwt (lookupk session users_list (fun (x:user_obj) -> x.name = name) @@ function
     | {id = UserId s; _} -> Some s
     | {id = UserName _; _} -> None) with
     | exception _ -> Lwt.return `User_not_found
     | Some v -> Lwt.return @@ `Found v
     | None -> Lwt.return `User_not_found
 
-let id_of_group token = function
+let id_of_group session = function
   | GroupId id -> Lwt.return @@ `Found id
   | GroupName name ->
-    match%lwt (lookupk token groups_list (fun (x:group_obj) -> x.name = name) @@ function
+    match%lwt (lookupk session groups_list (fun (x:group_obj) -> x.name = name) @@ function
     | {id = GroupId s; _} -> Some s
     | {id = GroupName _; _} -> None) with
     | exception _ -> Lwt.return `Channel_not_found
     | Some v -> Lwt.return @@ `Found v
     | None -> Lwt.return `Channel_not_found
 
-let id_of_chat token : _ -> [ `Found of string | `Channel_not_found | `User_not_found ] Lwt.t = function
-  | Channel c -> id_of_channel token c
+let id_of_chat session : _ -> [ `Found of string | `Channel_not_found | `User_not_found ] Lwt.t = function
+  | Channel c -> id_of_channel session c
   | Im i -> Lwt.return @@ `Found i
-  | User u -> id_of_user token u
-  | Group g -> id_of_group token g
+  | User u -> id_of_user session u
+  | Group g -> id_of_group session g
 
 let name_of_group = function
   | GroupId id -> failwith "Need to specify a name"
@@ -834,7 +845,11 @@ let string_of_presence = function
   | Away -> "away"
 
 (* Slacko API helper methods *)
-let token_of_string = identity
+let start_session ?(base_url=default_base_url) token = {
+  base_url;
+  token;
+}
+let token_of_string token = start_session token
 let message_of_string = identity
 
 (* Calculate the amount of codepoints in a string encoded in UTF-8 *)
@@ -884,8 +899,8 @@ let translate_parsing_error = function
 
 (* Slack API begins here *)
 
-let api_test ?foo ?error () =
-  endpoint "api.test"
+let api_test ?base_url ?foo ?error () =
+  unauthed_endpoint ~base_url "api.test"
     |> optionally_add "foo" foo
     |> optionally_add "error" error
     |> query
@@ -894,9 +909,8 @@ let api_test ?foo ?error () =
     | #api_error as res -> res
     | _ -> `Unknown_error
 
-let auth_test token =
-  endpoint "auth.test"
-    |> definitely_add "token" token
+let auth_test session =
+  endpoint "auth.test" session
     |> query
     >|= function
     | `Json_response d -> d |> authed_obj_of_yojson |> translate_parsing_error
@@ -917,10 +931,9 @@ let (|+>) m f =
   | `User_not_found -> Lwt.return `User_not_found
   | `Found v -> f v
 
-let channels_archive token channel =
-  id_of_channel token channel |-> fun channel_id ->
-    endpoint "channels.archive"
-    |> definitely_add "token" token
+let channels_archive session channel =
+  id_of_channel session channel |-> fun channel_id ->
+    endpoint "channels.archive" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -935,9 +948,8 @@ let channels_archive token channel =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_create token name =
-  endpoint "channels.create"
-    |> definitely_add "token" token
+let channels_create session name =
+  endpoint "channels.create" session
     |> definitely_add "name" name
     |> query
     >|= function
@@ -949,11 +961,10 @@ let channels_create token name =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_history token
+let channels_history session
   ?latest ?oldest ?count ?inclusive channel =
-  id_of_channel token channel |-> fun channel_id ->
-    endpoint "channels.history"
-    |> definitely_add "token" token
+  id_of_channel session channel |-> fun channel_id ->
+    endpoint "channels.history" session
     |> definitely_add "channel" channel_id
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
@@ -965,10 +976,9 @@ let channels_history token
     | #history_result as res -> res
     | _ -> `Unknown_error
 
-let channels_info token channel =
-  id_of_channel token channel |-> fun channel_id ->
-    endpoint "channels.info"
-    |> definitely_add "token" token
+let channels_info session channel =
+  id_of_channel session channel |-> fun channel_id ->
+    endpoint "channels.info" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -978,11 +988,10 @@ let channels_info token channel =
     | #channel_error as res -> res
     | _ -> `Unknown_error
 
-let channels_invite token channel user =
-  id_of_channel token channel |-> fun channel_id ->
-  id_of_user token user |+> fun user_id ->
-    endpoint "channels.invite"
-    |> definitely_add "token" token
+let channels_invite session channel user =
+  id_of_channel session channel |-> fun channel_id ->
+  id_of_user session user |+> fun user_id ->
+    endpoint "channels.invite" session
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
     |> query
@@ -1000,9 +1009,8 @@ let channels_invite token channel user =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_join token name =
-  endpoint "channels.join"
-    |> definitely_add "token" token
+let channels_join session name =
+  endpoint "channels.join" session
     |> definitely_add "name" @@ string_of_channel name
     |> query
     >|= function
@@ -1016,11 +1024,10 @@ let channels_join token name =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_kick token channel user =
-  id_of_channel token channel |-> fun channel_id ->
-  id_of_user token user |+> fun user_id ->
-    endpoint "channels.kick"
-    |> definitely_add "token" token
+let channels_kick session channel user =
+  id_of_channel session channel |-> fun channel_id ->
+  id_of_user session user |+> fun user_id ->
+    endpoint "channels.kick" session
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
     |> query
@@ -1036,10 +1043,9 @@ let channels_kick token channel user =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_leave token channel =
-  id_of_channel token channel |-> fun channel_id ->
-  endpoint "channels.leave"
-    |> definitely_add "token" token
+let channels_leave session channel =
+  id_of_channel session channel |-> fun channel_id ->
+  endpoint "channels.leave" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -1053,10 +1059,9 @@ let channels_leave token channel =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_mark token channel ts =
-  id_of_channel token channel |-> fun channel_id ->
-  endpoint "channels.mark"
-    |> definitely_add "token" token
+let channels_mark session channel ts =
+  id_of_channel session channel |-> fun channel_id ->
+  endpoint "channels.mark" session
     |> definitely_add "channel" channel_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1068,10 +1073,9 @@ let channels_mark token channel ts =
     | #not_in_channel_error as res -> res
     | _ -> `Unknown_error
 
-let channels_rename token channel name =
-  id_of_channel token channel |-> fun channel_id ->
-  endpoint "channels.rename"
-    |> definitely_add "token" token
+let channels_rename session channel name =
+  id_of_channel session channel |-> fun channel_id ->
+  endpoint "channels.rename" session
     |> definitely_add "channel" channel_id
     |> definitely_add "name" name
     |> query
@@ -1088,10 +1092,9 @@ let channels_rename token channel name =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let channels_set_purpose token channel purpose =
-  id_of_channel token channel |-> fun channel_id ->
-  endpoint "channels.setPurpose"
-    |> definitely_add "token" token
+let channels_set_purpose session channel purpose =
+  id_of_channel session channel |-> fun channel_id ->
+  endpoint "channels.setPurpose" session
     |> definitely_add "channel" channel_id
     |> definitely_add "purpose" purpose
     |> query
@@ -1101,10 +1104,9 @@ let channels_set_purpose token channel purpose =
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
-let channels_set_topic token channel topic =
-  id_of_channel token channel |-> fun channel_id ->
-  endpoint "channels.setTopic"
-    |> definitely_add "token" token
+let channels_set_topic session channel topic =
+  id_of_channel session channel |-> fun channel_id ->
+  endpoint "channels.setTopic" session
     |> definitely_add "channel" channel_id
     |> definitely_add "topic" topic
     |> query
@@ -1114,10 +1116,9 @@ let channels_set_topic token channel topic =
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
-let channels_unarchive token channel =
-  id_of_channel token channel |-> fun channel_id ->
-  endpoint "channels.unarchive"
-    |> definitely_add "token" token
+let channels_unarchive session channel =
+  id_of_channel session channel |-> fun channel_id ->
+  endpoint "channels.unarchive" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -1129,10 +1130,9 @@ let channels_unarchive token channel =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let chat_delete token ts chat =
-  id_of_chat token chat |-> fun chat_id ->
-  endpoint "chat.delete"
-    |> definitely_add "token" token
+let chat_delete session ts chat =
+  id_of_chat session chat |-> fun chat_id ->
+  endpoint "chat.delete" session
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1147,11 +1147,10 @@ let jsonify_attachments attachments =
   `List (List.map (fun a -> attachment_obj_to_yojson a) attachments)
   |> Yojson.Safe.to_string
 
-let chat_post_message token chat
+let chat_post_message session chat
   ?username ?parse ?icon_url ?icon_emoji ?(attachments=[]) text =
-  id_of_chat token chat |-> fun chat_id ->
-  endpoint "chat.postMessage"
-    |> definitely_add "token" token
+  id_of_chat session chat |-> fun chat_id ->
+  endpoint "chat.postMessage" session
     |> definitely_add "channel" chat_id
     |> definitely_add "text" text
     |> optionally_add "username" username
@@ -1172,10 +1171,9 @@ let chat_post_message token chat
     | #rate_error as res -> res
     | _ -> `Unknown_error
 
-let chat_update token ts chat text =
-  id_of_chat token chat |-> fun chat_id ->
-  endpoint "chat.update"
-    |> definitely_add "token" token
+let chat_update session ts chat text =
+  id_of_chat session chat |-> fun chat_id ->
+  endpoint "chat.update" session
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> definitely_add "text" text
@@ -1190,9 +1188,8 @@ let chat_update token ts chat text =
     | #attachments_error as res -> res
     | _ -> `Unknown_error
 
-let emoji_list token =
-  endpoint "emoji.list"
-    |> definitely_add "token" token
+let emoji_list session =
+  endpoint "emoji.list" session
     |> query
     >|= function
     | `Json_response d ->
@@ -1202,9 +1199,8 @@ let emoji_list token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-let files_delete token file =
-  endpoint "files.delete"
-    |> definitely_add "token" token
+let files_delete session file =
+  endpoint "files.delete" session
     |> definitely_add "file" file
     |> query
     >|= function
@@ -1215,9 +1211,8 @@ let files_delete token file =
     | #file_error as res -> res
     | _ -> `Unknown_error
 
-let files_info token ?count ?page file =
-  endpoint "files.info"
-    |> definitely_add "token" token
+let files_info session ?count ?page file =
+  endpoint "files.info" session
     |> definitely_add "file" file
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
@@ -1230,17 +1225,16 @@ let files_info token ?count ?page file =
     | #file_error as res -> res
     | _ -> `Unknown_error
 
-let maybe_with_user token user f =
+let maybe_with_user session user f =
   match user with
-    | Some u -> id_of_user token u >>= (function
+    | Some u -> id_of_user session u >>= (function
         | `Found id -> f @@ Some id
         | _ -> Lwt.return `User_not_found)
     | None -> f None
 
-let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
-  maybe_with_user token user @@ fun user_id ->
-  endpoint "files.list"
-    |> definitely_add "token" token
+let files_list ?user ?ts_from ?ts_to ?types ?count ?page session =
+  maybe_with_user session user @@ fun user_id ->
+  endpoint "files.list" session
     |> optionally_add "user" user_id
     |> optionally_add "ts_from" @@ maybe string_of_timestamp ts_from
     |> optionally_add "ts_to" @@ maybe string_of_timestamp ts_to
@@ -1257,10 +1251,9 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page token =
     | #unknown_type_error as res -> res
     | _ -> `Unknown_error
 
-let files_upload token
+let files_upload session
   ?filetype ?filename ?title ?initial_comment ?channels content =
-  endpoint "files.upload"
-    |> definitely_add "token" token
+  endpoint "files.upload" session
     |> optionally_add "filetype" filetype
     |> optionally_add "filename" filename
     |> optionally_add "title" title
@@ -1274,10 +1267,9 @@ let files_upload token
     | #bot_error as res -> res
     | _ -> `Unknown_error
 
-let groups_archive token group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.archive"
-    |> definitely_add "token" token
+let groups_archive session group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.archive" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1292,10 +1284,9 @@ let groups_archive token group =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_close token group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.close"
-    |> definitely_add "token" token
+let groups_close session group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.close" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1305,9 +1296,8 @@ let groups_close token group =
     | #channel_error as res -> res
     | _ -> `Unknown_error
 
-let groups_create token name =
-  endpoint "groups.create"
-    |> definitely_add "token" token
+let groups_create session name =
+  endpoint "groups.create" session
     |> definitely_add "name" @@ name_of_group name
     |> query
     >|= function
@@ -1320,10 +1310,9 @@ let groups_create token name =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_create_child token group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.createChild"
-    |> definitely_add "token" token
+let groups_create_child session group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.createChild" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1337,10 +1326,9 @@ let groups_create_child token group =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_history token ?latest ?oldest ?count ?inclusive group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.history"
-    |> definitely_add "token" token
+let groups_history session ?latest ?oldest ?count ?inclusive group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.history" session
     |> definitely_add "channel" group_id
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
@@ -1352,11 +1340,10 @@ let groups_history token ?latest ?oldest ?count ?inclusive group =
     | #history_result as res -> res
     | _ -> `Unknown_error
 
-let groups_invite token group user =
-  id_of_group token group |-> fun group_id ->
-  id_of_user token user |+> fun user_id ->
-  endpoint "groups.invite"
-    |> definitely_add "token" token
+let groups_invite session group user =
+  id_of_group session group |-> fun group_id ->
+  id_of_user session user |+> fun user_id ->
+  endpoint "groups.invite" session
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
     |> query
@@ -1372,11 +1359,10 @@ let groups_invite token group user =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_kick token group user =
-  id_of_group token group |-> fun group_id ->
-  id_of_user token user |+> fun user_id ->
-  endpoint "groups.kick"
-    |> definitely_add "token" token
+let groups_kick session group user =
+  id_of_group session group |-> fun group_id ->
+  id_of_user session user |+> fun user_id ->
+  endpoint "groups.kick" session
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
     |> query
@@ -1392,10 +1378,9 @@ let groups_kick token group user =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_leave token group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.leave"
-    |> definitely_add "token" token
+let groups_leave session group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.leave" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1409,10 +1394,9 @@ let groups_leave token group =
     | `User_is_ultra_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_mark token group ts =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.mark"
-    |> definitely_add "token" token
+let groups_mark session group ts =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.mark" session
     |> definitely_add "channel" group_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1424,10 +1408,9 @@ let groups_mark token group ts =
     | #not_in_channel_error as res -> res
     | _ -> `Unknown_error
 
-let groups_open token group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.open"
-    |> definitely_add "token" token
+let groups_open session group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.open" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1437,10 +1420,9 @@ let groups_open token group =
     | #channel_error as res -> res
     | _ -> `Unknown_error
 
-let groups_rename token group name =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.rename"
-    |> definitely_add "token" token
+let groups_rename session group name =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.rename" session
     |> definitely_add "channel" group_id
     |> definitely_add "name" name
     |> query
@@ -1455,10 +1437,9 @@ let groups_rename token group name =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let groups_set_purpose token group purpose =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.setPurpose"
-    |> definitely_add "token" token
+let groups_set_purpose session group purpose =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.setPurpose" session
     |> definitely_add "channel" group_id
     |> definitely_add "purpose" purpose
     |> query
@@ -1468,10 +1449,9 @@ let groups_set_purpose token group purpose =
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
-let groups_set_topic token group topic =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.setTopic"
-    |> definitely_add "token" token
+let groups_set_topic session group topic =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.setTopic" session
     |> definitely_add "channel" group_id
     |> definitely_add "topic" topic
     |> query
@@ -1481,10 +1461,9 @@ let groups_set_topic token group topic =
     | #topic_result as res -> res
     | _ -> `Unknown_error
 
-let groups_unarchive token group =
-  id_of_group token group |-> fun group_id ->
-  endpoint "groups.unarchive"
-    |> definitely_add "token" token
+let groups_unarchive session group =
+  id_of_group session group |-> fun group_id ->
+  endpoint "groups.unarchive" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1496,9 +1475,8 @@ let groups_unarchive token group =
     | `User_is_restricted as res -> res
     | _ -> `Unknown_error
 
-let im_close token channel =
-  endpoint "im.close"
-    |> definitely_add "token" token
+let im_close session channel =
+  endpoint "im.close" session
     |> definitely_add "channel" channel
     |> query
     >|= function
@@ -1509,9 +1487,8 @@ let im_close token channel =
     | `User_does_not_own_channel as res -> res
     | _ -> `Unknown_error
 
-let im_history token ?latest ?oldest ?count ?inclusive channel =
-  endpoint "im.history"
-    |> definitely_add "token" token
+let im_history session ?latest ?oldest ?count ?inclusive channel =
+  endpoint "im.history" session
     |> definitely_add "channel" channel
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
@@ -1523,9 +1500,8 @@ let im_history token ?latest ?oldest ?count ?inclusive channel =
     | #history_result as res -> res
     | _ -> `Unknown_error
 
-let im_list token =
-  endpoint "im.list"
-    |> definitely_add "token" token
+let im_list session =
+  endpoint "im.list" session
     |> query
     >|= function
     | `Json_response d ->
@@ -1536,9 +1512,8 @@ let im_list token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-let im_mark token channel ts =
-  endpoint "im.mark"
-    |> definitely_add "token" token
+let im_mark session channel ts =
+  endpoint "im.mark" session
     |> definitely_add "channel" channel
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1549,10 +1524,9 @@ let im_mark token channel ts =
     | #not_in_channel_error as res -> res
     | _ -> `Unknown_error
 
-let im_open token user =
-  id_of_user token user |+> fun user_id ->
-  endpoint "im.open"
-    |> definitely_add "token" token
+let im_open session user =
+  id_of_user session user |+> fun user_id ->
+  endpoint "im.open" session
     |> definitely_add "user" user_id
     |> query
     >|= function
@@ -1563,8 +1537,8 @@ let im_open token user =
     | #user_visibility_error as res -> res
     | _ -> `Unknown_error
 
-let oauth_access client_id client_secret ?redirect_url code =
-  endpoint "oauth.access"
+let oauth_access ?base_url client_id client_secret ?redirect_url code =
+  unauthed_endpoint ~base_url "oauth.access"
     |> definitely_add "client_id" client_id
     |> definitely_add "client_secret" client_secret
     |> definitely_add "code" code
@@ -1576,10 +1550,9 @@ let oauth_access client_id client_secret ?redirect_url code =
     | #oauth_error as res -> res
     | _ -> `Unknown_error
 
-let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
-  base
-    |> definitely_add "token" token
-    |> definitely_add "query" query_
+let search method' session ?sort ?sort_dir ?highlight ?count ?page query_ =
+  endpoint method' session
+    |> definitely_add "query" @@ query_
     |> optionally_add "sort" @@ maybe string_of_criterion sort
     |> optionally_add "sort_dir" @@ maybe string_of_direction sort_dir
     |> optionally_add "highlight" @@ maybe string_of_bool highlight
@@ -1593,14 +1566,13 @@ let search base token ?sort ?sort_dir ?highlight ?count ?page query_ =
     | #bot_error as res -> res
     | _ -> `Unknown_error
 
-let search_all = search @@ endpoint "search.all"
-let search_files = search @@ endpoint "search.files"
-let search_messages = search @@ endpoint "search.messages"
+let search_all = search "search.all"
+let search_files = search "search.files"
+let search_messages = search "search.messages"
 
-let stars_list ?user ?count ?page token =
-  maybe_with_user token user @@ fun user_id ->
-  endpoint "stars.list"
-    |> definitely_add "token" token
+let stars_list ?user ?count ?page session =
+  maybe_with_user session user @@ fun user_id ->
+  endpoint "stars.list" session
     |> optionally_add "user" user_id
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
@@ -1613,9 +1585,8 @@ let stars_list ?user ?count ?page token =
     | #user_error as res -> res
     | _ -> `Unknown_error
 
-let team_access_logs ?count ?page token =
-  endpoint "team.accessLogs"
-    |> definitely_add "token" token
+let team_access_logs ?count ?page session =
+  endpoint "team.accessLogs" session
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
@@ -1627,9 +1598,8 @@ let team_access_logs ?count ?page token =
     | #bot_error as res -> res
     | _ -> `Unknown_error
 
-let team_info token =
-  endpoint "team.info"
-    |> definitely_add "token" token
+let team_info session =
+  endpoint "team.info" session
     |> query
     >|= function
     | `Json_response d ->
@@ -1638,10 +1608,9 @@ let team_info token =
     | #bot_error as res -> res
     | _ -> `Unknown_error
 
-let users_get_presence token user =
-  id_of_user token user |+> fun user_id ->
-  endpoint "users.getPresence"
-    |> definitely_add "token" token
+let users_get_presence session user =
+  id_of_user session user |+> fun user_id ->
+  endpoint "users.getPresence" session
     |> definitely_add "user" user_id
     |> query
     >|= function
@@ -1653,11 +1622,10 @@ let users_get_presence token user =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-let users_info token user =
-  id_of_user token user
+let users_info session user =
+  id_of_user session user
   |+> fun user_id ->
-  endpoint "users.info"
-    |> definitely_add "token" token
+  endpoint "users.info" session
     |> definitely_add "user" user_id
     |> query
     >|= function
@@ -1668,9 +1636,8 @@ let users_info token user =
     | #user_visibility_error as res -> res
     | _ -> `Unknown_error
 
-let users_set_active token =
-  endpoint "users.setActive"
-    |> definitely_add "token" token
+let users_set_active session =
+  endpoint "users.setActive" session
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success
@@ -1678,9 +1645,8 @@ let users_set_active token =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-let users_set_presence token presence =
-  endpoint "users.setPresence"
-    |> definitely_add "token" token
+let users_set_presence session presence =
+  endpoint "users.setPresence" session
     |> definitely_add "presence" @@ string_of_presence presence
     |> query
     >|= function

@@ -599,16 +599,16 @@ let optionally_add key value uri = match value with
 
 let definitely_add key value = optionally_add key (Some value)
 
-let unauthed_endpoint ~base_url meth =
+let unauthed_endpoint ~base_url method' =
   let base_url = match base_url with
     | None -> default_base_url
     | Some base_url -> base_url
   in
-  base_url ^ meth
+  base_url ^ method'
   |> Uri.of_string
 
-let endpoint meth session =
-  unauthed_endpoint ~base_url:(Some session.base_url) meth
+let endpoint method' session =
+  unauthed_endpoint ~base_url:(Some session.base_url) method'
   |> definitely_add "token" session.token
 
 (* private API return type *)
@@ -1550,8 +1550,8 @@ let oauth_access ?base_url client_id client_secret ?redirect_url code =
     | #oauth_error as res -> res
     | _ -> `Unknown_error
 
-let search meth session ?sort ?sort_dir ?highlight ?count ?page query_ =
-  endpoint meth session
+let search method' session ?sort ?sort_dir ?highlight ?count ?page query_ =
+  endpoint method' session
     |> definitely_add "query" @@ query_
     |> optionally_add "sort" @@ maybe string_of_criterion sort
     |> optionally_add "sort_dir" @@ maybe string_of_direction sort_dir

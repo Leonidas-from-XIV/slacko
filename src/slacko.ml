@@ -845,11 +845,11 @@ let string_of_presence = function
   | Away -> "away"
 
 (* Slacko API helper methods *)
-let make_session ?(base_url=default_base_url) token = {
+let start_session ?(base_url=default_base_url) token = {
   base_url;
   token;
 }
-let token_of_string token = make_session token
+let token_of_string token = start_session token
 let message_of_string = identity
 
 (* Calculate the amount of codepoints in a string encoded in UTF-8 *)

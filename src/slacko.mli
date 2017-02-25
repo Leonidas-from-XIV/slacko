@@ -634,10 +634,10 @@ type history_result = [
     functions. *)
 
 (** Create a session from a token string and an optional base_url. *)
-val make_session: ?base_url:string -> string -> session
+val start_session: ?base_url:string -> string -> session
 
 (** Deprecated wrapper for backcompat. *)
-val token_of_string: string -> session
+val token_of_string: string -> session [@@ocaml.deprecated]
 
 val field: ?title:string -> ?short:bool -> string -> field_obj
 

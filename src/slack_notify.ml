@@ -70,7 +70,7 @@ let execute base_url token username channel icon_url icon_emoji attachment_text 
   in
 
   let open Lwt in
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   let channel = Slacko.channel_of_string channel in
   let chat = Slacko.Channel channel in
   let msg = Slacko.message_of_string msg in

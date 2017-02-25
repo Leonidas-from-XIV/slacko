@@ -637,7 +637,8 @@ type history_result = [
 val start_session: ?base_url:string -> string -> session
 
 (** Deprecated wrapper for backcompat. *)
-val token_of_string: string -> session [@@ocaml.deprecated]
+val token_of_string: string -> session
+[@@ocaml.deprecated "Please use 'start_session' instead."]
 
 val field: ?title:string -> ?short:bool -> string -> field_obj
 

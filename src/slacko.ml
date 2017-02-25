@@ -599,16 +599,16 @@ let optionally_add key value uri = match value with
 
 let definitely_add key value = optionally_add key (Some value)
 
-let unauthed_endpoint ~base_url e =
+let unauthed_endpoint ~base_url meth =
   let base_url = match base_url with
     | None -> default_base_url
     | Some base_url -> base_url
   in
-  base_url ^ e
+  base_url ^ meth
   |> Uri.of_string
 
-let endpoint session e =
-  unauthed_endpoint ~base_url:(Some session.base_url) e
+let endpoint meth session =
+  unauthed_endpoint ~base_url:(Some session.base_url) meth
   |> definitely_add "token" session.token
 
 (* private API return type *)
@@ -734,7 +734,7 @@ type im_list_obj = {
 } [@@deriving of_yojson]
 
 let channels_list ?exclude_archived session =
-  endpoint session "channels.list"
+  endpoint "channels.list" session
     |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
     |> query
     >|= function
@@ -746,7 +746,7 @@ let channels_list ?exclude_archived session =
     | _ -> `Unknown_error
 
 let users_list session =
-  endpoint session "users.list"
+  endpoint "users.list" session
     |> query
     >|= function
     | `Json_response d ->
@@ -757,7 +757,7 @@ let users_list session =
     | _ -> `Unknown_error
 
 let groups_list ?exclude_archived session =
-  endpoint session "groups.list"
+  endpoint "groups.list" session
     |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
     |> query
     >|= function
@@ -910,7 +910,7 @@ let api_test ?base_url ?foo ?error () =
     | _ -> `Unknown_error
 
 let auth_test session =
-  endpoint session "auth.test"
+  endpoint "auth.test" session
     |> query
     >|= function
     | `Json_response d -> d |> authed_obj_of_yojson |> translate_parsing_error
@@ -933,7 +933,7 @@ let (|+>) m f =
 
 let channels_archive session channel =
   id_of_channel session channel |-> fun channel_id ->
-    endpoint session "channels.archive"
+    endpoint "channels.archive" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -949,7 +949,7 @@ let channels_archive session channel =
     | _ -> `Unknown_error
 
 let channels_create session name =
-  endpoint session "channels.create"
+  endpoint "channels.create" session
     |> definitely_add "name" name
     |> query
     >|= function
@@ -964,7 +964,7 @@ let channels_create session name =
 let channels_history session
   ?latest ?oldest ?count ?inclusive channel =
   id_of_channel session channel |-> fun channel_id ->
-    endpoint session "channels.history"
+    endpoint "channels.history" session
     |> definitely_add "channel" channel_id
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
@@ -978,7 +978,7 @@ let channels_history session
 
 let channels_info session channel =
   id_of_channel session channel |-> fun channel_id ->
-    endpoint session "channels.info"
+    endpoint "channels.info" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -991,7 +991,7 @@ let channels_info session channel =
 let channels_invite session channel user =
   id_of_channel session channel |-> fun channel_id ->
   id_of_user session user |+> fun user_id ->
-    endpoint session "channels.invite"
+    endpoint "channels.invite" session
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
     |> query
@@ -1010,7 +1010,7 @@ let channels_invite session channel user =
     | _ -> `Unknown_error
 
 let channels_join session name =
-  endpoint session "channels.join"
+  endpoint "channels.join" session
     |> definitely_add "name" @@ string_of_channel name
     |> query
     >|= function
@@ -1027,7 +1027,7 @@ let channels_join session name =
 let channels_kick session channel user =
   id_of_channel session channel |-> fun channel_id ->
   id_of_user session user |+> fun user_id ->
-    endpoint session "channels.kick"
+    endpoint "channels.kick" session
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
     |> query
@@ -1045,7 +1045,7 @@ let channels_kick session channel user =
 
 let channels_leave session channel =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint session "channels.leave"
+  endpoint "channels.leave" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -1061,7 +1061,7 @@ let channels_leave session channel =
 
 let channels_mark session channel ts =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint session "channels.mark"
+  endpoint "channels.mark" session
     |> definitely_add "channel" channel_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1075,7 +1075,7 @@ let channels_mark session channel ts =
 
 let channels_rename session channel name =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint session "channels.rename"
+  endpoint "channels.rename" session
     |> definitely_add "channel" channel_id
     |> definitely_add "name" name
     |> query
@@ -1094,7 +1094,7 @@ let channels_rename session channel name =
 
 let channels_set_purpose session channel purpose =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint session "channels.setPurpose"
+  endpoint "channels.setPurpose" session
     |> definitely_add "channel" channel_id
     |> definitely_add "purpose" purpose
     |> query
@@ -1106,7 +1106,7 @@ let channels_set_purpose session channel purpose =
 
 let channels_set_topic session channel topic =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint session "channels.setTopic"
+  endpoint "channels.setTopic" session
     |> definitely_add "channel" channel_id
     |> definitely_add "topic" topic
     |> query
@@ -1118,7 +1118,7 @@ let channels_set_topic session channel topic =
 
 let channels_unarchive session channel =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint session "channels.unarchive"
+  endpoint "channels.unarchive" session
     |> definitely_add "channel" channel_id
     |> query
     >|= function
@@ -1132,7 +1132,7 @@ let channels_unarchive session channel =
 
 let chat_delete session ts chat =
   id_of_chat session chat |-> fun chat_id ->
-  endpoint session "chat.delete"
+  endpoint "chat.delete" session
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1150,7 +1150,7 @@ let jsonify_attachments attachments =
 let chat_post_message session chat
   ?username ?parse ?icon_url ?icon_emoji ?(attachments=[]) text =
   id_of_chat session chat |-> fun chat_id ->
-  endpoint session "chat.postMessage"
+  endpoint "chat.postMessage" session
     |> definitely_add "channel" chat_id
     |> definitely_add "text" text
     |> optionally_add "username" username
@@ -1173,7 +1173,7 @@ let chat_post_message session chat
 
 let chat_update session ts chat text =
   id_of_chat session chat |-> fun chat_id ->
-  endpoint session "chat.update"
+  endpoint "chat.update" session
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> definitely_add "text" text
@@ -1189,7 +1189,7 @@ let chat_update session ts chat text =
     | _ -> `Unknown_error
 
 let emoji_list session =
-  endpoint session "emoji.list"
+  endpoint "emoji.list" session
     |> query
     >|= function
     | `Json_response d ->
@@ -1200,7 +1200,7 @@ let emoji_list session =
     | _ -> `Unknown_error
 
 let files_delete session file =
-  endpoint session "files.delete"
+  endpoint "files.delete" session
     |> definitely_add "file" file
     |> query
     >|= function
@@ -1212,7 +1212,7 @@ let files_delete session file =
     | _ -> `Unknown_error
 
 let files_info session ?count ?page file =
-  endpoint session "files.info"
+  endpoint "files.info" session
     |> definitely_add "file" file
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
@@ -1234,7 +1234,7 @@ let maybe_with_user session user f =
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page session =
   maybe_with_user session user @@ fun user_id ->
-  endpoint session "files.list"
+  endpoint "files.list" session
     |> optionally_add "user" user_id
     |> optionally_add "ts_from" @@ maybe string_of_timestamp ts_from
     |> optionally_add "ts_to" @@ maybe string_of_timestamp ts_to
@@ -1253,7 +1253,7 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page session =
 
 let files_upload session
   ?filetype ?filename ?title ?initial_comment ?channels content =
-  endpoint session "files.upload"
+  endpoint "files.upload" session
     |> optionally_add "filetype" filetype
     |> optionally_add "filename" filename
     |> optionally_add "title" title
@@ -1269,7 +1269,7 @@ let files_upload session
 
 let groups_archive session group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.archive"
+  endpoint "groups.archive" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1286,7 +1286,7 @@ let groups_archive session group =
 
 let groups_close session group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.close"
+  endpoint "groups.close" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1297,7 +1297,7 @@ let groups_close session group =
     | _ -> `Unknown_error
 
 let groups_create session name =
-  endpoint session "groups.create"
+  endpoint "groups.create" session
     |> definitely_add "name" @@ name_of_group name
     |> query
     >|= function
@@ -1312,7 +1312,7 @@ let groups_create session name =
 
 let groups_create_child session group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.createChild"
+  endpoint "groups.createChild" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1328,7 +1328,7 @@ let groups_create_child session group =
 
 let groups_history session ?latest ?oldest ?count ?inclusive group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.history"
+  endpoint "groups.history" session
     |> definitely_add "channel" group_id
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
@@ -1343,7 +1343,7 @@ let groups_history session ?latest ?oldest ?count ?inclusive group =
 let groups_invite session group user =
   id_of_group session group |-> fun group_id ->
   id_of_user session user |+> fun user_id ->
-  endpoint session "groups.invite"
+  endpoint "groups.invite" session
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
     |> query
@@ -1362,7 +1362,7 @@ let groups_invite session group user =
 let groups_kick session group user =
   id_of_group session group |-> fun group_id ->
   id_of_user session user |+> fun user_id ->
-  endpoint session "groups.kick"
+  endpoint "groups.kick" session
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
     |> query
@@ -1380,7 +1380,7 @@ let groups_kick session group user =
 
 let groups_leave session group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.leave"
+  endpoint "groups.leave" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1396,7 +1396,7 @@ let groups_leave session group =
 
 let groups_mark session group ts =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.mark"
+  endpoint "groups.mark" session
     |> definitely_add "channel" group_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1410,7 +1410,7 @@ let groups_mark session group ts =
 
 let groups_open session group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.open"
+  endpoint "groups.open" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1422,7 +1422,7 @@ let groups_open session group =
 
 let groups_rename session group name =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.rename"
+  endpoint "groups.rename" session
     |> definitely_add "channel" group_id
     |> definitely_add "name" name
     |> query
@@ -1439,7 +1439,7 @@ let groups_rename session group name =
 
 let groups_set_purpose session group purpose =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.setPurpose"
+  endpoint "groups.setPurpose" session
     |> definitely_add "channel" group_id
     |> definitely_add "purpose" purpose
     |> query
@@ -1451,7 +1451,7 @@ let groups_set_purpose session group purpose =
 
 let groups_set_topic session group topic =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.setTopic"
+  endpoint "groups.setTopic" session
     |> definitely_add "channel" group_id
     |> definitely_add "topic" topic
     |> query
@@ -1463,7 +1463,7 @@ let groups_set_topic session group topic =
 
 let groups_unarchive session group =
   id_of_group session group |-> fun group_id ->
-  endpoint session "groups.unarchive"
+  endpoint "groups.unarchive" session
     |> definitely_add "channel" group_id
     |> query
     >|= function
@@ -1476,7 +1476,7 @@ let groups_unarchive session group =
     | _ -> `Unknown_error
 
 let im_close session channel =
-  endpoint session "im.close"
+  endpoint "im.close" session
     |> definitely_add "channel" channel
     |> query
     >|= function
@@ -1488,7 +1488,7 @@ let im_close session channel =
     | _ -> `Unknown_error
 
 let im_history session ?latest ?oldest ?count ?inclusive channel =
-  endpoint session "im.history"
+  endpoint "im.history" session
     |> definitely_add "channel" channel
     |> optionally_add "latest" @@ maybe string_of_timestamp latest
     |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
@@ -1501,7 +1501,7 @@ let im_history session ?latest ?oldest ?count ?inclusive channel =
     | _ -> `Unknown_error
 
 let im_list session =
-  endpoint session "im.list"
+  endpoint "im.list" session
     |> query
     >|= function
     | `Json_response d ->
@@ -1513,7 +1513,7 @@ let im_list session =
     | _ -> `Unknown_error
 
 let im_mark session channel ts =
-  endpoint session "im.mark"
+  endpoint "im.mark" session
     |> definitely_add "channel" channel
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> query
@@ -1526,7 +1526,7 @@ let im_mark session channel ts =
 
 let im_open session user =
   id_of_user session user |+> fun user_id ->
-  endpoint session "im.open"
+  endpoint "im.open" session
     |> definitely_add "user" user_id
     |> query
     >|= function
@@ -1550,9 +1550,9 @@ let oauth_access ?base_url client_id client_secret ?redirect_url code =
     | #oauth_error as res -> res
     | _ -> `Unknown_error
 
-let search session base ?sort ?sort_dir ?highlight ?count ?page query_ =
-  base
-    |> definitely_add "query" query_
+let search meth session ?sort ?sort_dir ?highlight ?count ?page query_ =
+  endpoint meth session
+    |> definitely_add "query" @@ query_
     |> optionally_add "sort" @@ maybe string_of_criterion sort
     |> optionally_add "sort_dir" @@ maybe string_of_direction sort_dir
     |> optionally_add "highlight" @@ maybe string_of_bool highlight
@@ -1566,13 +1566,13 @@ let search session base ?sort ?sort_dir ?highlight ?count ?page query_ =
     | #bot_error as res -> res
     | _ -> `Unknown_error
 
-let search_all session = search session @@ endpoint session "search.all"
-let search_files session = search session @@ endpoint session "search.files"
-let search_messages session = search session @@ endpoint session "search.messages"
+let search_all = search "search.all"
+let search_files = search "search.files"
+let search_messages = search "search.messages"
 
 let stars_list ?user ?count ?page session =
   maybe_with_user session user @@ fun user_id ->
-  endpoint session "stars.list"
+  endpoint "stars.list" session
     |> optionally_add "user" user_id
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
@@ -1586,7 +1586,7 @@ let stars_list ?user ?count ?page session =
     | _ -> `Unknown_error
 
 let team_access_logs ?count ?page session =
-  endpoint session "team.accessLogs"
+  endpoint "team.accessLogs" session
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
     |> query
@@ -1599,7 +1599,7 @@ let team_access_logs ?count ?page session =
     | _ -> `Unknown_error
 
 let team_info session =
-  endpoint session "team.info"
+  endpoint "team.info" session
     |> query
     >|= function
     | `Json_response d ->
@@ -1610,7 +1610,7 @@ let team_info session =
 
 let users_get_presence session user =
   id_of_user session user |+> fun user_id ->
-  endpoint session "users.getPresence"
+  endpoint "users.getPresence" session
     |> definitely_add "user" user_id
     |> query
     >|= function
@@ -1625,7 +1625,7 @@ let users_get_presence session user =
 let users_info session user =
   id_of_user session user
   |+> fun user_id ->
-  endpoint session "users.info"
+  endpoint "users.info" session
     |> definitely_add "user" user_id
     |> query
     >|= function
@@ -1637,7 +1637,7 @@ let users_info session user =
     | _ -> `Unknown_error
 
 let users_set_active session =
-  endpoint session "users.setActive"
+  endpoint "users.setActive" session
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success
@@ -1646,7 +1646,7 @@ let users_set_active session =
     | _ -> `Unknown_error
 
 let users_set_presence session presence =
-  endpoint session "users.setPresence"
+  endpoint "users.setPresence" session
     |> definitely_add "presence" @@ string_of_presence presence
     |> query
     >|= function

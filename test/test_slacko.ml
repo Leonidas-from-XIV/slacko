@@ -67,7 +67,7 @@ let api_test_tests = fake_slack_tests "api_test" [
 (* auth_test *)
 
 let test_auth_test_valid tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   Slacko.auth_test session >|= get_success >|=
   abbr_authed_obj >|= fun authed ->
   assert_equal ~printer:show_abbr_authed_obj
@@ -75,7 +75,7 @@ let test_auth_test_valid tctx =
     authed
 
 let test_auth_test_invalid tctx =
-  let session = Slacko.make_session ?base_url badtoken in
+  let session = Slacko.start_session ?base_url badtoken in
   Slacko.auth_test session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
@@ -88,31 +88,31 @@ let auth_test_tests = fake_slack_tests "test_auth" [
 
 let test_channels_archive_bad_auth tctx =
   skip_if true "TODO: Channel lookup swallows all sorts of things.";
-  let session = Slacko.make_session ?base_url badtoken in
+  let session = Slacko.start_session ?base_url badtoken in
   let new_channel = Slacko.channel_of_string "#new_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_channels_archive_existing tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   let new_channel = Slacko.channel_of_string "#archivable_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Success resp
 
 let test_channels_archive_missing tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   let missing_channel = Slacko.channel_of_string "#missing_channel" in
   Slacko.channels_archive session missing_channel >|= fun resp ->
   assert_equal `Channel_not_found resp
 
 let test_channels_archive_archived tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   let archived_channel = Slacko.channel_of_string "#archived_channel" in
   Slacko.channels_archive session archived_channel >|= fun resp ->
   assert_equal `Already_archived resp
 
 let test_channels_archive_general tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   let general = Slacko.channel_of_string "#general" in
   Slacko.channels_archive session general >|= fun resp ->
   assert_equal `Cant_archive_general resp
@@ -128,13 +128,13 @@ let channels_archive_tests = fake_slack_tests "channels_archive" [
 (* channels_create *)
 
 let test_channels_create_bad_auth tctx =
-  let session = Slacko.make_session ?base_url badtoken in
+  let session = Slacko.start_session ?base_url badtoken in
   Slacko.channels_create session "#new_channel" >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_channels_create_new tctx =
   skip_if true "TODO: Fix parsing of last_read field.";
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   Slacko.channels_create session "#new_channel" >|= get_success >|=
   abbr_channel_obj >|= fun channel ->
   assert_equal ~printer:show_abbr_channel_obj
@@ -142,7 +142,7 @@ let test_channels_create_new tctx =
     channel
 
 let test_channels_create_existing tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   Slacko.channels_create session "#general" >|= fun resp ->
   assert_equal `Name_taken resp
 
@@ -155,12 +155,12 @@ let channels_create_tests = fake_slack_tests "channels_create" [
 (* channels_list *)
 
 let test_channels_list_bad_auth tctx =
-  let session = Slacko.make_session ?base_url badtoken in
+  let session = Slacko.start_session ?base_url badtoken in
   Slacko.channels_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_channels_list tctx =
-  let session = Slacko.make_session ?base_url token in
+  let session = Slacko.start_session ?base_url token in
   Slacko.channels_list session >|= get_success >|=
   List.map abbr_channel_obj >|= fun channels ->
   assert_equal ~printer:show_abbr_channel_obj_list

@@ -313,7 +313,7 @@ type user_obj = {
   deleted: bool;
   color: string;
   real_name: string;
-  tz: string;
+  tz: string option;
   tz_label: string;
   tz_offset: int;
   profile: Yojson.Safe.json;

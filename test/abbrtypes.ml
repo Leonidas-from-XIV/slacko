@@ -98,9 +98,6 @@ let abbr_message_obj (message : Slacko.message_obj) = {
   is_starred = message.Slacko.is_starred;
 }
 
-type abbr_message_obj_list = abbr_message_obj list
-[@@deriving show, yojson]
-
 type abbr_history_obj = {
   latest: timestamp option [@default None];
   messages: abbr_message_obj list;
@@ -112,3 +109,53 @@ let abbr_history_obj (history : Slacko.history_obj) = {
   messages = List.map abbr_message_obj history.Slacko.messages;
   has_more = history.Slacko.has_more;
 }
+
+type abbr_user_obj = {
+  (* id: user; *)
+  name: string;
+  deleted: bool;
+  color: string;
+  real_name: string;
+  tz: string option [@default None];
+  tz_label: string;
+  tz_offset: int;
+  profile: Yojson.Safe.json
+      [@printer fun fmt v -> fprintf fmt "%s" (Yojson.Safe.to_string v)];
+  is_admin: bool;
+  is_owner: bool;
+  is_primary_owner: bool;
+  is_restricted: bool;
+  is_ultra_restricted: bool;
+  is_bot: bool;
+  has_files: bool [@default false];
+} [@@deriving show, yojson { strict = false } ]
+
+let abbr_user_obj (user : Slacko.user_obj) = {
+  name = user.Slacko.name;
+  deleted = user.Slacko.deleted;
+  color = user.Slacko.color;
+  real_name = user.Slacko.real_name;
+  tz = Some user.Slacko.tz;
+  tz_label = user.Slacko.tz_label;
+  tz_offset = user.Slacko.tz_offset;
+  profile = user.Slacko.profile;
+  is_admin = user.Slacko.is_admin;
+  is_owner = user.Slacko.is_owner;
+  is_primary_owner = user.Slacko.is_primary_owner;
+  is_restricted = user.Slacko.is_restricted;
+  is_ultra_restricted = user.Slacko.is_ultra_restricted;
+  is_bot = user.Slacko.is_bot;
+  has_files = user.Slacko.has_files;
+}
+
+type abbr_users_list_obj = {
+  members: abbr_user_obj list
+} [@@deriving of_yojson { strict = false }]
+
+type abbr_user_obj_list = abbr_user_obj list
+[@@deriving show]
+
+let abbr_user_obj_list_of_yojson json =
+  match abbr_users_list_obj_of_yojson json with
+  | Result.Ok obj -> Result.Ok obj.members
+  | (Result.Error _) as err -> err

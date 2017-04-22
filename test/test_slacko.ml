@@ -242,7 +242,29 @@ let channels_list_tests = fake_slack_tests "channels_list" [
 (* team_info *)
 (* users_get_presence *)
 (* users_info *)
+
 (* users_list *)
+
+let test_users_list_bad_auth tctx =
+  let session = Slacko.start_session ?base_url badtoken in
+  Slacko.users_list session >|= fun resp ->
+  assert_equal `Invalid_auth resp
+
+let test_users_list tctx =
+  skip_if true
+    "TODO: Make user_obj.tz,has_files optional, users_list_obj non-strict.";
+  let session = Slacko.start_session ?base_url token in
+  Slacko.users_list session >|= get_success >|=
+  List.map abbr_user_obj >|= fun users ->
+  assert_equal ~printer:show_abbr_user_obj_list
+    (abbr_json abbr_user_obj_list_of_yojson Fake_slack.users_json)
+    users
+
+let users_list_tests = fake_slack_tests "users_list" [
+  "test_bad_auth", test_users_list_bad_auth;
+  "test", test_users_list;
+]
+
 (* users_set_active *)
 (* users_set_presence *)
 
@@ -302,7 +324,7 @@ let suite = "tests" >::: [
     (* team_info_tests; *)
     (* users_get_presence_tests; *)
     (* users_info_tests; *)
-    (* users_list_tests; *)
+    users_list_tests;
     (* users_set_active_tests; *)
     (* users_set_presence_tests; *)
   ]

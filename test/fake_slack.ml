@@ -20,6 +20,7 @@ let channels_json = Yojson.Safe.from_file "channels.json"
 let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
 let random_history_json = Yojson.Safe.from_file "random_history.json"
+let users_json = Yojson.Safe.from_file "users.json"
 
 let json_fields = function
   | `Assoc fields -> fields
@@ -92,6 +93,9 @@ let channels_history req body =
 let channels_list req body =
   reply_ok ["channels", channels_json]
 
+let users_list req body =
+  reply_ok (json_fields users_json)
+
 (* Dispatcher, etc. *)
 
 let server ?(port=7357) ~stop () =
@@ -103,6 +107,7 @@ let server ?(port=7357) ~stop () =
       | "/api/channels.create" -> check_auth channels_create
       | "/api/channels.history" -> check_auth channels_history
       | "/api/channels.list" -> check_auth channels_list
+      | "/api/users.list" -> check_auth users_list
       | _ -> bad_path
     in
     handler req body

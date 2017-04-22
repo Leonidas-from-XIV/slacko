@@ -6,14 +6,14 @@ open Abbrtypes
 
 
 let token =
-  try Sys.getenv "SLACKO_TEST_TOKEN" with Not_found -> "xoxp-testtoken"
+  try Sys.getenv "SLACKO_TEST_TOKEN" with Not_found -> Fake_slack.valid_token
 
 let badtoken = "badtoken"
 
 (* If we have a non-default token, assume we want to talk to real slack. If
    not, use our local fake instead. *)
 let base_url = match token with
-  | "xoxp-testtoken" -> Some "http://127.0.0.1:7357/api/"
+  | t when t = Fake_slack.valid_token -> Some "http://127.0.0.1:7357/api/"
   | _ ->
     print_endline ("NOTE: Because an API token has been provided, " ^
                    "tests will run against the real slack API.");

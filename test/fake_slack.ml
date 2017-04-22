@@ -5,6 +5,16 @@ open Cohttp
 open Cohttp_lwt_unix
 
 
+let valid_token = "xoxp-testtoken" (* The only "valid" token we accept. *)
+
+(* The following values come from data captured by a relay proxy between slacko
+   and slack.com. They need to be replaced with something more generic that
+   doesn't depend on the arbitrary details of a particular slack team. *)
+let ch_general = "C3UK9TS3C"
+let ch_archivable = "C3XTJPLFL"
+let ch_archived = "C3XTHDCTC"
+
+
 let channels_json = Yojson.Safe.from_file "channels.json"
 let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
@@ -37,7 +47,7 @@ let get_arg arg req =
 
 let check_auth f req body =
   match get_arg "token" req with
-  | "xoxp-testtoken" -> f req body
+  | t when t = valid_token -> f req body
   | _ -> reply_err "invalid_auth" []
 
 (* Request handlers *)
@@ -62,9 +72,9 @@ let auth_test req body =
 
 let channels_archive req body =
   match get_arg "channel" req with
-  | "C3UK9TS3C" -> reply_err "cant_archive_general" []
-  | "C3XTJPLFL" -> reply_ok []
-  | "C3XTHDCTC" -> reply_err "already_archived" []
+  | ch when ch = ch_general -> reply_err "cant_archive_general" []
+  | ch when ch = ch_archivable -> reply_ok []
+  | ch when ch = ch_archived -> reply_err "already_archived" []
   | _ -> reply_err "channel_not_found" []
 
 let channels_create req body =

@@ -1,0 +1,31 @@
+{
+    "has_more": false,
+    "messages": [
+        {
+            "subtype": "me_message",
+            "text": "thinks you are.",
+            "ts": "1492867855.021331",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "text": "I am not a slackobot. Are you?",
+            "ts": "1492867843.020464",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "text": "hello",
+            "ts": "1492867142.979902",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "subtype": "channel_join",
+            "text": "<@U3UMJU868|jerith> has joined the channel",
+            "ts": "1484993283.000002",
+            "type": "message",
+            "user": "U3UMJU868"
+        }
+    ]
+}

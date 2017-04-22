@@ -11,6 +11,7 @@ let valid_token = "xoxp-testtoken" (* The only "valid" token we accept. *)
    and slack.com. They need to be replaced with something more generic that
    doesn't depend on the arbitrary details of a particular slack team. *)
 let ch_general = "C3UK9TS3C"
+let ch_random = "C3TTWNCTA"
 let ch_archivable = "C3XTJPLFL"
 let ch_archived = "C3XTHDCTC"
 
@@ -18,6 +19,7 @@ let ch_archived = "C3XTHDCTC"
 let channels_json = Yojson.Safe.from_file "channels.json"
 let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
+let random_history_json = Yojson.Safe.from_file "random_history.json"
 
 let json_fields = function
   | `Assoc fields -> fields
@@ -82,6 +84,11 @@ let channels_create req body =
   | "#general" | "#random" -> reply_err "name_taken" []
   | "#new_channel" | _ -> reply_ok ["channel", new_channel_json]
 
+let channels_history req body =
+  match get_arg "channel" req with
+  | ch when ch = ch_random -> reply_ok (json_fields random_history_json)
+  | _ -> reply_err "channel_not_found" []
+
 let channels_list req body =
   reply_ok ["channels", channels_json]
 
@@ -94,6 +101,7 @@ let server ?(port=7357) ~stop () =
       | "/api/auth.test" -> check_auth auth_test
       | "/api/channels.archive" -> check_auth channels_archive
       | "/api/channels.create" -> check_auth channels_create
+      | "/api/channels.history" -> check_auth channels_history
       | "/api/channels.list" -> check_auth channels_list
       | _ -> bad_path
     in

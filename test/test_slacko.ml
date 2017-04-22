@@ -151,6 +151,35 @@ let channels_create_tests = fake_slack_tests "channels_create" [
   "test_existing", test_channels_create_existing;
 ]
 
+(* channels_history *)
+
+let test_channels_history_bad_auth tctx =
+  skip_if true "TODO: Channel lookup swallows all sorts of things.";
+  let session = Slacko.start_session ?base_url badtoken in
+  let new_channel = Slacko.channel_of_string "#new_channel" in
+  Slacko.channels_history session new_channel >|= fun resp ->
+  assert_equal `Invalid_auth resp
+
+let test_channels_history_no_params tctx =
+  skip_if true "TODO: Make history_obj.latest optional.";
+  let session = Slacko.start_session ?base_url token in
+  let random = Slacko.channel_of_string "#random" in
+  Slacko.channels_history session random >|= get_success >|= fun history ->
+  assert_equal ~printer:show_abbr_history_obj
+    (abbr_json abbr_history_obj_of_yojson Fake_slack.random_history_json)
+    (abbr_history_obj history)
+
+let channels_history_tests = fake_slack_tests "channels_history" [
+  "test_bad_auth", test_channels_history_bad_auth;
+  "test_no_params", test_channels_history_no_params;
+]
+
+(* channels_info *)
+(* channels_invite *)
+(* channels_join *)
+(* channels_kick *)
+(* channels_leave *)
+
 (* channels_list *)
 
 let test_channels_list_bad_auth tctx =
@@ -171,13 +200,111 @@ let channels_list_tests = fake_slack_tests "channels_list" [
   "test", test_channels_list;
 ]
 
+(* channels_mark *)
+(* channels_rename *)
+(* channels_set_purpose *)
+(* channels_set_topic *)
+(* channels_unarchive *)
+(* chat_delete *)
+(* chat_post_message *)
+(* chat_update *)
+(* emoji_list *)
+(* files_delete *)
+(* files_info *)
+(* files_list *)
+(* files_upload *)
+(* groups_archive *)
+(* groups_close *)
+(* groups_create *)
+(* groups_create_child *)
+(* groups_history *)
+(* groups_invite *)
+(* groups_kick *)
+(* groups_leave *)
+(* groups_list *)
+(* groups_mark *)
+(* groups_open *)
+(* groups_rename *)
+(* groups_set_purpose *)
+(* groups_set_topic *)
+(* groups_unarchive *)
+(* im_close *)
+(* im_history *)
+(* im_list *)
+(* im_mark *)
+(* im_open *)
+(* oauth_access *)
+(* search_all *)
+(* search_files *)
+(* search_messages *)
+(* stars_list *)
+(* team_access_logs *)
+(* team_info *)
+(* users_get_presence *)
+(* users_info *)
+(* users_list *)
+(* users_set_active *)
+(* users_set_presence *)
+
+(* Gotta run them all! *)
 
 let suite = "tests" >::: [
     api_test_tests;
     auth_test_tests;
     channels_archive_tests;
     channels_create_tests;
+    channels_history_tests;
+    (* channels_info_tests; *)
+    (* channels_invite_tests; *)
+    (* channels_join_tests; *)
+    (* channels_kick_tests; *)
+    (* channels_leave_tests; *)
     channels_list_tests;
+    (* channels_mark_tests; *)
+    (* channels_rename_tests; *)
+    (* channels_set_purpose_tests; *)
+    (* channels_set_topic_tests; *)
+    (* channels_unarchive_tests; *)
+    (* chat_delete_tests; *)
+    (* chat_post_message_tests; *)
+    (* chat_update_tests; *)
+    (* emoji_list_tests; *)
+    (* files_delete_tests; *)
+    (* files_info_tests; *)
+    (* files_list_tests; *)
+    (* files_upload_tests; *)
+    (* groups_archive_tests; *)
+    (* groups_close_tests; *)
+    (* groups_create_tests; *)
+    (* groups_create_child_tests; *)
+    (* groups_history_tests; *)
+    (* groups_invite_tests; *)
+    (* groups_kick_tests; *)
+    (* groups_leave_tests; *)
+    (* groups_list_tests; *)
+    (* groups_mark_tests; *)
+    (* groups_open_tests; *)
+    (* groups_rename_tests; *)
+    (* groups_set_purpose_tests; *)
+    (* groups_set_topic_tests; *)
+    (* groups_unarchive_tests; *)
+    (* im_close_tests; *)
+    (* im_history_tests; *)
+    (* im_list_tests; *)
+    (* im_mark_tests; *)
+    (* im_open_tests; *)
+    (* oauth_access_tests; *)
+    (* search_all_tests; *)
+    (* search_files_tests; *)
+    (* search_messages_tests; *)
+    (* stars_list_tests; *)
+    (* team_access_logs_tests; *)
+    (* team_info_tests; *)
+    (* users_get_presence_tests; *)
+    (* users_info_tests; *)
+    (* users_list_tests; *)
+    (* users_set_active_tests; *)
+    (* users_set_presence_tests; *)
   ]
 
 

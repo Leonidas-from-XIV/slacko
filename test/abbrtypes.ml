@@ -82,3 +82,33 @@ let abbr_channel_obj (chan : Slacko.channel_obj) = {
 
 type abbr_channel_obj_list = abbr_channel_obj list
 [@@deriving show, yojson]
+
+type abbr_message_obj = {
+  type': string [@key "type"];
+  ts: timestamp;
+  (* user: user; *)
+  text: string;
+  is_starred: bool option [@default None];
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_message_obj (message : Slacko.message_obj) = {
+  type' = message.Slacko.type';
+  ts = message.Slacko.ts;
+  text = message.Slacko.text;
+  is_starred = message.Slacko.is_starred;
+}
+
+type abbr_message_obj_list = abbr_message_obj list
+[@@deriving show, yojson]
+
+type abbr_history_obj = {
+  latest: timestamp option [@default None];
+  messages: abbr_message_obj list;
+  has_more: bool;
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_history_obj (history : Slacko.history_obj) = {
+  latest = Some history.Slacko.latest;
+  messages = List.map abbr_message_obj history.Slacko.messages;
+  has_more = history.Slacko.has_more;
+}

@@ -133,7 +133,6 @@ let test_channels_create_bad_auth tctx =
   assert_equal `Invalid_auth resp
 
 let test_channels_create_new tctx =
-  skip_if true "TODO: Fix parsing of last_read field.";
   let session = Slacko.start_session ?base_url token in
   Slacko.channels_create session "#new_channel" >|= get_success >|=
   abbr_channel_obj >|= fun channel ->

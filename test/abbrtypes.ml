@@ -3,6 +3,17 @@
    those values at all. Therefore, we copy the record type that use these and
    skip the problematic fields. *)
 
+(* These are copied directly from slacko.ml so we can use them here. *)
+type timestamp = float
+let timestamp_to_yojson ts = `Int (int_of_float ts)
+let timestamp_of_yojson = function
+  | `Int x -> Result.Ok (float_of_int x)
+  | `Intlit x -> Result.Ok (float_of_string x)
+  | `String x -> Result.Ok (float_of_string x)
+  | _ -> Result.Error "Couldn't parse timestamp type"
+(* But this one is new. *)
+let pp_timestamp fmt ts = Format.pp_print_float fmt ts
+
 type abbr_authed_obj = {
   url: string;
   team: string;
@@ -21,7 +32,7 @@ let abbr_authed_obj (authed : Slacko.authed_obj) = {
 type abbr_topic_obj = {
   value: string;
   (* creator: user; *)
-  last_set: (* timestamp *) float;
+  last_set: timestamp;
 } [@@deriving show, yojson { strict = false }]
 
 let abbr_topic_obj (topic : Slacko.topic_obj) = {
@@ -37,7 +48,7 @@ type abbr_channel_obj = {
   (* id: channel; *)
   name: string;
   is_channel: bool;
-  created: (* timestamp *) float;
+  created: timestamp;
   (* creator: user; *)
   is_archived: bool;
   is_general: bool;
@@ -45,7 +56,7 @@ type abbr_channel_obj = {
   (* members: user list; *)
   topic: abbr_topic_obj;
   purpose: abbr_topic_obj;
-  last_read: (* timestamp *) float option [@default None];
+  last_read: timestamp option [@default None];
   latest: Yojson.Safe.json option [@default None]
       [@printer fun fmt v -> fprintf fmt "%s" (opt_json_to_string v)];
   unread_count: int option [@default None];

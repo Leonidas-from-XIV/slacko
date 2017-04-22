@@ -5,7 +5,8 @@ open Cohttp
 open Cohttp_lwt_unix
 
 
-let valid_token = "xoxp-testtoken" (* The only "valid" token we accept. *)
+(* The only "valid" token we accept. *)
+let valid_token = "xoxp-testtoken"
 
 (* The following values come from data captured by a relay proxy between slacko
    and slack.com. They need to be replaced with something more generic that
@@ -28,7 +29,10 @@ let json_fields = function
 
 
 let reply_json ok fields =
-  let body = `Assoc (("ok", `Bool ok) :: fields) |> Yojson.Safe.to_string in
+  let body =
+    `Assoc (("ok", `Bool ok) :: fields)
+    |> Yojson.Safe.to_string
+  in
   Server.respond_string ~status:`OK ~body ()
 
 let reply_ok fields = reply_json true fields

@@ -14,13 +14,13 @@ let json_fields = function
   | _ -> failwith "Can't parse test json."
 
 
-let resp ok fields =
+let reply_json ok fields =
   let body = `Assoc (("ok", `Bool ok) :: fields) |> Yojson.Safe.to_string in
   Server.respond_string ~status:`OK ~body ()
 
-let ok_resp fields = resp true fields
+let reply_ok fields = reply_json true fields
 
-let err_resp err fields = resp false (("error", `String err) :: fields)
+let reply_err err fields = reply_json false (("error", `String err) :: fields)
 
 let get_arg_opt arg req =
   Uri.get_query_param (Request.uri req) arg
@@ -38,13 +38,13 @@ let get_arg arg req =
 let check_auth f req body =
   match get_arg "token" req with
   | "xoxp-testtoken" -> f req body
-  | _ -> err_resp "invalid_auth" []
+  | _ -> reply_err "invalid_auth" []
 
 (* Request handlers *)
 
 let bad_path req body =
   let path = req |> Request.uri |> Uri.path in
-  err_resp "unknown_method" ["req_method", `String path]
+  reply_err "unknown_method" ["req_method", `String path]
 
 let api_test req body =
   let args = req |> Request.uri |> Uri.query in
@@ -54,26 +54,26 @@ let api_test req body =
     | args -> ["args", `Assoc (List.map field_of_arg args)]
   in
   match Uri.get_query_param (Request.uri req) "error" with
-  | None -> ok_resp fields
-  | Some err -> err_resp err fields
+  | None -> reply_ok fields
+  | Some err -> reply_err err fields
 
 let auth_test req body =
-  ok_resp (json_fields authed_json)
+  reply_ok (json_fields authed_json)
 
 let channels_archive req body =
   match get_arg "channel" req with
-  | "C3UK9TS3C" -> err_resp "cant_archive_general" []
-  | "C3XTJPLFL" -> ok_resp []
-  | "C3XTHDCTC" -> err_resp "already_archived" []
-  | _ -> err_resp "channel_not_found" []
+  | "C3UK9TS3C" -> reply_err "cant_archive_general" []
+  | "C3XTJPLFL" -> reply_ok []
+  | "C3XTHDCTC" -> reply_err "already_archived" []
+  | _ -> reply_err "channel_not_found" []
 
 let channels_create req body =
   match get_arg "name" req with
-  | "#general" | "#random" -> err_resp "name_taken" []
-  | "#new_channel" | _ -> ok_resp ["channel", new_channel_json]
+  | "#general" | "#random" -> reply_err "name_taken" []
+  | "#new_channel" | _ -> reply_ok ["channel", new_channel_json]
 
 let channels_list req body =
-  ok_resp ["channels", channels_json]
+  reply_ok ["channels", channels_json]
 
 (* Dispatcher, etc. *)
 

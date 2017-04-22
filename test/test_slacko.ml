@@ -251,8 +251,6 @@ let test_users_list_bad_auth tctx =
   assert_equal `Invalid_auth resp
 
 let test_users_list tctx =
-  skip_if true
-    "TODO: Make user_obj.tz,has_files optional, users_list_obj non-strict.";
   let session = Slacko.start_session ?base_url token in
   Slacko.users_list session >|= get_success >|=
   List.map abbr_user_obj >|= fun users ->

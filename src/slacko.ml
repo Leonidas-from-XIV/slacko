@@ -267,7 +267,7 @@ type user_obj = {
   deleted: bool;
   color: string;
   real_name: string;
-  tz: string;
+  tz: string option [@default None];
   tz_label: string;
   tz_offset: int;
   profile: Yojson.Safe.json;
@@ -277,7 +277,7 @@ type user_obj = {
   is_restricted: bool;
   is_ultra_restricted: bool;
   is_bot: bool;
-  has_files: bool;
+  has_files: bool [@default false];
 } [@@deriving of_yojson { strict = false } ]
 
 type group_obj = {
@@ -723,7 +723,7 @@ type channels_list_obj = {
 
 type users_list_obj = {
   members: user_obj list
-} [@@deriving of_yojson]
+} [@@deriving of_yojson { strict = false }]
 
 type groups_list_obj = {
   groups: group_obj list;

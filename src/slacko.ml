@@ -765,7 +765,6 @@ let groups_list ?exclude_archived session =
       (match d |> groups_list_obj_of_yojson with
         | Result.Ok x -> `Success x.groups
         | Result.Error x -> `ParseFailure x)
-    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -1508,7 +1507,6 @@ let im_list session =
       (match d |> im_list_obj_of_yojson with
         | Result.Ok x -> `Success x.ims
         | Result.Error x -> `ParseFailure x)
-    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 

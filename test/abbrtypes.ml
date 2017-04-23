@@ -14,6 +14,11 @@ let timestamp_of_yojson = function
 (* But this one is new. *)
 let pp_timestamp fmt ts = Format.pp_print_float fmt ts
 
+(* Wrap Yojson.Safe.json so we don't have to keep providing printers for it. *)
+type json = Yojson.Safe.json
+[@@deriving yojson]
+let pp_json fmt json = Format.pp_print_string fmt (Yojson.Safe.to_string json)
+
 type abbr_authed_obj = {
   url: string;
   team: string;
@@ -40,10 +45,6 @@ let abbr_topic_obj (topic : Slacko.topic_obj) = {
   last_set = topic.Slacko.last_set;
 }
 
-let opt_json_to_string = function
-  | Some json -> Yojson.Safe.to_string json
-  | None -> Yojson.Safe.to_string `Null
-
 type abbr_channel_obj = {
   (* id: channel; *)
   name: string;
@@ -57,8 +58,7 @@ type abbr_channel_obj = {
   topic: abbr_topic_obj;
   purpose: abbr_topic_obj;
   last_read: timestamp option [@default None];
-  latest: Yojson.Safe.json option [@default None]
-      [@printer fun fmt v -> fprintf fmt "%s" (opt_json_to_string v)];
+  latest: json option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
   num_members: int option [@default None];
@@ -119,8 +119,7 @@ type abbr_user_obj = {
   tz: string option [@default None];
   tz_label: string;
   tz_offset: int;
-  profile: Yojson.Safe.json
-      [@printer fun fmt v -> fprintf fmt "%s" (Yojson.Safe.to_string v)];
+  profile: json;
   is_admin: bool;
   is_owner: bool;
   is_primary_owner: bool;
@@ -159,3 +158,109 @@ let abbr_user_obj_list_of_yojson json =
   match abbr_users_list_obj_of_yojson json with
   | Result.Ok obj -> Result.Ok obj.members
   | (Result.Error _) as err -> err
+
+
+type abbr_file_obj = {
+  (* TODO file id type *)
+  id: string;
+  created: timestamp;
+  (* deprecated *)
+  timestamp: timestamp;
+
+  name: string option [@default None];
+  title: string;
+  mimetype: string;
+  pretty_type: string;
+  (* user: user; *)
+
+  mode: string;
+  editable: bool;
+  is_external: bool;
+  external_type: string;
+
+  size: int;
+
+  (* These two are deprecated and appear to be gone. *)
+  (* url: string; *)
+  (* url_download: string; *)
+  url_private: string;
+  url_private_download: string;
+
+  thumb_64: string option [@default None];
+  thunb_80: string option [@default None];
+  thumb_360: string option [@default None];
+  thumb_360_gif: string option [@default None];
+  thumb_360_w: int option [@default None];
+  thumb_360_h: int option [@default None];
+
+  permalink: string;
+  edit_link: string option [@default None];
+  preview: string option [@default None];
+  preview_highlight: string option [@default None];
+  lines: int option [@default None];
+  lines_more: int option [@default None];
+
+  is_public: bool;
+  (*public_url_shared: ???;*)
+  (* channels: channel list; *)
+  (* groups: group list; *)
+  (* ims: conversation list; *)
+  initial_comment: json option [@default None];
+  num_stars: int option [@default None];
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_file_obj (file : Slacko.file_obj) = {
+  id = file.Slacko.id;
+  created = file.Slacko.created;
+  timestamp = file.Slacko.timestamp;
+  name = file.Slacko.name;
+  title = file.Slacko.title;
+  mimetype = file.Slacko.mimetype;
+  pretty_type = file.Slacko.pretty_type;
+  mode = file.Slacko.mode;
+  editable = file.Slacko.editable;
+  is_external = file.Slacko.is_external;
+  external_type = file.Slacko.external_type;
+  size = file.Slacko.size;
+  url_private = file.Slacko.url_private;
+  url_private_download = file.Slacko.url_private_download;
+  thumb_64 = Some file.Slacko.thumb_64;
+  thunb_80 = Some file.Slacko.thunb_80;
+  thumb_360 = Some file.Slacko.thumb_360;
+  thumb_360_gif = Some file.Slacko.thumb_360_gif;
+  thumb_360_w = Some file.Slacko.thumb_360_w;
+  thumb_360_h = Some file.Slacko.thumb_360_h;
+  permalink = file.Slacko.permalink;
+  edit_link = Some file.Slacko.edit_link;
+  preview = Some file.Slacko.preview;
+  preview_highlight = Some file.Slacko.preview_highlight;
+  lines = Some file.Slacko.lines;
+  lines_more = Some file.Slacko.lines_more;
+  is_public = file.Slacko.is_public;
+  initial_comment = Some file.Slacko.initial_comment;
+  num_stars = file.Slacko.num_stars;
+}
+
+type abbr_paging_obj = {
+  count: int;
+  total: int;
+  page: int;
+  pages: int;
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_paging_obj (paging : Slacko.paging_obj) = {
+  count = paging.Slacko.count;
+  total = paging.Slacko.total;
+  page = paging.Slacko.page;
+  pages = paging.Slacko.pages;
+}
+
+type abbr_files_list_obj = {
+  files: abbr_file_obj list;
+  paging: abbr_paging_obj;
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_files_list_obj (files : Slacko.files_list_obj) = {
+  files = List.map abbr_file_obj files.Slacko.files;
+  paging = abbr_paging_obj files.Slacko.paging;
+}

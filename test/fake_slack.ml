@@ -22,6 +22,7 @@ let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
 let random_history_json = Yojson.Safe.from_file "random_history.json"
 let users_json = Yojson.Safe.from_file "users.json"
+let files_json = Yojson.Safe.from_file "files.json"
 
 let json_fields = function
   | `Assoc fields -> fields
@@ -95,9 +96,15 @@ let channels_history req body =
   | _ -> reply_err "channel_not_found" []
 
 let channels_list req body =
+  (* TODO: Check exclude_archived param. *)
   reply_ok ["channels", channels_json]
 
+let files_list req body =
+  (* TODO: Check various filtering params. *)
+  reply_ok (json_fields files_json)
+
 let users_list req body =
+  (* TODO: Check presence param. *)
   reply_ok (json_fields users_json)
 
 (* Dispatcher, etc. *)
@@ -111,6 +118,7 @@ let server ?(port=7357) ~stop () =
       | "/api/channels.create" -> check_auth channels_create
       | "/api/channels.history" -> check_auth channels_history
       | "/api/channels.list" -> check_auth channels_list
+      | "/api/files.list" -> check_auth files_list
       | "/api/users.list" -> check_auth users_list
       | _ -> bad_path
     in

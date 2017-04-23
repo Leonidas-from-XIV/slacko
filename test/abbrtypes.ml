@@ -264,3 +264,59 @@ let abbr_files_list_obj (files : Slacko.files_list_obj) = {
   files = List.map abbr_file_obj files.Slacko.files;
   paging = abbr_paging_obj files.Slacko.paging;
 }
+
+type abbr_group_obj = {
+  (* id: group; *)
+  name: string;
+  is_group: bool;
+  created: timestamp;
+  (* creator: user; *)
+  is_archived: bool;
+  (* members: user list; *)
+  topic: abbr_topic_obj;
+  purpose: abbr_topic_obj;
+  is_open: bool option [@default None];
+  last_read: timestamp option [@default None];
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+  latest: json option [@default None];
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_group_obj (group : Slacko.group_obj) = {
+  name = group.Slacko.name;
+  is_group = group.Slacko.is_group;
+  created = group.Slacko.created;
+  is_archived = group.Slacko.is_archived;
+  topic = abbr_topic_obj group.Slacko.topic;
+  purpose = abbr_topic_obj group.Slacko.purpose;
+  is_open = group.Slacko.is_open;
+  last_read = group.Slacko.last_read;
+  unread_count = group.Slacko.unread_count;
+  unread_count_display = group.Slacko.unread_count_display;
+  latest = group.Slacko.latest;
+}
+
+type abbr_group_obj_list = abbr_group_obj list
+[@@deriving show, yojson]
+
+type abbr_im_obj = {
+  id: string;
+  is_im: bool;
+  (* user: user; *)
+  created: timestamp;
+  is_user_deleted: bool;
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_im_obj (im : Slacko.im_obj) = {
+  id = im.Slacko.id;
+  is_im = im.Slacko.is_im;
+  created = im.Slacko.created;
+  is_user_deleted = im.Slacko.is_user_deleted;
+  unread_count = im.Slacko.unread_count;
+  unread_count_display = im.Slacko.unread_count_display;
+}
+
+type abbr_im_obj_list = abbr_im_obj list
+[@@deriving show, yojson]

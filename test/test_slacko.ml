@@ -238,11 +238,54 @@ let files_list_tests = fake_slack_tests "files_list" [
 (* groups_close *)
 (* groups_create *)
 (* groups_create_child *)
+
 (* groups_history *)
+
+let test_groups_history_bad_auth tctx =
+  skip_if true "TODO: Group lookup swallows all sorts of things.";
+  let session = Slacko.start_session ?base_url badtoken in
+  let seekrit = Slacko.group_of_string "seekrit" in
+  Slacko.groups_history session seekrit >|= fun resp ->
+  assert_equal `Invalid_auth resp
+
+let test_groups_history_no_params tctx =
+  skip_if true "TODO: Make history_obj.latest optional.";
+  let session = Slacko.start_session ?base_url token in
+  let seekrit = Slacko.group_of_string "seekrit" in
+  Slacko.groups_history session seekrit >|= get_success >|= fun history ->
+  assert_equal ~printer:show_abbr_history_obj
+    (abbr_json abbr_history_obj_of_yojson Fake_slack.seekrit_history_json)
+    (abbr_history_obj history)
+
+let groups_history_tests = fake_slack_tests "groups_history" [
+  "test_bad_auth", test_groups_history_bad_auth;
+  "test_no_params", test_groups_history_no_params;
+]
+
 (* groups_invite *)
 (* groups_kick *)
 (* groups_leave *)
+
 (* groups_list *)
+
+let test_groups_list_bad_auth tctx =
+  let session = Slacko.start_session ?base_url badtoken in
+  Slacko.groups_list session >|= fun resp ->
+  assert_equal `Invalid_auth resp
+
+let test_groups_list tctx =
+  let session = Slacko.start_session ?base_url token in
+  Slacko.groups_list session >|= get_success >|=
+  List.map abbr_group_obj >|= fun groups ->
+  assert_equal ~printer:show_abbr_group_obj_list
+    (abbr_json abbr_group_obj_list_of_yojson Fake_slack.groups_json)
+    groups
+
+let groups_list_tests = fake_slack_tests "groups_list" [
+  "test_bad_auth", test_groups_list_bad_auth;
+  "test", test_groups_list;
+]
+
 (* groups_mark *)
 (* groups_open *)
 (* groups_rename *)
@@ -250,8 +293,49 @@ let files_list_tests = fake_slack_tests "files_list" [
 (* groups_set_topic *)
 (* groups_unarchive *)
 (* im_close *)
+
 (* im_history *)
+
+let test_im_history_bad_auth tctx =
+  let session = Slacko.start_session ?base_url badtoken in
+  let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
+  Slacko.im_history session slackbot >|= fun resp ->
+  assert_equal `Invalid_auth resp
+
+let test_im_history_no_params tctx =
+  skip_if true "TODO: Make history_obj.latest optional.";
+  let session = Slacko.start_session ?base_url token in
+  let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
+  Slacko.im_history session slackbot >|= get_success >|= fun history ->
+  assert_equal ~printer:show_abbr_history_obj
+    (abbr_json abbr_history_obj_of_yojson Fake_slack.slackbot_history_json)
+    (abbr_history_obj history)
+
+let im_history_tests = fake_slack_tests "im_history" [
+  "test_bad_auth", test_im_history_bad_auth;
+  "test_no_params", test_im_history_no_params;
+]
+
 (* im_list *)
+
+let test_im_list_bad_auth tctx =
+  let session = Slacko.start_session ?base_url badtoken in
+  Slacko.im_list session >|= fun resp ->
+  assert_equal `Invalid_auth resp
+
+let test_im_list tctx =
+  let session = Slacko.start_session ?base_url token in
+  Slacko.im_list session >|= get_success >|=
+  List.map abbr_im_obj >|= fun ims ->
+  assert_equal ~printer:show_abbr_im_obj_list
+    (abbr_json abbr_im_obj_list_of_yojson Fake_slack.ims_json)
+    ims
+
+let im_list_tests = fake_slack_tests "im_list" [
+  "test_bad_auth", test_im_list_bad_auth;
+  "test", test_im_list;
+]
+
 (* im_mark *)
 (* im_open *)
 (* oauth_access *)
@@ -318,11 +402,11 @@ let suite = "tests" >::: [
     (* groups_close_tests; *)
     (* groups_create_tests; *)
     (* groups_create_child_tests; *)
-    (* groups_history_tests; *)
+    groups_history_tests;
     (* groups_invite_tests; *)
     (* groups_kick_tests; *)
     (* groups_leave_tests; *)
-    (* groups_list_tests; *)
+    groups_list_tests;
     (* groups_mark_tests; *)
     (* groups_open_tests; *)
     (* groups_rename_tests; *)
@@ -330,8 +414,8 @@ let suite = "tests" >::: [
     (* groups_set_topic_tests; *)
     (* groups_unarchive_tests; *)
     (* im_close_tests; *)
-    (* im_history_tests; *)
-    (* im_list_tests; *)
+    im_history_tests;
+    im_list_tests;
     (* im_mark_tests; *)
     (* im_open_tests; *)
     (* oauth_access_tests; *)

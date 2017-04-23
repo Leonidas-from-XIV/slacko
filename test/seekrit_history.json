@@ -1,0 +1,45 @@
+{
+    "has_more": false,
+    "messages": [
+        {
+            "text": "Want an X.509 private key?",
+            "ts": "1492937859.690158",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "subtype": "me_message",
+            "text": "lurks in a shadow.",
+            "ts": "1492937718.682784",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "text": "Hey you, pssst.",
+            "ts": "1492937707.682226",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "text": "Pssssst.",
+            "ts": "1492937698.681778",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "purpose": "Secret place for secretly secreting secrets",
+            "subtype": "group_purpose",
+            "text": "<@U3UMJU868|jerith> set the channel's purpose: Secret place for secretly secreting secrets",
+            "ts": "1492937683.680879",
+            "type": "message",
+            "user": "U3UMJU868"
+        },
+        {
+            "subtype": "group_join",
+            "text": "<@U3UMJU868|jerith> has joined the group",
+            "ts": "1492937682.680791",
+            "type": "message",
+            "user": "U3UMJU868"
+        }
+    ]
+}

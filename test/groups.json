@@ -1,0 +1,25 @@
+[
+    {
+        "created": 1492937682,
+        "creator": "U3UMJU868",
+        "id": "G536YKXPE",
+        "is_archived": false,
+        "is_group": true,
+        "is_mpim": false,
+        "members": [
+            "U3UMJU868"
+        ],
+        "name": "seekrit",
+        "name_normalized": "seekrit",
+        "purpose": {
+            "creator": "U3UMJU868",
+            "last_set": 1492937683,
+            "value": "Secret place for secretly secreting secrets"
+        },
+        "topic": {
+            "creator": "",
+            "last_set": 0,
+            "value": ""
+        }
+    }
+]

@@ -15,6 +15,9 @@ let ch_general = "C3UK9TS3C"
 let ch_random = "C3TTWNCTA"
 let ch_archivable = "C3XTJPLFL"
 let ch_archived = "C3XTHDCTC"
+let gr_seekrit = "G536YKXPE"
+(* slacko doesn't have a lookup function for us, so we just use it directly. *)
+let im_slackbot = "D3UMJU8VA"
 
 
 let channels_json = Yojson.Safe.from_file "channels.json"
@@ -23,6 +26,10 @@ let authed_json = Yojson.Safe.from_file "authed.json"
 let random_history_json = Yojson.Safe.from_file "random_history.json"
 let users_json = Yojson.Safe.from_file "users.json"
 let files_json = Yojson.Safe.from_file "files.json"
+let groups_json = Yojson.Safe.from_file "groups.json"
+let seekrit_history_json = Yojson.Safe.from_file "seekrit_history.json"
+let ims_json = Yojson.Safe.from_file "ims.json"
+let slackbot_history_json = Yojson.Safe.from_file "slackbot_history.json"
 
 let json_fields = function
   | `Assoc fields -> fields
@@ -91,6 +98,7 @@ let channels_create req body =
   | "#new_channel" | _ -> reply_ok ["channel", new_channel_json]
 
 let channels_history req body =
+  (* TODO: Check various filtering params. *)
   match get_arg "channel" req with
   | ch when ch = ch_random -> reply_ok (json_fields random_history_json)
   | _ -> reply_err "channel_not_found" []
@@ -102,6 +110,25 @@ let channels_list req body =
 let files_list req body =
   (* TODO: Check various filtering params. *)
   reply_ok (json_fields files_json)
+
+let groups_list req body =
+  (* TODO: Check exclude_archived param. *)
+  reply_ok ["groups", groups_json]
+
+let groups_history req body =
+  (* TODO: Check various filtering params. *)
+  match get_arg "channel" req with
+  | gr when gr = gr_seekrit -> reply_ok (json_fields seekrit_history_json)
+  | _ -> reply_err "channel_not_found" []
+
+let im_list req body =
+  reply_ok ["ims", ims_json]
+
+let im_history req body =
+  (* TODO: Check various filtering params. *)
+  match get_arg "channel" req with
+  | im when im = im_slackbot -> reply_ok (json_fields slackbot_history_json)
+  | _ -> reply_err "channel_not_found" []
 
 let users_list req body =
   (* TODO: Check presence param. *)
@@ -119,6 +146,10 @@ let server ?(port=7357) ~stop () =
       | "/api/channels.history" -> check_auth channels_history
       | "/api/channels.list" -> check_auth channels_list
       | "/api/files.list" -> check_auth files_list
+      | "/api/groups.history" -> check_auth groups_history
+      | "/api/groups.list" -> check_auth groups_list
+      | "/api/im.history" -> check_auth im_history
+      | "/api/im.list" -> check_auth im_list
       | "/api/users.list" -> check_auth users_list
       | _ -> bad_path
     in

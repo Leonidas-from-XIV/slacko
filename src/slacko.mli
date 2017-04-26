@@ -402,7 +402,7 @@ type message_obj = {
 
 (* The message history of a channel or group conversation. *)
 type history_obj = {
-  latest: timestamp;
+  latest: timestamp option;
   messages: message_obj list;
   has_more: bool;
 }

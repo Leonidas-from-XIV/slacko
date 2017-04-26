@@ -417,7 +417,7 @@ type message_obj = {
 } [@@deriving of_yojson { strict = false }]
 
 type history_obj = {
-  latest: timestamp;
+  latest: timestamp option [@default None];
   messages: message_obj list;
   has_more: bool;
 } [@@deriving of_yojson { strict = false }]

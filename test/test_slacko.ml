@@ -161,7 +161,6 @@ let test_channels_history_bad_auth tctx =
   assert_equal `Invalid_auth resp
 
 let test_channels_history_no_params tctx =
-  skip_if true "TODO: Make history_obj.latest optional.";
   let session = Slacko.start_session ?base_url token in
   let random = Slacko.channel_of_string "#random" in
   Slacko.channels_history session random >|= get_success >|= fun history ->
@@ -249,7 +248,6 @@ let test_groups_history_bad_auth tctx =
   assert_equal `Invalid_auth resp
 
 let test_groups_history_no_params tctx =
-  skip_if true "TODO: Make history_obj.latest optional.";
   let session = Slacko.start_session ?base_url token in
   let seekrit = Slacko.group_of_string "seekrit" in
   Slacko.groups_history session seekrit >|= get_success >|= fun history ->
@@ -303,7 +301,6 @@ let test_im_history_bad_auth tctx =
   assert_equal `Invalid_auth resp
 
 let test_im_history_no_params tctx =
-  skip_if true "TODO: Make history_obj.latest optional.";
   let session = Slacko.start_session ?base_url token in
   let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
   Slacko.im_history session slackbot >|= get_success >|= fun history ->

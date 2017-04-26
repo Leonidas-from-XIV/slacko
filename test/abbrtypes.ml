@@ -105,7 +105,7 @@ type abbr_history_obj = {
 } [@@deriving show, yojson { strict = false }]
 
 let abbr_history_obj (history : Slacko.history_obj) = {
-  latest = Some history.Slacko.latest;
+  latest = history.Slacko.latest;
   messages = List.map abbr_message_obj history.Slacko.messages;
   has_more = history.Slacko.has_more;
 }

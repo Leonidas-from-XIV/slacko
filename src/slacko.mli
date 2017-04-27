@@ -529,9 +529,6 @@ type file_obj = {
 
   size: int;
 
-  (* These two are deprecated and appear to be gone. *)
-  (* url: string; *)
-  (* url_download: string; *)
   url_private: string;
   url_private_download: string;
 

@@ -768,8 +768,10 @@ let groups_list ?exclude_archived session =
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
+type 'a listfn = session -> [`Success of 'a list | parsed_auth_error] Lwt.t
+
 (* look up the id of query from results provided by the listfn *)
-let lookupk session listfn filterfn k =
+let lookupk session (listfn : 'a listfn) filterfn k =
   match%lwt listfn session with
   | #parsed_auth_error as e -> Lwt.return e
   | `Success items -> Lwt.return @@ k @@ List.filter filterfn items

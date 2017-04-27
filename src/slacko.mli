@@ -529,31 +529,29 @@ type file_obj = {
 
   size: int;
 
-  url: string;
-  url_download: string;
   url_private: string;
   url_private_download: string;
 
-  thumb_64: string;
-  thunb_80: string;
-  thumb_360: string;
-  thumb_360_gif: string;
-  thumb_360_w: int;
-  thumb_360_h: int;
+  thumb_64: string option;
+  thunb_80: string option;
+  thumb_360: string option;
+  thumb_360_gif: string option;
+  thumb_360_w: int option;
+  thumb_360_h: int option;
 
   permalink: string;
-  edit_link: string;
-  preview: string;
-  preview_highlight: string;
-  lines: int;
-  lines_more: int;
+  edit_link: string option;
+  preview: string option;
+  preview_highlight: string option;
+  lines: int option;
+  lines_more: int option;
 
   is_public: bool;
   (*public_url_shared: ???;*)
   channels: channel list;
   groups: group list;
   ims: conversation list;
-  initial_comment: Yojson.Safe.json;
+  initial_comment: Yojson.Safe.json option;
   num_stars: int option;
 }
 

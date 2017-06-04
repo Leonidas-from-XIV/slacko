@@ -317,31 +317,29 @@ type file_obj = {
 
   size: int;
 
-  url: string;
-  url_download: string;
   url_private: string;
   url_private_download: string;
 
-  thumb_64: string;
-  thunb_80: string;
-  thumb_360: string;
-  thumb_360_gif: string;
-  thumb_360_w: int;
-  thumb_360_h: int;
+  thumb_64: string option [@default None];
+  thunb_80: string option [@default None];
+  thumb_360: string option [@default None];
+  thumb_360_gif: string option [@default None];
+  thumb_360_w: int option [@default None];
+  thumb_360_h: int option [@default None];
 
   permalink: string;
-  edit_link: string;
-  preview: string;
-  preview_highlight: string;
-  lines: int;
-  lines_more: int;
+  edit_link: string option [@default None];
+  preview: string option [@default None];
+  preview_highlight: string option [@default None];
+  lines: int option [@default None];
+  lines_more: int option [@default None];
 
   is_public: bool;
   (*public_url_shared: ???;*)
   channels: channel list;
   groups: group list;
   ims: conversation list;
-  initial_comment: Yojson.Safe.json;
+  initial_comment: Yojson.Safe.json option [@default None];
   num_stars: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
 

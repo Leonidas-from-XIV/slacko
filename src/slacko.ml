@@ -763,33 +763,26 @@ let groups_list ?exclude_archived session =
       (match d |> groups_list_obj_of_yojson with
         | Result.Ok x -> `Success x.groups
         | Result.Error x -> `ParseFailure x)
-    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
-exception No_matches
-exception No_unique_matches
-exception Lookup_failed
+type 'a listfn = session -> [`Success of 'a list | parsed_auth_error] Lwt.t
 
 (* look up the id of query from results provided by the listfn *)
-let lookupk session listfn filterfn k =
+let lookupk session (listfn : 'a listfn) filterfn k =
   match%lwt listfn session with
-  | `Success channels -> (match List.filter filterfn channels with
-    | [] -> Lwt.fail No_matches
-    | [x] -> Lwt.return @@ k x
-    | _ -> Lwt.fail No_unique_matches)
-  | _ -> Lwt.fail Lookup_failed
+  | #parsed_auth_error as e -> Lwt.return e
+  | `Success items -> Lwt.return @@ k @@ List.filter filterfn items
 
-let id_of_channel session : _ -> [ `User_not_found | `Channel_not_found | `Found of string ] Lwt.t = function
+let id_of_channel session = function
   | ChannelId id -> Lwt.return @@ `Found id
   | ChannelName name ->
     let base = String.sub name 1 @@ String.length name - 1 in
-    match%lwt (lookupk session channels_list (fun (x:channel_obj) -> x.name = base) @@ function
-    | {id = ChannelId s; _} -> Some s
-    | {id = ChannelName _; _} -> None) with
-    | exception _ -> Lwt.return `Channel_not_found
-    | Some v -> Lwt.return @@ `Found v
-    | None -> Lwt.return `Channel_not_found
+    lookupk session channels_list (fun (x:channel_obj) -> x.name = base) @@ function
+    | [] -> `Channel_not_found
+    | [{id = ChannelId s; _}] -> `Found s
+    | [_] -> failwith "Bad result from channel id lookup."
+    | _::_::_ -> failwith "Too many results from channel id lookup."
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -799,24 +792,22 @@ let string_of_channel = function
 let id_of_user session = function
   | UserId id -> Lwt.return @@ `Found id
   | UserName name ->
-    match%lwt (lookupk session users_list (fun (x:user_obj) -> x.name = name) @@ function
-    | {id = UserId s; _} -> Some s
-    | {id = UserName _; _} -> None) with
-    | exception _ -> Lwt.return `User_not_found
-    | Some v -> Lwt.return @@ `Found v
-    | None -> Lwt.return `User_not_found
+    lookupk session users_list (fun (x:user_obj) -> x.name = name) @@ function
+    | [] -> `User_not_found
+    | [{id = UserId s; _}] -> `Found s
+    | [_] -> failwith "Bad result from user id lookup."
+    | _::_::_ -> failwith "Too many results from user id lookup."
 
 let id_of_group session = function
   | GroupId id -> Lwt.return @@ `Found id
   | GroupName name ->
-    match%lwt (lookupk session groups_list (fun (x:group_obj) -> x.name = name) @@ function
-    | {id = GroupId s; _} -> Some s
-    | {id = GroupName _; _} -> None) with
-    | exception _ -> Lwt.return `Channel_not_found
-    | Some v -> Lwt.return @@ `Found v
-    | None -> Lwt.return `Channel_not_found
+    lookupk session groups_list (fun (x:group_obj) -> x.name = name) @@ function
+    | [] -> `Channel_not_found
+    | [{id = GroupId s; _}] -> `Found s
+    | [_] -> failwith "Bad result from group id lookup."
+    | _::_::_ -> failwith "Too many results from group id lookup."
 
-let id_of_chat session : _ -> [ `Found of string | `Channel_not_found | `User_not_found ] Lwt.t = function
+let id_of_chat session = function
   | Channel c -> id_of_channel session c
   | Im i -> Lwt.return @@ `Found i
   | User u -> id_of_user session u
@@ -918,7 +909,8 @@ let auth_test session =
 (* Operator for unwrapping channel_ids *)
 let (|->) m f =
   match%lwt m with
-  | `Channel_not_found -> Lwt.return `Channel_not_found
+  | `Channel_not_found
+  | #parsed_auth_error as e -> Lwt.return e
   | `User_not_found -> Lwt.return `Unknown_error
   | `Found v -> f v
 
@@ -926,7 +918,8 @@ let (|->) m f =
 let (|+>) m f =
   match%lwt m with
   | `Channel_not_found -> Lwt.return `Unknown_error
-  | `User_not_found -> Lwt.return `User_not_found
+  | `User_not_found
+  | #parsed_auth_error as e -> Lwt.return e
   | `Found v -> f v
 
 let channels_archive session channel =
@@ -1506,7 +1499,6 @@ let im_list session =
       (match d |> im_list_obj_of_yojson with
         | Result.Ok x -> `Success x.ims
         | Result.Error x -> `ParseFailure x)
-    | #bot_error
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 

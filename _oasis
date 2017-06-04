@@ -27,6 +27,23 @@ Executable "slack-notify"
   NativeOpt:      -safe-string
   CompiledObject: best
 
+Executable "test_slacko"
+  Path:           test
+  BuildDepends:   oUnit, slacko, ppx_deriving.std
+  MainIs:         test_slacko.ml
+  ByteOpt:        -safe-string
+  NativeOpt:      -safe-string
+  CompiledObject: best
+  Build$:         flag(tests)
+  Install:        false
+
+Test "test_slacko"
+  Run$:             flag(tests)
+  # We need the "-runner sequential" for lwt-based tests.
+  # https://forge.ocamlcore.org/tracker/?func=detail&aid=1363&group_id=162&atid=730
+  Command:          $test_slacko -runner sequential
+  WorkingDirectory: test
+
 SourceRepository head
   Type:     git
   Location: https://github.com/Leonidas-from-XIV/slacko.git

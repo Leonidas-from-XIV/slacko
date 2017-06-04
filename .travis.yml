@@ -1,14 +1,22 @@
 language: c
 sudo: required
-install: wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-opam.sh
+install:
+  - wget https://raw.githubusercontent.com/ocaml/ocaml-ci-scripts/master/.travis-opam.sh
+  - if [ -n "$COVERAGE" ]; then wget https://raw.githubusercontent.com/simonjbeaumont/ocaml-travis-coveralls/master/travis-coveralls.sh; fi
 script: bash -ex .travis-opam.sh
+after_success: |
+  if [ -n "$COVERAGE" ]; then
+    opam install slacko --deps-only --yes --build-test
+    bash -ex travis-coveralls.sh
+  fi
 env:
   global:
     - PACKAGE=slacko
     - EXTRA_DEPS="oasis"
     - PRE_INSTALL_HOOK="oasis setup"
-    - TESTS=false
+    - TESTS=true
+    - COV_CONF="./configure --enable-tests"
   matrix:
-    - OCAML_VERSION=4.02
+    - OCAML_VERSION=4.02 COVERAGE=YES
     - OCAML_VERSION=4.03
     - OCAML_VERSION=4.04

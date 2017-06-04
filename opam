@@ -10,6 +10,7 @@ build: [
   ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
   ["ocaml" "setup.ml" "-build"]
 ]
+build-test: [make "test"]
 install: [
   ["ocaml" "setup.ml" "-install"]
 ]
@@ -22,10 +23,11 @@ depends: [
   "yojson"
   "lwt" {>= "2.4.7"}
   "tls" | "ssl"
-  "cohttp" {>= "0.13.0"}
+  "cohttp" {>= "0.21.1"}
   "ppx_deriving_yojson" {>= "3.0"}
   # for development. Not to be included in opam-repository
   "oasis" {build & >= "0.4.0"}
+  "ounit" {test}
   # /development
 ]
 conflicts: [

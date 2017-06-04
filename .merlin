@@ -1,8 +1,12 @@
 S src
+S test
 B _build/src
+B _build/test
 PKG cmdliner
 PKG lwt
 PKG lwt.ppx
 PKG cohttp.lwt
 PKG yojson
 PKG ppx_deriving_yojson
+PKG ppx_deriving.std
+PKG oUnit

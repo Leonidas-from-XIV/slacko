@@ -23,7 +23,7 @@
 
     To use the API you first need to either apply for a {!token} from Slack,
     or get one via the OAuth2 API. This string can then be converted into
-    a {!session} by means of {!make_session}. With this {!session} most other
+    a {!session} by means of {!start_session}. With this {!session} most other
     methods from the binding can be called. The result of each API call is
     a variant type containing either the JSON result or an error type
     describing what kind of error occured.

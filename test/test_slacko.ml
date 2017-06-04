@@ -87,7 +87,6 @@ let auth_test_tests = fake_slack_tests "test_auth" [
 (* channels_archive  *)
 
 let test_channels_archive_bad_auth tctx =
-  skip_if true "TODO: Channel lookup swallows all sorts of things.";
   let session = Slacko.start_session ?base_url badtoken in
   let new_channel = Slacko.channel_of_string "#new_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
@@ -154,7 +153,6 @@ let channels_create_tests = fake_slack_tests "channels_create" [
 (* channels_history *)
 
 let test_channels_history_bad_auth tctx =
-  skip_if true "TODO: Channel lookup swallows all sorts of things.";
   let session = Slacko.start_session ?base_url badtoken in
   let new_channel = Slacko.channel_of_string "#new_channel" in
   Slacko.channels_history session new_channel >|= fun resp ->
@@ -240,7 +238,6 @@ let files_list_tests = fake_slack_tests "files_list" [
 (* groups_history *)
 
 let test_groups_history_bad_auth tctx =
-  skip_if true "TODO: Group lookup swallows all sorts of things.";
   let session = Slacko.start_session ?base_url badtoken in
   let seekrit = Slacko.group_of_string "seekrit" in
   Slacko.groups_history session seekrit >|= fun resp ->

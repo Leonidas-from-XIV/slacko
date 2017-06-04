@@ -219,7 +219,6 @@ let test_files_list_bad_auth tctx =
   assert_equal `Invalid_auth resp
 
 let test_files_list tctx =
-  skip_if true "TODO: Make a bunch of file_obj fields optional.";
   let session = Slacko.start_session ?base_url token in
   Slacko.files_list session >|= get_success >|=
   abbr_files_list_obj >|= fun files ->

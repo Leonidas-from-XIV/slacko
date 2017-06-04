@@ -795,7 +795,7 @@ val groups_kick: session -> group -> user -> [ `Success | parsed_auth_error | ch
 val groups_leave: session -> group -> [ `Success | parsed_auth_error | channel_error | archive_error | leave_last_channel_error | last_member_error | `User_is_ultra_restricted | bot_error ] Lwt.t
 
 (** Lists private groups that the calling user has access to. *)
-val groups_list: ?exclude_archived:bool -> session -> [ `Success of group_obj list | parsed_auth_error | bot_error ] Lwt.t
+val groups_list: ?exclude_archived:bool -> session -> [ `Success of group_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a private group. *)
 val groups_mark: session -> group -> timestamp -> [ `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t
@@ -822,7 +822,7 @@ val im_close: session -> conversation -> [ `Success of chat_close_obj | parsed_a
 val im_history: session -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> ?inclusive:bool -> conversation -> history_result Lwt.t
 
 (** Lists direct message channels for the calling user. *)
-val im_list: session -> [ `Success of im_obj list | parsed_auth_error | bot_error ] Lwt.t
+val im_list: session -> [ `Success of im_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
 val im_mark: session -> conversation -> timestamp -> [ `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t

@@ -781,8 +781,10 @@ let id_of_channel session = function
   | ChannelName name ->
     let base = String.sub name 1 @@ String.length name - 1 in
     lookupk session channels_list (fun (x:channel_obj) -> x.name = base) @@ function
+    | [] -> `Channel_not_found
     | [{id = ChannelId s; _}] -> `Found s
-    | _ -> `Channel_not_found
+    | [_] -> failwith "Bad result from channel id lookup."
+    | _::_::_ -> failwith "Too many results from channel id lookup."
 
 (* like id_of_channel but does not resolve names to ids *)
 let string_of_channel = function
@@ -793,15 +795,19 @@ let id_of_user session = function
   | UserId id -> Lwt.return @@ `Found id
   | UserName name ->
     lookupk session users_list (fun (x:user_obj) -> x.name = name) @@ function
+    | [] -> `User_not_found
     | [{id = UserId s; _}] -> `Found s
-    | _ -> `User_not_found
+    | [_] -> failwith "Bad result from user id lookup."
+    | _::_::_ -> failwith "Too many results from user id lookup."
 
 let id_of_group session = function
   | GroupId id -> Lwt.return @@ `Found id
   | GroupName name ->
     lookupk session groups_list (fun (x:group_obj) -> x.name = name) @@ function
+    | [] -> `Channel_not_found
     | [{id = GroupId s; _}] -> `Found s
-    | _ -> `Channel_not_found
+    | [_] -> failwith "Bad result from group id lookup."
+    | _::_::_ -> failwith "Too many results from group id lookup."
 
 let id_of_chat session = function
   | Channel c -> id_of_channel session c

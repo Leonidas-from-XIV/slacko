@@ -1,6 +1,6 @@
 OASISFormat:  0.4
 Name:         slacko
-Version:      0.12.0
+Version:      0.13.0
 Synopsis:     Neat binding to the Slack API
 Authors:      Marek Kubica
 Maintainers:  Marek Kubica

@@ -1,34 +1,20 @@
 opam-version: "1.2"
-maintainer: "marek@xivilization.net"
+maintainer: "Marek Kubica <marek@xivilization.net>"
 author: "Marek Kubica <marek@xivilization.net>"
 homepage: "https://github.com/Leonidas-from-XIV/slacko"
 license: "LGPL-3 with OCaml linking exception"
-build: [
-  # for development. Not to be included in opam-repository
-  ["oasis" "setup"]
-  # /development
-  ["ocaml" "setup.ml" "-configure" "--prefix" prefix]
-  ["ocaml" "setup.ml" "-build"]
-]
+build: [["jbuilder" "build" "-p" name "-j" jobs]]
 build-test: [make "test"]
-install: [
-  ["ocaml" "setup.ml" "-install"]
-]
-remove: [
-  ["ocamlfind" "remove" "slacko"]
-]
 depends: [
-  "ocamlfind"
+  "jbuilder" {build}
   "cmdliner"
   "yojson"
-  "lwt" {>= "2.4.7"}
+  "lwt" {>= "3.2.0"}
+  "lwt_ppx" {>= "3.2.0"}
   "tls" | "ssl"
-  "cohttp" {>= "0.21.1"}
+  "cohttp-lwt-unix"
   "ppx_deriving_yojson" {>= "3.0"}
-  # for development. Not to be included in opam-repository
-  "oasis" {build & >= "0.4.0"}
   "ounit" {test}
-  # /development
 ]
 conflicts: [
   # broken release: https://github.com/mirage/ocaml-conduit/issues/189

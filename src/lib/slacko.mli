@@ -768,7 +768,7 @@ val files_info: session -> ?count:int -> ?page:int -> string -> [ `Success of fi
 val files_list: ?user:user -> ?ts_from:timestamp -> ?ts_to:timestamp -> ?types:string -> ?count:int -> ?page:int -> session -> [ `Success of files_list_obj | parsed_auth_error | user_error | unknown_type_error | bot_error ] Lwt.t
 
 (** Uploads or creates a file. *)
-val files_upload: session -> ?filetype:string -> ?filename:string -> ?title:string -> ?initial_comment:string -> ?channels:string -> Cohttp_lwt_body.t -> [ `Success of file_obj | parsed_auth_error | bot_error ] Lwt.t
+val files_upload: session -> ?filetype:string -> ?filename:string -> ?title:string -> ?initial_comment:string -> ?channels:string -> Cohttp_lwt.Body.t -> [ `Success of file_obj | parsed_auth_error | bot_error ] Lwt.t
 
 (** Archives a private group. *)
 val groups_archive: session -> group -> [ `Success | parsed_auth_error | channel_error | already_archived_error | `Group_contains_others | `Last_restricted_channel | restriction_error | `User_is_ultra_restricted | bot_error ] Lwt.t

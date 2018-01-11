@@ -1,11 +1,5 @@
-*.byte
-*.native
 /_build/
-_tags
+/_opam/
 META
-Makefile
-configure
-myocamlbuild.ml
-setup.*
-*.mldylib
-*.mllib
+/*.install
+.merlin

@@ -9,4 +9,4 @@
  ((name runtest)
   (deps ((file test_slacko.exe)
          (glob_files *.json)))
-  (action (run ${<}))))
+  (action (run ${<} -runner sequential))))

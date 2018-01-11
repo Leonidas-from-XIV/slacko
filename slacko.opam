@@ -10,7 +10,7 @@ depends: [
   "cmdliner"
   "yojson"
   "lwt" {>= "3.2.0"}
-  "lwt_ppx" {>= "3.2.0"}
+  "lwt_ppx"
   "tls" | "ssl"
   "cohttp-lwt-unix"
   "ppx_deriving_yojson" {>= "3.0"}
@@ -22,4 +22,4 @@ conflicts: [
 ]
 dev-repo: "git://github.com/Leonidas-from-XIV/slacko"
 bug-reports: "https://github.com/Leonidas-from-XIV/slacko/issues"
-available: [ ocaml-version >= "4.02.0" ]
+available: [ ocaml-version >= "4.03.0" ]

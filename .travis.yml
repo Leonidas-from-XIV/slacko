@@ -14,7 +14,6 @@ env:
     - PACKAGE=slacko
     - TESTS=true
   matrix:
-    - OCAML_VERSION=4.03 COVERAGE=YES
-    - OCAML_VERSION=4.04
+    - OCAML_VERSION=4.04 COVERAGE=YES
     - OCAML_VERSION=4.05
     - OCAML_VERSION=4.06

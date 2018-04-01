@@ -12,7 +12,7 @@ depends: [
   "lwt" {>= "3.2.0"}
   "lwt_ppx"
   "tls" | "ssl"
-  "cohttp-lwt-unix"
+  "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.0"}
   "ounit" {test}
 ]

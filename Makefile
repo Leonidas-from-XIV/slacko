@@ -4,7 +4,7 @@ all:
 
 .PHONY: clean
 clean:
-	jbuilder cleanr
+	jbuilder clean
 
 .PHONY: test
 test:

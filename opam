@@ -23,7 +23,7 @@ depends: [
   "yojson"
   "lwt" {>= "2.4.7"}
   "tls" | "ssl"
-  "cohttp" {>= "0.21.1"}
+  "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.0"}
   # for development. Not to be included in opam-repository
   "oasis" {build & >= "0.4.0"}

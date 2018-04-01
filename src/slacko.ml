@@ -20,7 +20,7 @@
 
 open Lwt.Infix
 module Cohttp_unix = Cohttp_lwt_unix
-module Cohttp_body = Cohttp_lwt_body
+module Cohttp_body = Cohttp_lwt.Body
 
 type api_error = [
   | `Unhandled_error of string

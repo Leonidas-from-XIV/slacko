@@ -17,6 +17,7 @@ env:
     - TESTS=true
     - COV_CONF="./configure --enable-tests"
   matrix:
-    - OCAML_VERSION=4.02 COVERAGE=YES
-    - OCAML_VERSION=4.03
+    - OCAML_VERSION=4.03 COVERAGE=YES
     - OCAML_VERSION=4.04
+    - OCAML_VERSION=4.05
+    - OCAML_VERSION=4.06

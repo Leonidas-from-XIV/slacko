@@ -663,6 +663,10 @@ val topic_of_string: string -> topic option
     the text data into a {!topic}. *)
 val topic_of_string_exn: string -> topic
 
+(** The string representing the given {!topic}. This never fails and is the
+    inverse of {!topic_of_string_exn}. *)
+val string_of_topic: topic -> string
+
 (** Construct a group out of a given string. This can be either a group id,
     starting with capital 'G' character which is the preferred way or it can
     be a group name for convenience. In the latter case, each API call with
@@ -670,11 +674,19 @@ val topic_of_string_exn: string -> topic
     id from the name. *)
 val group_of_string: string -> group
 
+(** The string representing the given group. This is the inverse of
+    {!group_of_string}. The result can be a group ID or a group name. *)
+val string_of_group: group -> string
+
 (** Constructs a user out of a given string. The string can either be an user
     id starting with a capital 'U' which is the preferred way or it can be a
     simple user name in which case every API call will look up the user name
     to an id in an additional request. *)
 val user_of_string: string -> user
+
+(** The string representing the given user. This is the inverse of
+    {!user_of_string}. The result can be a user ID or a user name. *)
+val string_of_user: user -> string
 
 (** Constructs a channel out of a given string. Can either be a channel id
     starting with a capital 'C' which is the preferred way or a channel name
@@ -683,9 +695,18 @@ val user_of_string: string -> user
     id by means of an additional request. *)
 val channel_of_string: string -> channel
 
+(** The string representing the given channel. This is the inverse of
+    {!channel_of_string}. The result can be a channel ID or a channel name
+    starting with '#'. *)
+val string_of_channel: channel -> string
+
 (** Create a conversation type out of a given string. The string is usually
     starting with a capital 'D' and represents an IM conversation channel. *)
 val conversation_of_string: string -> conversation
+
+(** The string representing a conversation. This is the inverse of
+    {!conversation_of_string}. *)
+val string_of_conversation: conversation -> string
 
 (** {2 Slack API calls} *)
 

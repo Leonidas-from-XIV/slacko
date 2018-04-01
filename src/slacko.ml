@@ -869,18 +869,31 @@ let topic_of_string_exn text =
   | Some t -> t
   | None -> failwith "Too long"
 
+let string_of_topic t = t
+
 let channel_of_string s =
   if s.[0] = 'C' then ChannelId s else ChannelName s
+
+let string_of_channel =
+  function ChannelId s | ChannelName s -> s
 
 let user_of_string s =
   if s.[0] = 'U' then UserId s else UserName s
 
+let string_of_user =
+  function UserId s | UserName s -> s
+
 let group_of_string s =
   if s.[0] = 'G' then GroupId s else GroupName s
+
+let string_of_group =
+  function GroupId s | GroupName s -> s
 
 (* TODO Create a conversation if conversation does not exist? *)
 let conversation_of_string s =
   if s.[0] = 'D' then s else failwith "Not an IM channel"
+
+let string_of_conversation s = s
 
 let translate_parsing_error = function
   | Result.Error a -> `ParseFailure a

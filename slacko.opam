@@ -6,7 +6,7 @@ license: "LGPL-3 with OCaml linking exception"
 build: [["jbuilder" "build" "-p" name "-j" jobs]]
 build-test: [make "test"]
 depends: [
-  "jbuilder" {build}
+  "jbuilder" {build & >= "1.0+beta17"}
   "cmdliner"
   "yojson"
   "lwt" {>= "3.2.0"}

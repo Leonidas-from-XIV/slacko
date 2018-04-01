@@ -8,4 +8,4 @@ clean:
 
 .PHONY: test
 test:
-	jbuilder runtest
+	jbuilder runtest --force

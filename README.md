@@ -35,24 +35,13 @@ required at all. Actually, once compiled, not even OCaml is required anymore,
 everything is self-contained.
 
 In case you want to manually install it, you can, too. There's a number of
-dependencies that you have to take care of yourself:
-
-  * [OCaml](http://ocaml.org/), >= 4.02.0 (no kidding)
-  * [Lwt](https://ocsigen.org/lwt/) >= 2.4.7 (for ppx support)
-  * [ssl](https://github.com/savonet/ocaml-ssl) or
-    [tls](https://github.com/mirleft/ocaml-tls) (for SSL support)
-  * [Cmdliner](http://erratique.ch/software/cmdliner)
-  * [Yojson](http://mjambon.com/yojson.html)
-  * [ppx_deriving_yojson](https://github.com/whitequark/ppx_deriving_yojson)
-    >= 2.3
-  * [Cohttp](https://github.com/mirage/ocaml-cohttp) >= 0.13.0
+dependencies that you have to take care of yourself, for the list you'll have
+to check the [slacko.opam](slacko.opam) file.
 
 Then you can build Slacko by yourself:
 
 ```sh
-$ ocaml setup.ml -configure
-$ ocaml setup.ml -build
-$ ocaml setup.ml -install
+$ jbuilder build
 ```
 
 How do I even use this thing?

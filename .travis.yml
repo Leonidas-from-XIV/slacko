@@ -12,12 +12,8 @@ after_success: |
 env:
   global:
     - PACKAGE=slacko
-    - EXTRA_DEPS="oasis"
-    - PRE_INSTALL_HOOK="oasis setup"
     - TESTS=true
-    - COV_CONF="./configure --enable-tests"
   matrix:
-    - OCAML_VERSION=4.03 COVERAGE=YES
-    - OCAML_VERSION=4.04
+    - OCAML_VERSION=4.04 COVERAGE=YES
     - OCAML_VERSION=4.05
     - OCAML_VERSION=4.06

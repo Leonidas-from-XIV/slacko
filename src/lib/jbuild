@@ -1,0 +1,6 @@
+(jbuild_version 1)
+
+(library
+  ((name slacko)
+   (libraries (lwt cohttp-lwt-unix yojson ppx_deriving_yojson.runtime))
+   (preprocess (pps (lwt_ppx ppx_deriving_yojson)))))

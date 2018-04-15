@@ -2,5 +2,7 @@
 
 (library
   ((name slacko)
+   (public_name slacko)
+   (wrapped false)
    (libraries (lwt cohttp-lwt-unix yojson ppx_deriving_yojson.runtime))
    (preprocess (pps (lwt_ppx ppx_deriving_yojson)))))

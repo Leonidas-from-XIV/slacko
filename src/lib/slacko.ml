@@ -409,7 +409,7 @@ let attachment
 type message_obj = {
   type': string [@key "type"];
   ts: timestamp;
-  user: user;
+  user: user option [@default None];
   text: string;
   is_starred: bool option [@default None];
 } [@@deriving of_yojson { strict = false }]

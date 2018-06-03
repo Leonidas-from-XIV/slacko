@@ -87,7 +87,7 @@ type abbr_message_obj = {
   type': string [@key "type"];
   ts: timestamp;
   (* user: user; *)
-  text: string;
+  text: string option;
   is_starred: bool option [@default None];
 } [@@deriving show, yojson { strict = false }]
 

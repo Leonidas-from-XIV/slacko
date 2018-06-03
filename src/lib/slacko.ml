@@ -410,7 +410,7 @@ type message_obj = {
   type': string [@key "type"];
   ts: timestamp;
   user: user option [@default None];
-  text: string;
+  text: string option;
   is_starred: bool option [@default None];
 } [@@deriving of_yojson { strict = false }]
 

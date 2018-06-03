@@ -15,6 +15,7 @@ depends: [
   "tls" | "ssl"
   "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.0"}
+  "ptime"
   "ounit" {with-test}
 ]
 conflicts: [

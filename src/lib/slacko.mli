@@ -396,7 +396,7 @@ type message_obj = {
   type': string;
   ts: timestamp;
   user: user option;
-  text: string;
+  text: string option;
   is_starred: bool option;
 }
 

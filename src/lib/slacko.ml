@@ -704,9 +704,8 @@ let query =
 let query_post body =
   process << Cohttp_unix.Client.post ~body
 
-(* like string_of_float, but doesn't truncate numbers to end with '.',
- * e.g. '42.' *)
-let string_of_timestamp = Printf.sprintf "%.f"
+(* like string_of_float, but with 6 digits precision as used by Slack. *)
+let string_of_timestamp = Printf.sprintf "%.6f"
 
 let identity x = x
 

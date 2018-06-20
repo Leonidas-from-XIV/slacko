@@ -232,10 +232,6 @@ let conversation_of_yojson = function
   | `String x -> Result.Ok x
   | _ -> Result.Error "Couldn't parse conversation type"
 
-let token_of_yojson = function
-  | `String x -> Result.Ok x
-  | _ -> Result.Error "Couldn't parse token"
-
 type topic_obj = {
   value: string;
   creator: user;
@@ -347,7 +343,7 @@ type field_obj = {
   title: string option [@default None];
   value: string [@default ""];
   short: bool [@default false];
-} [@@deriving yojson { strict = false }]
+} [@@deriving to_yojson { strict = false }]
 
 let field ?title ?(short=false) value = {
   title;
@@ -372,7 +368,7 @@ type attachment_obj = {
   footer_icon: string option [@default None];
   ts: timestamp option [@default None];
   mrkdwn_in: string list option [@default None];
-} [@@deriving yojson { strict = false }]
+} [@@deriving to_yojson { strict = false }]
 
 let if_none a b =
   match a with
@@ -813,7 +809,7 @@ let id_of_chat session = function
   | Group g -> id_of_group session g
 
 let name_of_group = function
-  | GroupId id -> failwith "Need to specify a name"
+  | GroupId _ -> failwith "Need to specify a name"
   | GroupName name -> name
 
 let string_of_bool = function

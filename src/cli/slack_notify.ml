@@ -60,7 +60,7 @@ let execute base_url token username channel icon_url icon_emoji attachment_text 
     |> print_endline;
 
   let string_or_bust = function
-    | `Success x -> "Message posted"
+    | `Success _ -> "Message posted"
     | `Invalid_auth -> "Invalid token"
     | `Channel_not_found -> "Channel unknown"
     | `Is_archived -> "Channel is archived"

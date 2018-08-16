@@ -196,6 +196,8 @@ type conversation = string
 
 type user = UserId of string | UserName of string
 
+type bot = BotId of string
+
 type group = GroupId of string | GroupName of string
 
 (* TODO: Sure about user? *)
@@ -219,6 +221,14 @@ let timestamp_of_yojson = function
 let user_of_yojson = function
   | `String x -> Result.Ok (UserId x)
   | _ -> Result.Error "Couldn't parse user type"
+
+let bot_of_string s =
+  if s.[0] = 'B' then BotId s else invalid_arg ("bot_of_string " ^ s)
+
+let bot_of_yojson = function
+  | `String x -> Result.Ok (bot_of_string x)
+  | _ -> Result.Error "Couldn't parse bot type"
+
 
 let channel_of_yojson = function
   | `String x -> Result.Ok (ChannelId x)
@@ -406,6 +416,7 @@ type message_obj = {
   type': string [@key "type"];
   ts: timestamp;
   user: user option [@default None];
+  bot_id: bot option [@default None];
   text: string option;
   is_starred: bool option [@default None];
 } [@@deriving of_yojson { strict = false }]

@@ -284,6 +284,9 @@ type conversation
 (** An user, represented by either a user name or a user id. *)
 type user
 
+(** A bot user, represented by a bot id *)
+type bot
+
 (** A group, a private subset of users chatting together. *)
 type group
 
@@ -396,6 +399,7 @@ type message_obj = {
   type': string;
   ts: timestamp;
   user: user option;
+  bot_id: bot option;
   text: string option;
   is_starred: bool option;
 }
@@ -675,6 +679,8 @@ val group_of_string: string -> group
     simple user name in which case every API call will look up the user name
     to an id in an additional request. *)
 val user_of_string: string -> user
+
+val bot_of_string : string -> bot
 
 (** Constructs a channel out of a given string. Can either be a channel id
     starting with a capital 'C' which is the preferred way or a channel name

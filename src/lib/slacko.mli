@@ -751,10 +751,10 @@ val channels_unarchive: session -> channel -> [ `Success | parsed_auth_error | c
 val chat_delete: session -> timestamp -> chat -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
 
 (** Sends a message to a channel. *)
-val chat_post_message: session -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | attachments_error | rate_error | bot_error ] Lwt.t
+val chat_post_message: session -> chat -> ?as_user:bool -> ?link_names:bool -> ?mrkdwn:bool -> ?reply_broadcast:bool -> ?thread_ts:timestamp -> ?unfurl_links:bool -> ?unfurl_media:bool -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | attachments_error | rate_error | bot_error ] Lwt.t
 
 (** Updates a message. *)
-val chat_update: session -> timestamp -> chat -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error | attachments_error ] Lwt.t
+val chat_update: session -> timestamp -> chat -> ?as_user:bool -> ?attachments:attachment_obj list -> ?link_names:bool -> ?parse:string -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error | attachments_error ] Lwt.t
 
 (** Lists custom emoji for a team. *)
 val emoji_list: session -> [ `Success of emoji list | parsed_auth_error ] Lwt.t

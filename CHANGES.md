@@ -1,3 +1,5 @@
+* Adjust build process to use `dune` instead of `jbuilder`
+
 0.14.0
 ------
 

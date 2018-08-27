@@ -41,7 +41,7 @@ to check the [slacko.opam](slacko.opam) file.
 Then you can build Slacko by yourself:
 
 ```sh
-$ jbuilder build
+$ make
 ```
 
 How do I even use this thing?

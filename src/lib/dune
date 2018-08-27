@@ -1,0 +1,8 @@
+(library
+  (name slacko)
+  (public_name slacko)
+  (synopsis "A neat interface for Slack")
+  (libraries lwt cohttp-lwt-unix yojson ppx_deriving_yojson.runtime)
+  ;; disable warning 39, unused rec flag, because ppx_deriving_yojson generates these
+  (flags (:standard -w -39))
+  (preprocess (pps lwt_ppx ppx_deriving_yojson)))

@@ -1,3 +1,4 @@
+* Support additional arguments to `chat.post_message` and `chat.update`
 * Adjust build process to use `dune` instead of `jbuilder`
 * Replace `topkg` code with `dune-release`
 

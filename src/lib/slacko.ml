@@ -196,6 +196,8 @@ type conversation = string
 
 type user = UserId of string | UserName of string
 
+type bot = BotId of string
+
 type group = GroupId of string | GroupName of string
 
 (* TODO: Sure about user? *)
@@ -219,6 +221,14 @@ let timestamp_of_yojson = function
 let user_of_yojson = function
   | `String x -> Result.Ok (UserId x)
   | _ -> Result.Error "Couldn't parse user type"
+
+let bot_of_string s =
+  if s.[0] = 'B' then BotId s else invalid_arg ("bot_of_string " ^ s)
+
+let bot_of_yojson = function
+  | `String x -> Result.Ok (bot_of_string x)
+  | _ -> Result.Error "Couldn't parse bot type"
+
 
 let channel_of_yojson = function
   | `String x -> Result.Ok (ChannelId x)
@@ -406,6 +416,7 @@ type message_obj = {
   type': string [@key "type"];
   ts: timestamp;
   user: user option [@default None];
+  bot_id: bot option [@default None];
   text: string option;
   is_starred: bool option [@default None];
 } [@@deriving of_yojson { strict = false }]
@@ -1134,6 +1145,8 @@ let jsonify_attachments attachments =
   |> Yojson.Safe.to_string
 
 let chat_post_message session chat
+  ?as_user ?link_names ?mrkdwn
+  ?reply_broadcast ?thread_ts ?unfurl_links ?unfurl_media
   ?username ?parse ?icon_url ?icon_emoji ?(attachments=[]) text =
   id_of_chat session chat |-> fun chat_id ->
   endpoint "chat.postMessage" session
@@ -1144,6 +1157,13 @@ let chat_post_message session chat
     |> optionally_add "icon_url" icon_url
     |> optionally_add "icon_emoji" icon_emoji
     |> definitely_add "attachments" @@ jsonify_attachments attachments
+    |> optionally_add "as_user" @@ maybe string_of_bool as_user
+    |> optionally_add "link_names" @@ maybe string_of_bool link_names
+    |> optionally_add "mrkdwn" @@ maybe string_of_bool mrkdwn
+    |> optionally_add "reply_broadcast" @@ maybe string_of_bool reply_broadcast
+    |> optionally_add "thread_ts" @@ maybe string_of_timestamp thread_ts
+    |> optionally_add "unfurl_links" @@ maybe string_of_bool unfurl_links
+    |> optionally_add "unfurl_media" @@ maybe string_of_bool unfurl_media
     |> query
     >|= function
     | `Json_response d ->
@@ -1157,12 +1177,16 @@ let chat_post_message session chat
     | #rate_error as res -> res
     | _ -> `Unknown_error
 
-let chat_update session ts chat text =
+let chat_update session ts chat ?as_user ?attachments ?link_names ?parse text =
   id_of_chat session chat |-> fun chat_id ->
   endpoint "chat.update" session
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ string_of_timestamp ts
     |> definitely_add "text" text
+    |> optionally_add "as_user" @@ maybe string_of_bool as_user
+    |> optionally_add "attachments" @@ maybe jsonify_attachments attachments
+    |> optionally_add "link_names" @@ maybe string_of_bool link_names
+    |> optionally_add "parse" parse
     |> query
     >|= function
     | `Json_response d ->

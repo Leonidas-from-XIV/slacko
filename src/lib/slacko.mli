@@ -284,6 +284,9 @@ type conversation
 (** An user, represented by either a user name or a user id. *)
 type user
 
+(** A bot user, represented by a bot id *)
+type bot
+
 (** A group, a private subset of users chatting together. *)
 type group
 
@@ -396,6 +399,7 @@ type message_obj = {
   type': string;
   ts: timestamp;
   user: user option;
+  bot_id: bot option;
   text: string option;
   is_starred: bool option;
 }
@@ -676,6 +680,8 @@ val group_of_string: string -> group
     to an id in an additional request. *)
 val user_of_string: string -> user
 
+val bot_of_string : string -> bot
+
 (** Constructs a channel out of a given string. Can either be a channel id
     starting with a capital 'C' which is the preferred way or a channel name
     starting with a '#'. If a channel name was provided, each consecutive API
@@ -751,10 +757,10 @@ val channels_unarchive: session -> channel -> [ `Success | parsed_auth_error | c
 val chat_delete: session -> timestamp -> chat -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_error ] Lwt.t
 
 (** Sends a message to a channel. *)
-val chat_post_message: session -> chat -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | attachments_error | rate_error | bot_error ] Lwt.t
+val chat_post_message: session -> chat -> ?as_user:bool -> ?link_names:bool -> ?mrkdwn:bool -> ?reply_broadcast:bool -> ?thread_ts:timestamp -> ?unfurl_links:bool -> ?unfurl_media:bool -> ?username:string -> ?parse:string -> ?icon_url:string -> ?icon_emoji:string -> ?attachments:attachment_obj list -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | archive_error | message_length_error | attachments_error | rate_error | bot_error ] Lwt.t
 
 (** Updates a message. *)
-val chat_update: session -> timestamp -> chat -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error | attachments_error ] Lwt.t
+val chat_update: session -> timestamp -> chat -> ?as_user:bool -> ?attachments:attachment_obj list -> ?link_names:bool -> ?parse:string -> message -> [ `Success of chat_obj | parsed_auth_error | channel_error | message_update_error | message_length_error | attachments_error ] Lwt.t
 
 (** Lists custom emoji for a team. *)
 val emoji_list: session -> [ `Success of emoji list | parsed_auth_error ] Lwt.t

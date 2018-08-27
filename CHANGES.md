@@ -1,4 +1,5 @@
 * Adjust build process to use `dune` instead of `jbuilder`
+* Replace `topkg` code with `dune-release`
 
 0.14.0
 ------

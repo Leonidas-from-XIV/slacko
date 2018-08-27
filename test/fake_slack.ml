@@ -1,9 +1,7 @@
 (* A (currently pretty useless) fake slack implementation to run tests
    against. *)
 open Lwt
-open Cohttp
 open Cohttp_lwt_unix
-
 
 (* The only "valid" token we accept. *)
 let valid_token = "xoxp-testtoken"
@@ -67,11 +65,11 @@ let check_auth f req body =
 
 (* Request handlers *)
 
-let bad_path req body =
+let bad_path req _body =
   let path = req |> Request.uri |> Uri.path in
   reply_err "unknown_method" ["req_method", `String path]
 
-let api_test req body =
+let api_test req _body =
   let args = req |> Request.uri |> Uri.query in
   let field_of_arg (k, v) = k, `String (List.hd v) in
   let fields = match args with
@@ -82,55 +80,55 @@ let api_test req body =
   | None -> reply_ok fields
   | Some err -> reply_err err fields
 
-let auth_test req body =
+let auth_test _req _body =
   reply_ok (json_fields authed_json)
 
-let channels_archive req body =
+let channels_archive req _body =
   match get_arg "channel" req with
   | ch when ch = ch_general -> reply_err "cant_archive_general" []
   | ch when ch = ch_archivable -> reply_ok []
   | ch when ch = ch_archived -> reply_err "already_archived" []
   | _ -> reply_err "channel_not_found" []
 
-let channels_create req body =
+let channels_create req _body =
   match get_arg "name" req with
   | "#general" | "#random" -> reply_err "name_taken" []
   | "#new_channel" | _ -> reply_ok ["channel", new_channel_json]
 
-let channels_history req body =
+let channels_history req _body =
   (* TODO: Check various filtering params. *)
   match get_arg "channel" req with
   | ch when ch = ch_random -> reply_ok (json_fields random_history_json)
   | _ -> reply_err "channel_not_found" []
 
-let channels_list req body =
+let channels_list _req _body =
   (* TODO: Check exclude_archived param. *)
   reply_ok ["channels", channels_json]
 
-let files_list req body =
+let files_list _req _body =
   (* TODO: Check various filtering params. *)
   reply_ok (json_fields files_json)
 
-let groups_list req body =
+let groups_list _req _body =
   (* TODO: Check exclude_archived param. *)
   reply_ok ["groups", groups_json]
 
-let groups_history req body =
+let groups_history req _body =
   (* TODO: Check various filtering params. *)
   match get_arg "channel" req with
   | gr when gr = gr_seekrit -> reply_ok (json_fields seekrit_history_json)
   | _ -> reply_err "channel_not_found" []
 
-let im_list req body =
+let im_list _req _body =
   reply_ok ["ims", ims_json]
 
-let im_history req body =
+let im_history req _body =
   (* TODO: Check various filtering params. *)
   match get_arg "channel" req with
   | im when im = im_slackbot -> reply_ok (json_fields slackbot_history_json)
   | _ -> reply_err "channel_not_found" []
 
-let users_list req body =
+let users_list _req _body =
   (* TODO: Check presence param. *)
   reply_ok (json_fields users_json)
 
@@ -160,5 +158,8 @@ let server ?(port=7357) ~stop () =
 let with_fake_slack f =
   let stop, wake = wait () in
   let srv = server ~stop () in
-  let stop_server result = wakeup wake (); srv in
+  let stop_server _result =
+    wakeup wake ();
+    srv
+  in
   finalize f stop_server

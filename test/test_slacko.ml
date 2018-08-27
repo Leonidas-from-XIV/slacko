@@ -37,23 +37,23 @@ let get_success = function
 
 (* api_test *)
 
-let test_api_test_nodata tctx =
+let test_api_test_nodata _tctx =
   Slacko.api_test ?base_url () >|= get_success >|= fun json ->
   assert_equal ~printer:Yojson.Safe.to_string
     (`Assoc [])
     json
 
-let test_api_test_foo tctx =
+let test_api_test_foo _tctx =
   Slacko.api_test ?base_url ~foo:"hello" () >|= get_success >|= fun json ->
   assert_equal ~printer:Yojson.Safe.to_string
     (`Assoc ["args", `Assoc ["foo", `String "hello"]])
     json
 
-let test_api_test_err tctx =
+let test_api_test_err _tctx =
   Slacko.api_test ?base_url ~error:"badthing" () >|= fun resp ->
   assert_equal (`Unhandled_error "badthing") resp
 
-let test_api_test_err_foo tctx =
+let test_api_test_err_foo _tctx =
   Slacko.api_test ?base_url ~foo:"goodbye" ~error:"badthing" () >|= fun resp ->
   assert_equal (`Unhandled_error "badthing") resp
 
@@ -66,7 +66,7 @@ let api_test_tests = fake_slack_tests "api_test" [
 
 (* auth_test *)
 
-let test_auth_test_valid tctx =
+let test_auth_test_valid _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.auth_test session >|= get_success >|=
   abbr_authed_obj >|= fun authed ->
@@ -74,7 +74,7 @@ let test_auth_test_valid tctx =
     (abbr_json abbr_authed_obj_of_yojson Fake_slack.authed_json)
     authed
 
-let test_auth_test_invalid tctx =
+let test_auth_test_invalid _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.auth_test session >|= fun resp ->
   assert_equal `Invalid_auth resp
@@ -86,31 +86,31 @@ let auth_test_tests = fake_slack_tests "test_auth" [
 
 (* channels_archive  *)
 
-let test_channels_archive_bad_auth tctx =
+let test_channels_archive_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   let new_channel = Slacko.channel_of_string "#new_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_channels_archive_existing tctx =
+let test_channels_archive_existing _tctx =
   let session = Slacko.start_session ?base_url token in
   let new_channel = Slacko.channel_of_string "#archivable_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Success resp
 
-let test_channels_archive_missing tctx =
+let test_channels_archive_missing _tctx =
   let session = Slacko.start_session ?base_url token in
   let missing_channel = Slacko.channel_of_string "#missing_channel" in
   Slacko.channels_archive session missing_channel >|= fun resp ->
   assert_equal `Channel_not_found resp
 
-let test_channels_archive_archived tctx =
+let test_channels_archive_archived _tctx =
   let session = Slacko.start_session ?base_url token in
   let archived_channel = Slacko.channel_of_string "#archived_channel" in
   Slacko.channels_archive session archived_channel >|= fun resp ->
   assert_equal `Already_archived resp
 
-let test_channels_archive_general tctx =
+let test_channels_archive_general _tctx =
   let session = Slacko.start_session ?base_url token in
   let general = Slacko.channel_of_string "#general" in
   Slacko.channels_archive session general >|= fun resp ->
@@ -126,12 +126,12 @@ let channels_archive_tests = fake_slack_tests "channels_archive" [
 
 (* channels_create *)
 
-let test_channels_create_bad_auth tctx =
+let test_channels_create_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.channels_create session "#new_channel" >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_channels_create_new tctx =
+let test_channels_create_new _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.channels_create session "#new_channel" >|= get_success >|=
   abbr_channel_obj >|= fun channel ->
@@ -139,7 +139,7 @@ let test_channels_create_new tctx =
     (abbr_json abbr_channel_obj_of_yojson Fake_slack.new_channel_json)
     channel
 
-let test_channels_create_existing tctx =
+let test_channels_create_existing _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.channels_create session "#general" >|= fun resp ->
   assert_equal `Name_taken resp
@@ -152,13 +152,13 @@ let channels_create_tests = fake_slack_tests "channels_create" [
 
 (* channels_history *)
 
-let test_channels_history_bad_auth tctx =
+let test_channels_history_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   let new_channel = Slacko.channel_of_string "#new_channel" in
   Slacko.channels_history session new_channel >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_channels_history_no_params tctx =
+let test_channels_history_no_params _tctx =
   let session = Slacko.start_session ?base_url token in
   let random = Slacko.channel_of_string "#random" in
   Slacko.channels_history session random >|= get_success >|= fun history ->
@@ -179,12 +179,12 @@ let channels_history_tests = fake_slack_tests "channels_history" [
 
 (* channels_list *)
 
-let test_channels_list_bad_auth tctx =
+let test_channels_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.channels_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_channels_list tctx =
+let test_channels_list _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.channels_list session >|= get_success >|=
   List.map abbr_channel_obj >|= fun channels ->
@@ -211,12 +211,12 @@ let channels_list_tests = fake_slack_tests "channels_list" [
 
 (* files_list *)
 
-let test_files_list_bad_auth tctx =
+let test_files_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.files_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_files_list tctx =
+let test_files_list _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.files_list session >|= get_success >|=
   abbr_files_list_obj >|= fun files ->
@@ -237,13 +237,13 @@ let files_list_tests = fake_slack_tests "files_list" [
 
 (* groups_history *)
 
-let test_groups_history_bad_auth tctx =
+let test_groups_history_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   let seekrit = Slacko.group_of_string "seekrit" in
   Slacko.groups_history session seekrit >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_groups_history_no_params tctx =
+let test_groups_history_no_params _tctx =
   let session = Slacko.start_session ?base_url token in
   let seekrit = Slacko.group_of_string "seekrit" in
   Slacko.groups_history session seekrit >|= get_success >|= fun history ->
@@ -262,12 +262,12 @@ let groups_history_tests = fake_slack_tests "groups_history" [
 
 (* groups_list *)
 
-let test_groups_list_bad_auth tctx =
+let test_groups_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.groups_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_groups_list tctx =
+let test_groups_list _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.groups_list session >|= get_success >|=
   List.map abbr_group_obj >|= fun groups ->
@@ -290,13 +290,13 @@ let groups_list_tests = fake_slack_tests "groups_list" [
 
 (* im_history *)
 
-let test_im_history_bad_auth tctx =
+let test_im_history_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
   Slacko.im_history session slackbot >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_im_history_no_params tctx =
+let test_im_history_no_params _tctx =
   let session = Slacko.start_session ?base_url token in
   let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
   Slacko.im_history session slackbot >|= get_success >|= fun history ->
@@ -311,12 +311,12 @@ let im_history_tests = fake_slack_tests "im_history" [
 
 (* im_list *)
 
-let test_im_list_bad_auth tctx =
+let test_im_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.im_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_im_list tctx =
+let test_im_list _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.im_list session >|= get_success >|=
   List.map abbr_im_obj >|= fun ims ->
@@ -343,12 +343,12 @@ let im_list_tests = fake_slack_tests "im_list" [
 
 (* users_list *)
 
-let test_users_list_bad_auth tctx =
+let test_users_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
   Slacko.users_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_users_list tctx =
+let test_users_list _tctx =
   let session = Slacko.start_session ?base_url token in
   Slacko.users_list session >|= get_success >|=
   List.map abbr_user_obj >|= fun users ->

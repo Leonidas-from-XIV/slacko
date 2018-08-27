@@ -3,10 +3,10 @@ maintainer: "Marek Kubica <marek@xivilization.net>"
 author: "Marek Kubica <marek@xivilization.net>"
 homepage: "https://github.com/Leonidas-from-XIV/slacko"
 license: "LGPL-3 with OCaml linking exception"
-build: [["jbuilder" "build" "-p" name "-j" jobs]]
+build: [["dune" "build" "-p" name "-j" jobs]]
 build-test: [make "test"]
 depends: [
-  "jbuilder" {build & >= "1.0+beta17"}
+  "dune" {build}
   "cmdliner"
   "yojson"
   "lwt" {>= "3.2.0"}

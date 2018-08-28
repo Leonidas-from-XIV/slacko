@@ -3,6 +3,7 @@ maintainer: "Marek Kubica <marek@xivilization.net>"
 author: "Marek Kubica <marek@xivilization.net>"
 homepage: "https://github.com/Leonidas-from-XIV/slacko"
 license: "LGPL-3 with OCaml linking exception"
+doc: "https://leonidas-from-xiv.github.io/slacko/"
 build: [["dune" "build" "-p" name "-j" jobs]]
 build-test: [make "test"]
 depends: [
@@ -20,6 +21,6 @@ conflicts: [
   # broken release: https://github.com/mirage/ocaml-conduit/issues/189
   "conduit" {= "0.14.1"}
 ]
-dev-repo: "git://github.com/Leonidas-from-XIV/slacko"
+dev-repo: "https://github.com/Leonidas-from-XIV/slacko.git"
 bug-reports: "https://github.com/Leonidas-from-XIV/slacko/issues"
 available: [ ocaml-version >= "4.04.0" ]

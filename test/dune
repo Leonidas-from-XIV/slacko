@@ -2,7 +2,7 @@
   (name test_slacko)
   (libraries slacko oUnit)
   ;; disable warning 39, unused rec flag, because ppx_deriving_yojson generates these
-  (flags (:standard -w -39))
+  (flags (:standard -w -39 -I src/lib/.slacko.objs/.private))
   (preprocess (pps ppx_deriving_yojson ppx_deriving.std)))
 
 (alias

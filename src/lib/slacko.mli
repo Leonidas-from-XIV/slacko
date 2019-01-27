@@ -256,10 +256,11 @@ type topic_result = [
   | `User_is_restricted
 ]
 
-(** In Slack, timestamps are represented as float, same as in OCaml, so the
-    {!timestamp} type is following suit, so all timestamp-related functions
-    can be used. *)
-type timestamp = float
+(** Slack uses 6 decimal digit fixed point seconds since Epoch to represent
+    message timestamps, which are also used to identify messages within a
+    channel. Ptime provides an exact representation, allowing precise history
+    queries and message identification. *)
+type timestamp = Ptime.t
 
 (** Sessions are required in the API for all actions that interact with
      *)

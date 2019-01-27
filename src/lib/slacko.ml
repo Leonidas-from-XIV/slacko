@@ -18,7 +18,6 @@
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *)
 
-open Internal
 open Lwt.Infix
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt.Body
@@ -237,14 +236,14 @@ let conversation_of_yojson = function
 type topic_obj = {
   value: string;
   creator: user;
-  last_set: timestamp;
+  last_set: Timestamp.t;
 } [@@deriving of_yojson]
 
 type channel_obj = {
   id: channel;
   name: string;
   is_channel: bool;
-  created: timestamp;
+  created: Timestamp.t;
   creator: user;
   is_archived: bool;
   is_general: bool;
@@ -252,7 +251,7 @@ type channel_obj = {
   members: user list;
   topic: topic_obj;
   purpose: topic_obj;
-  last_read: timestamp option [@default None];
+  last_read: Timestamp.t option [@default None];
   latest: Yojson.Safe.json option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
@@ -282,14 +281,14 @@ type group_obj = {
   id: group;
   name: string;
   is_group: bool;
-  created: timestamp;
+  created: Timestamp.t;
   creator: user;
   is_archived: bool;
   members: user list;
   topic: topic_obj;
   purpose: topic_obj;
   is_open: bool option [@default None];
-  last_read: timestamp option [@default None];
+  last_read: Timestamp.t option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
   latest: Yojson.Safe.json option [@default None];
@@ -298,9 +297,9 @@ type group_obj = {
 type file_obj = {
   (* TODO file id type *)
   id: string;
-  created: timestamp;
+  created: Timestamp.t;
   (* deprecated *)
-  timestamp: timestamp;
+  timestamp: Timestamp.t;
 
   name: string option [@default None];
   title: string;
@@ -368,7 +367,7 @@ type attachment_obj = {
   thumb_url: string option [@default None];
   footer: string option [@default None];
   footer_icon: string option [@default None];
-  ts: timestamp option [@default None];
+  ts: Timestamp.t option [@default None];
   mrkdwn_in: string list option [@default None];
 } [@@deriving to_yojson { strict = false }]
 
@@ -406,7 +405,7 @@ let attachment
 
 type message_obj = {
   type': string [@key "type"];
-  ts: timestamp;
+  ts: Timestamp.t;
   user: user option [@default None];
   bot_id: bot option [@default None];
   text: string option;
@@ -414,7 +413,7 @@ type message_obj = {
 } [@@deriving of_yojson { strict = false }]
 
 type history_obj = {
-  latest: timestamp option [@default None];
+  latest: Timestamp.t option [@default None];
   messages: message_obj list;
   has_more: bool;
 } [@@deriving of_yojson { strict = false }]
@@ -435,7 +434,7 @@ type channel_rename_obj = {
   id: channel;
   is_channel: bool;
   name: string;
-  created: timestamp;
+  created: Timestamp.t;
 } [@@deriving of_yojson { strict = false }]
 
 let chat_of_yojson = function
@@ -447,7 +446,7 @@ let chat_of_yojson = function
   | _ -> Result.Error "Failed to parse chat"
 
 type chat_obj = {
-  ts: timestamp;
+  ts: Timestamp.t;
   chat: chat [@key "channel"];
   text: string option [@default None];
 } [@@deriving of_yojson { strict = false }]
@@ -476,14 +475,14 @@ type groups_rename_obj = {
   id: channel;
   is_group: bool;
   name: string;
-  created: timestamp
+  created: Timestamp.t
 } [@@deriving of_yojson { strict = false }]
 
 type im_obj = {
   id: string;
   is_im: bool;
   user: user;
-  created: timestamp;
+  created: Timestamp.t;
   is_user_deleted: bool;
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
@@ -506,7 +505,7 @@ type oauth_obj = {
 
 type comment_obj = {
   id: string;
-  timestamp: timestamp;
+  timestamp: Timestamp.t;
   user: user;
   comment: string;
 } [@@deriving of_yojson { strict = false }]
@@ -565,8 +564,8 @@ type team_obj = {
 type login_obj = {
   user_id: user;
   username: string;
-  date_first: timestamp;
-  date_last: timestamp;
+  date_first: Timestamp.t;
+  date_last: Timestamp.t;
   count: int;
   ip: string;
   user_agent: string;
@@ -952,8 +951,8 @@ let channels_history session
   id_of_channel session channel |-> fun channel_id ->
     endpoint "channels.history" session
     |> definitely_add "channel" channel_id
-    |> optionally_add "latest" @@ maybe string_of_timestamp latest
-    |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
+    |> optionally_add "latest" @@ maybe Timestamp.to_string latest
+    |> optionally_add "oldest" @@ maybe Timestamp.to_string oldest
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
     |> query
@@ -1049,7 +1048,7 @@ let channels_mark session channel ts =
   id_of_channel session channel |-> fun channel_id ->
   endpoint "channels.mark" session
     |> definitely_add "channel" channel_id
-    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "ts" @@ Timestamp.to_string ts
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success
@@ -1120,7 +1119,7 @@ let chat_delete session ts chat =
   id_of_chat session chat |-> fun chat_id ->
   endpoint "chat.delete" session
     |> definitely_add "channel" chat_id
-    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "ts" @@ Timestamp.to_string ts
     |> query
     >|= function
     | `Json_response d -> d |> chat_obj_of_yojson |> translate_parsing_error
@@ -1150,7 +1149,7 @@ let chat_post_message session chat
     |> optionally_add "link_names" @@ maybe string_of_bool link_names
     |> optionally_add "mrkdwn" @@ maybe string_of_bool mrkdwn
     |> optionally_add "reply_broadcast" @@ maybe string_of_bool reply_broadcast
-    |> optionally_add "thread_ts" @@ maybe string_of_timestamp thread_ts
+    |> optionally_add "thread_ts" @@ maybe Timestamp.to_string thread_ts
     |> optionally_add "unfurl_links" @@ maybe string_of_bool unfurl_links
     |> optionally_add "unfurl_media" @@ maybe string_of_bool unfurl_media
     |> query
@@ -1170,7 +1169,7 @@ let chat_update session ts chat ?as_user ?attachments ?link_names ?parse text =
   id_of_chat session chat |-> fun chat_id ->
   endpoint "chat.update" session
     |> definitely_add "channel" chat_id
-    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "ts" @@ Timestamp.to_string ts
     |> definitely_add "text" text
     |> optionally_add "as_user" @@ maybe string_of_bool as_user
     |> optionally_add "attachments" @@ maybe jsonify_attachments attachments
@@ -1235,8 +1234,8 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page session =
   maybe_with_user session user @@ fun user_id ->
   endpoint "files.list" session
     |> optionally_add "user" user_id
-    |> optionally_add "ts_from" @@ maybe string_of_timestamp ts_from
-    |> optionally_add "ts_to" @@ maybe string_of_timestamp ts_to
+    |> optionally_add "ts_from" @@ maybe Timestamp.to_string ts_from
+    |> optionally_add "ts_to" @@ maybe Timestamp.to_string ts_to
     |> optionally_add "types" types
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
@@ -1329,8 +1328,8 @@ let groups_history session ?latest ?oldest ?count ?inclusive group =
   id_of_group session group |-> fun group_id ->
   endpoint "groups.history" session
     |> definitely_add "channel" group_id
-    |> optionally_add "latest" @@ maybe string_of_timestamp latest
-    |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
+    |> optionally_add "latest" @@ maybe Timestamp.to_string latest
+    |> optionally_add "oldest" @@ maybe Timestamp.to_string oldest
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
     |> query
@@ -1397,7 +1396,7 @@ let groups_mark session group ts =
   id_of_group session group |-> fun group_id ->
   endpoint "groups.mark" session
     |> definitely_add "channel" group_id
-    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "ts" @@ Timestamp.to_string ts
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success
@@ -1489,8 +1488,8 @@ let im_close session channel =
 let im_history session ?latest ?oldest ?count ?inclusive channel =
   endpoint "im.history" session
     |> definitely_add "channel" channel
-    |> optionally_add "latest" @@ maybe string_of_timestamp latest
-    |> optionally_add "oldest" @@ maybe string_of_timestamp oldest
+    |> optionally_add "latest" @@ maybe Timestamp.to_string latest
+    |> optionally_add "oldest" @@ maybe Timestamp.to_string oldest
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
     |> query
@@ -1513,7 +1512,7 @@ let im_list session =
 let im_mark session channel ts =
   endpoint "im.mark" session
     |> definitely_add "channel" channel
-    |> definitely_add "ts" @@ string_of_timestamp ts
+    |> definitely_add "ts" @@ Timestamp.to_string ts
     |> query
     >|= function
     | `Json_response (`Assoc []) -> `Success

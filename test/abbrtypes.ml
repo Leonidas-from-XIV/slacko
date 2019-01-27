@@ -3,12 +3,11 @@
    those values at all. Therefore, we copy the record type that use these and
    skip the problematic fields. *)
 
-open Slacko__Internal
+module Timestamp = struct
+  include Slacko__Timestamp
 
-type timestamp = Ptime.t
-
-(* But this one is new. *)
-let pp_timestamp = Ptime.pp_human ~frac_s:6 ()
+  let pp = Ptime.pp_human ~frac_s:6 ()
+end
 
 (* Wrap Yojson.Safe.json so we don't have to keep providing printers for it. *)
 type json = Yojson.Safe.json
@@ -33,7 +32,7 @@ let abbr_authed_obj (authed : Slacko.authed_obj) = {
 type abbr_topic_obj = {
   value: string;
   (* creator: user; *)
-  last_set: timestamp;
+  last_set: Timestamp.t;
 } [@@deriving show, yojson { strict = false }]
 
 let abbr_topic_obj (topic : Slacko.topic_obj) = {
@@ -45,7 +44,7 @@ type abbr_channel_obj = {
   (* id: channel; *)
   name: string;
   is_channel: bool;
-  created: timestamp;
+  created: Timestamp.t;
   (* creator: user; *)
   is_archived: bool;
   is_general: bool;
@@ -53,7 +52,7 @@ type abbr_channel_obj = {
   (* members: user list; *)
   topic: abbr_topic_obj;
   purpose: abbr_topic_obj;
-  last_read: timestamp option [@default None];
+  last_read: Timestamp.t option [@default None];
   latest: json option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
@@ -81,7 +80,7 @@ type abbr_channel_obj_list = abbr_channel_obj list
 
 type abbr_message_obj = {
   type': string [@key "type"];
-  ts: timestamp;
+  ts: Timestamp.t;
   (* user: user; *)
   text: string option;
   is_starred: bool option [@default None];
@@ -95,7 +94,7 @@ let abbr_message_obj (message : Slacko.message_obj) = {
 }
 
 type abbr_history_obj = {
-  latest: timestamp option [@default None];
+  latest: Timestamp.t option [@default None];
   messages: abbr_message_obj list;
   has_more: bool;
 } [@@deriving show, yojson { strict = false }]
@@ -159,9 +158,9 @@ let abbr_user_obj_list_of_yojson json =
 type abbr_file_obj = {
   (* TODO file id type *)
   id: string;
-  created: timestamp;
+  created: Timestamp.t;
   (* deprecated *)
-  timestamp: timestamp;
+  timestamp: Timestamp.t;
 
   name: string option [@default None];
   title: string;
@@ -265,14 +264,14 @@ type abbr_group_obj = {
   (* id: group; *)
   name: string;
   is_group: bool;
-  created: timestamp;
+  created: Timestamp.t;
   (* creator: user; *)
   is_archived: bool;
   (* members: user list; *)
   topic: abbr_topic_obj;
   purpose: abbr_topic_obj;
   is_open: bool option [@default None];
-  last_read: timestamp option [@default None];
+  last_read: Timestamp.t option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
   latest: json option [@default None];
@@ -299,7 +298,7 @@ type abbr_im_obj = {
   id: string;
   is_im: bool;
   (* user: user; *)
-  created: timestamp;
+  created: Timestamp.t;
   is_user_deleted: bool;
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];

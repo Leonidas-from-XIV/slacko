@@ -1,6 +1,6 @@
 (*
 * Slacko - Binding to the Slack API
-* Copyright (C) 2014-2018 Marek Kubica <marek@xivilization.net>
+* Copyright (C) 2014-2019 Marek Kubica <marek@xivilization.net>
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,9 @@ let int64_pow b n =
          (if n land 1 = 0 then acc else Int64.(mul b acc)) in
   loop b n 1L
 
-let timestamp_of_string x =
+type t = Ptime.t
+
+let of_string x =
   let d_ps_of_intlit intlit =
     let sec = Int64.of_string intlit in
     let d = Int64.div sec 86_400L in
@@ -50,21 +52,21 @@ let timestamp_of_string x =
   | None -> None
   | Some span -> Ptime.of_span span
 
-let string_of_timestamp ts =
+let to_string ts =
   let d, ps = Ptime.Span.to_d_ps (Ptime.diff ts Ptime.epoch) in
   let sec = Int64.(add (mul (of_int d) 86_400L) (div ps 1_000_000_000_000L)) in
   let subsec = Int64.(rem ps 1_000_000_000_000L) in
   Printf.sprintf "%Ld.%06Ld" sec (Int64.div subsec 1_000_000L)
 
-let timestamp_of_yojson json =
+let of_yojson json =
   match
     match json with
     | `Int x -> Ptime.of_span (Ptime.Span.of_int_s x)
-    | `Intlit x -> timestamp_of_string x
-    | `String x -> timestamp_of_string x
+    | `Intlit x -> of_string x
+    | `String x -> of_string x
     | _ -> None
   with
   | Some ts -> Result.Ok ts
   | None -> Result.Error "Couldn't parse timestamp"
 
-let timestamp_to_yojson ts = `String (string_of_timestamp ts)
+let to_yojson ts = `String (to_string ts)

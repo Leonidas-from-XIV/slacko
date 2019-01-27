@@ -7,7 +7,7 @@ doc: "https://leonidas-from-xiv.github.io/slacko/"
 build: [["dune" "build" "-p" name "-j" jobs]]
 run-test: [make "test"]
 depends: [
-  "dune" {build}
+  "dune" {build & >= "1.2.0"}
   "cmdliner"
   "yojson"
   "lwt" {>= "3.2.0"}

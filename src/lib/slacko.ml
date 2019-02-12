@@ -262,17 +262,17 @@ type user_obj = {
   id: user;
   name: string;
   deleted: bool;
-  color: string;
-  real_name: string;
+  color: string option [@default None];
+  real_name: string option [@default None];
   tz: string option [@default None];
-  tz_label: string;
-  tz_offset: int;
+  tz_label: string option [@default None];
+  tz_offset: int [@default 0];
   profile: Yojson.Safe.json;
-  is_admin: bool;
-  is_owner: bool;
-  is_primary_owner: bool;
-  is_restricted: bool;
-  is_ultra_restricted: bool;
+  is_admin: bool [@default false];
+  is_owner: bool [@default false];
+  is_primary_owner: bool [@default false];
+  is_restricted: bool [@default false];
+  is_ultra_restricted: bool [@default false];
   is_bot: bool;
   has_files: bool [@default false];
 } [@@deriving of_yojson { strict = false } ]

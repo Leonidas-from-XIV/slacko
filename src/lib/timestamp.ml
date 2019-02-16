@@ -26,6 +26,7 @@ let int64_pow b n =
   loop b n 1L
 
 type t = Ptime.t
+let pp = Ptime.pp_human ~frac_s:6 ()
 
 let of_string x =
   let d_ps_of_intlit intlit =

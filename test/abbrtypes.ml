@@ -3,12 +3,6 @@
    those values at all. Therefore, we copy the record type that use these and
    skip the problematic fields. *)
 
-module Timestamp = struct
-  include Slacko__Timestamp
-
-  let pp = Ptime.pp_human ~frac_s:6 ()
-end
-
 (* Wrap Yojson.Safe.json so we don't have to keep providing printers for it. *)
 type json = Yojson.Safe.json
 [@@deriving yojson]

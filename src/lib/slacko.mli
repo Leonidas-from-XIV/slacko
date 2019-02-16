@@ -315,10 +315,10 @@ type user_obj = {
   id: user;
   name: string;
   deleted: bool;
-  color: string;
-  real_name: string;
+  color: string option;
+  real_name: string option;
   tz: string option;
-  tz_label: string;
+  tz_label: string option;
   tz_offset: int;
   profile: Yojson.Safe.json;
   is_admin: bool;

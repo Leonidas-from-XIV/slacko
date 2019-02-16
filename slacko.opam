@@ -14,7 +14,7 @@ depends: [
   "lwt_ppx"
   "tls" | "ssl"
   "cohttp-lwt-unix" {>= "1.0.0"}
-  "ppx_deriving_yojson" {>= "3.0"}
+  "ppx_deriving_yojson" {>= "3.3"}
   "ptime"
   "ounit" {with-test}
 ]

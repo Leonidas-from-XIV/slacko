@@ -1,3 +1,11 @@
+0.15.0
+------
+
+* Better handling of timestamps (@paurkedal)
+* Update user type to match what Slack returns (@Khady)
+* Update OPAM metadata to 2.0 format
+* Fixed brittle build
+
 0.14.1
 ------
 

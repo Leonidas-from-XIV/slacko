@@ -252,7 +252,7 @@ type channel_obj = {
   topic: topic_obj;
   purpose: topic_obj;
   last_read: Timestamp.t option [@default None];
-  latest: Yojson.Safe.json option [@default None];
+  latest: Yojson.Safe.t option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
   num_members: int option [@default None];
@@ -267,7 +267,7 @@ type user_obj = {
   tz: string option [@default None];
   tz_label: string option [@default None];
   tz_offset: int [@default 0];
-  profile: Yojson.Safe.json;
+  profile: Yojson.Safe.t;
   is_admin: bool [@default false];
   is_owner: bool [@default false];
   is_primary_owner: bool [@default false];
@@ -291,7 +291,7 @@ type group_obj = {
   last_read: Timestamp.t option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
-  latest: Yojson.Safe.json option [@default None];
+  latest: Yojson.Safe.t option [@default None];
 } [@@deriving of_yojson { strict = false }]
 
 type file_obj = {
@@ -336,7 +336,7 @@ type file_obj = {
   channels: channel list;
   groups: group list;
   ims: conversation list;
-  initial_comment: Yojson.Safe.json option [@default None];
+  initial_comment: Yojson.Safe.t option [@default None];
   num_stars: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
 
@@ -530,7 +530,7 @@ type files_list_obj = {
 
 type stars_list_obj = {
   (* TODO proper types *)
-  items: Yojson.Safe.json list;
+  items: Yojson.Safe.t list;
   paging: paging_obj;
 } [@@deriving of_yojson { strict = false }]
 
@@ -558,7 +558,7 @@ type team_obj = {
   name: string;
   domain: string;
   email_domain: string;
-  icon: Yojson.Safe.json;
+  icon: Yojson.Safe.t;
 } [@@deriving of_yojson { strict = false }]
 
 type login_obj = {

@@ -320,7 +320,7 @@ type user_obj = {
   tz: string option;
   tz_label: string option;
   tz_offset: int;
-  profile: Yojson.Safe.json;
+  profile: Yojson.Safe.t;
   is_admin: bool;
   is_owner: bool;
   is_primary_owner: bool;
@@ -345,7 +345,7 @@ type group_obj = {
   last_read: timestamp option;
   unread_count: int option;
   unread_count_display: int option;
-  latest: Yojson.Safe.json option;
+  latest: Yojson.Safe.t option;
 }
 
 (** Object representing information about a Slack channel. *)
@@ -362,7 +362,7 @@ type channel_obj = {
   topic: topic_obj;
   purpose: topic_obj;
   last_read: timestamp option;
-  latest: Yojson.Safe.json option;
+  latest: Yojson.Safe.t option;
   unread_count: int option;
   unread_count_display: int option;
   num_members: int option;
@@ -556,7 +556,7 @@ type file_obj = {
   channels: channel list;
   groups: group list;
   ims: conversation list;
-  initial_comment: Yojson.Safe.json option;
+  initial_comment: Yojson.Safe.t option;
   num_stars: int option;
 }
 
@@ -575,7 +575,7 @@ type files_list_obj = {
 
 (** Information about starred items. *)
 type stars_list_obj = {
-  items: Yojson.Safe.json list;
+  items: Yojson.Safe.t list;
   paging: paging_obj;
 }
 
@@ -602,7 +602,7 @@ type team_obj = {
   name: string;
   domain: string;
   email_domain: string;
-  icon: Yojson.Safe.json;
+  icon: Yojson.Safe.t;
 }
 
 type login_obj = {
@@ -700,7 +700,7 @@ val conversation_of_string: string -> conversation
     @param base_url If set, overrides the Slack API base URL.
     @param foo A dummy value that will be returned by the API.
     @param error If set, will return a specific kind of error. *)
-val api_test: ?base_url:string -> ?foo:string -> ?error:string -> unit -> [ `Success of Yojson.Safe.json | api_error ] Lwt.t
+val api_test: ?base_url:string -> ?foo:string -> ?error:string -> unit -> [ `Success of Yojson.Safe.t | api_error ] Lwt.t
 
 (** Checks authentication & identity.
     @param session The session containing the authentication token. *)

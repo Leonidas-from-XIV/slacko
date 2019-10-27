@@ -9,7 +9,7 @@ run-test: [make "test"]
 depends: [
   "dune" {build & >= "1.2.0"}
   "cmdliner"
-  "yojson"
+  "yojson" {>= "1.6.0"}
   "lwt" {>= "3.2.0"}
   "lwt_ppx"
   "tls" | "ssl"

@@ -3,8 +3,8 @@
    those values at all. Therefore, we copy the record type that use these and
    skip the problematic fields. *)
 
-(* Wrap Yojson.Safe.json so we don't have to keep providing printers for it. *)
-type json = Yojson.Safe.json
+(* Wrap Yojson.Safe.t so we don't have to keep providing printers for it. *)
+type json = Yojson.Safe.t
 [@@deriving yojson]
 let pp_json fmt json = Format.pp_print_string fmt (Yojson.Safe.to_string json)
 

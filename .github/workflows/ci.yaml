@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-20.04
+
+        ocaml-compiler:
+          - 4.04.x
+          - 4.07.x
+          - 4.13.x
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Use OCaml ${{ matrix.ocaml-compiler }}
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+
+      - name: Install dependencies
+        run: |
+          opam install . --deps-only --with-test
+
+      - name: Build
+        run: |
+          opam exec -- dune build @all
+
+      - name: Tests
+        run: |
+          opam exec -- dune build @runtest
+
+      - name: Opam Lint
+        run: |
+          opam lint slacko.opam

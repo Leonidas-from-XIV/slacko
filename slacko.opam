@@ -16,7 +16,9 @@ depends: [
   "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.3"}
   "ptime"
+  "result"
   "ounit" {with-test}
+  "ppx_deriving" {with-test & >= "5.2.1"}
 ]
 conflicts: [
   # broken release: https://github.com/mirage/ocaml-conduit/issues/189

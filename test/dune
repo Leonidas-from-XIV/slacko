@@ -5,7 +5,7 @@
 
 (executable
   (name test_slacko)
-  (libraries slacko oUnit)
+  (libraries slacko ounit2)
   (preprocess (pps ppx_deriving_yojson ppx_deriving.std)))
 
 (alias

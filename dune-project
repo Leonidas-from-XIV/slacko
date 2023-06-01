@@ -25,7 +25,7 @@ those, upload and search files, manage presence.")
     (ppx_deriving_yojson (>= 3.3))
     ptime
     result
-    (ounit :with-test)
+    (ounit2 (and :with-test (>= 2.2)))
     (ppx_deriving (and :with-test (>= 5.2.1))))
   (conflicts
     ;; broken release: https://github.com/mirage/ocaml-conduit/issues/189

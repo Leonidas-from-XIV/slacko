@@ -7,8 +7,9 @@ doc: "https://leonidas-from-xiv.github.io/slacko/"
 build: [["dune" "build" "-p" name "-j" jobs]]
 run-test: [make "test"]
 depends: [
+  "ocaml" {>= "4.08"}
   "dune" {build & >= "1.2.0"}
-  "cmdliner"
+  "cmdliner" {>= "1.1.0"}
   "yojson" {>= "1.6.0"}
   "lwt" {>= "3.2.0"}
   "lwt_ppx"

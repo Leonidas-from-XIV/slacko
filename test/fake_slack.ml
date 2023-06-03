@@ -45,6 +45,14 @@ let reply_ok fields = reply_json true fields
 
 let reply_err err fields = reply_json false (("error", `String err) :: fields)
 
+let get_token req =
+  let headers = Cohttp.Request.headers req in
+  let header = Cohttp.Header.get headers "Authorization" in
+  match header with
+  | Some x -> let hlen = String.length "Bearer " in
+      String.sub x hlen @@ String.length x - hlen
+  | None -> ""
+
 let get_arg_opt arg req =
   Uri.get_query_param (Request.uri req) arg
 
@@ -59,7 +67,7 @@ let get_arg arg req =
   | None -> failwith @@ "Mandatory arg " ^ arg ^ " not given."
 
 let check_auth f req body =
-  match get_arg "token" req with
+  match get_token req with
   | t when t = valid_token -> f req body
   | _ -> reply_err "invalid_auth" []
 

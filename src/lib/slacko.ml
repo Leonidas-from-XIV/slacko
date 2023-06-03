@@ -688,7 +688,7 @@ let process request =
   >|= validate
   >|= filter_useless
 
-let (<<) f g x = f @@ g x
+(* let (<<) f g x = f @@ g x *)
 
 let auth_header token =
   Cohttp.Header.init_with "Authorization" ("Bearer " ^ token)
@@ -697,19 +697,21 @@ let endpoint base_url request =
   let url = Uri.of_string (base_url ^ request.method') in
   List.fold_left (Uri.add_query_param') url request.arguments
 
-let unauthed_query ?(base_url=default_base_url) =
-  process << Cohttp_unix.Client.get << endpoint base_url
+let unauthed_query ?(base_url=default_base_url) request =
+  endpoint base_url request
+  |> Cohttp_unix.Client.get
+  |> process
 
-let query session =
-  process
-    << (Cohttp_unix.Client.get ~headers:(auth_header session.token))
-    << endpoint session.base_url
+let query session request =
+  endpoint session.base_url request
+  |> Cohttp_unix.Client.get ~headers:(auth_header session.token)
+  |> process
 
 (* do a POST request *)
-let query_post session body =
-  process
-    << (Cohttp_unix.Client.post ~headers:(auth_header session.token) ~body)
-    << endpoint session.base_url
+let query_post session body request =
+  endpoint session.base_url request
+  |> Cohttp_unix.Client.post ~headers:(auth_header session.token) ~body
+  |> process
 
 let identity x = x
 

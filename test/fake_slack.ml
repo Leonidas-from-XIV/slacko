@@ -49,7 +49,7 @@ let get_token_opt req =
   let headers = Cohttp.Request.headers req in
   let header = Cohttp.Header.get headers "Authorization" in
   match header with
-  | Some x when String.starts_with ~prefix:"Bearer " x ->
+  | Some x ->
       let hlen = String.length "Bearer " in
       Some (String.sub x hlen @@ String.length x - hlen)
   | _ -> None

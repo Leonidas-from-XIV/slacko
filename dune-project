@@ -24,7 +24,6 @@ those, upload and search files, manage presence.")
     (cohttp-lwt-unix (>= 1.0.0))
     (ppx_deriving_yojson (>= 3.3))
     ptime
-    result
     (ounit2 (and :with-test (>= 2.2)))
     (ppx_deriving (and :with-test (>= 5.2.1))))
   (conflicts

@@ -21,7 +21,6 @@ depends: [
   "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.3"}
   "ptime"
-  "result"
   "ounit2" {with-test & >= "2.2"}
   "ppx_deriving" {with-test & >= "5.2.1"}
 ]

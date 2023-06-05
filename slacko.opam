@@ -15,8 +15,7 @@ depends: [
   "ocaml" {>= "4.08"}
   "cmdliner" {>= "1.1.0"}
   "yojson" {>= "1.6.0"}
-  "lwt" {>= "3.2.0"}
-  "lwt_ppx"
+  "lwt" {>= "5.3.0"}
   "tls-lwt"
   "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.3"}

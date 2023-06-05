@@ -4,4 +4,4 @@
   (synopsis "A neat interface for Slack")
   (private_modules Timestamp)
   (libraries lwt cohttp-lwt-unix yojson ppx_deriving_yojson.runtime ptime)
-  (preprocess (pps lwt_ppx ppx_deriving_yojson)))
+  (preprocess (pps ppx_deriving_yojson)))

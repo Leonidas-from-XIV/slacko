@@ -19,6 +19,7 @@
 *)
 
 open Lwt.Infix
+open Lwt.Syntax
 module Cohttp_unix = Cohttp_lwt_unix
 module Cohttp_body = Cohttp_lwt.Body
 
@@ -773,7 +774,8 @@ type 'a listfn = session -> [`Success of 'a list | parsed_auth_error] Lwt.t
 
 (* look up the id of query from results provided by the listfn *)
 let lookupk session (listfn : 'a listfn) filterfn k =
-  match%lwt listfn session with
+  let* v = listfn session in
+  match v with
   | #parsed_auth_error as e -> Lwt.return e
   | `Success items -> Lwt.return @@ k @@ List.filter filterfn items
 
@@ -911,7 +913,8 @@ let auth_test session =
 
 (* Operator for unwrapping channel_ids *)
 let (|->) m f =
-  match%lwt m with
+  let* m = m in
+  match m with
   | `Channel_not_found
   | #parsed_auth_error as e -> Lwt.return e
   | `User_not_found -> Lwt.return `Unknown_error
@@ -919,7 +922,8 @@ let (|->) m f =
 
 (* Operator for unwrapping user_ids *)
 let (|+>) m f =
-  match%lwt m with
+  let* m = m in
+  match m with
   | `Channel_not_found -> Lwt.return `Unknown_error
   | `User_not_found
   | #parsed_auth_error as e -> Lwt.return e

@@ -589,23 +589,18 @@ type history_result = [
 (* internal *)
 let default_base_url = "https://slack.com/api/"
 
-let optionally_add key value uri = match value with
-  | None -> uri
-  | Some value -> Uri.add_query_param' uri (key, value)
+type api_request = {
+  method': string;
+  arguments: (string * string) list
+}
+
+let api_request method' = { method'; arguments = [] }
+
+let optionally_add key value request = match value with
+  | None -> request
+  | Some value -> { request with arguments = (key, value)::request.arguments }
 
 let definitely_add key value = optionally_add key (Some value)
-
-let unauthed_endpoint ~base_url method' =
-  let base_url = match base_url with
-    | None -> default_base_url
-    | Some base_url -> base_url
-  in
-  base_url ^ method'
-  |> Uri.of_string
-
-let endpoint method' session =
-  unauthed_endpoint ~base_url:(Some session.base_url) method'
-  |> definitely_add "token" session.token
 
 (* private API return type *)
 (* the strict is important here, because we just match ok & error and
@@ -693,14 +688,28 @@ let process request =
   >|= validate
   >|= filter_useless
 
-let (<<) f g x = f @@ g x
+let auth_header token =
+  Cohttp.Header.init_with "Authorization" ("Bearer " ^ token)
 
-let query =
-  process << Cohttp_unix.Client.get
+let endpoint base_url request =
+  let url = Uri.of_string (base_url ^ request.method') in
+  List.fold_left (Uri.add_query_param') url request.arguments
+
+let unauthed_query ?(base_url=default_base_url) request =
+  endpoint base_url request
+  |> Cohttp_unix.Client.get
+  |> process
+
+let query session request =
+  endpoint session.base_url request
+  |> Cohttp_unix.Client.get ~headers:(auth_header session.token)
+  |> process
 
 (* do a POST request *)
-let query_post body =
-  process << Cohttp_unix.Client.post ~body
+let query_post session body request =
+  endpoint session.base_url request
+  |> Cohttp_unix.Client.post ~headers:(auth_header session.token) ~body
+  |> process
 
 let identity x = x
 
@@ -726,9 +735,9 @@ type im_list_obj = {
 } [@@deriving of_yojson]
 
 let channels_list ?exclude_archived session =
-  endpoint "channels.list" session
+  api_request "channels.list"
     |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       (match d |> channels_list_obj_of_yojson with
@@ -738,8 +747,8 @@ let channels_list ?exclude_archived session =
     | _ -> `Unknown_error
 
 let users_list session =
-  endpoint "users.list" session
-    |> query
+  api_request "users.list"
+    |> query session
     >|= function
     | `Json_response d ->
       (match d |> users_list_obj_of_yojson with
@@ -749,9 +758,9 @@ let users_list session =
     | _ -> `Unknown_error
 
 let groups_list ?exclude_archived session =
-  endpoint "groups.list" session
+  api_request "groups.list"
     |> optionally_add "exclude_archived" @@ maybe string_of_bool exclude_archived
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       (match d |> groups_list_obj_of_yojson with
@@ -882,19 +891,19 @@ let translate_parsing_error = function
 
 (* Slack API begins here *)
 
-let api_test ?base_url ?foo ?error () =
-  unauthed_endpoint ~base_url "api.test"
+let api_test ?(base_url=default_base_url) ?foo ?error () =
+  api_request "api.test"
     |> optionally_add "foo" foo
     |> optionally_add "error" error
-    |> query
+    |> unauthed_query ~base_url
     >|= function
     | `Json_response x -> `Success x
     | #api_error as res -> res
     | _ -> `Unknown_error
 
 let auth_test session =
-  endpoint "auth.test" session
-    |> query
+  api_request "auth.test"
+    |> query session
     >|= function
     | `Json_response d -> d |> authed_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error as res -> res
@@ -918,9 +927,9 @@ let (|+>) m f =
 
 let channels_archive session channel =
   id_of_channel session channel |-> fun channel_id ->
-    endpoint "channels.archive" session
+    api_request "channels.archive"
     |> definitely_add "channel" channel_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -934,9 +943,9 @@ let channels_archive session channel =
     | _ -> `Unknown_error
 
 let channels_create session name =
-  endpoint "channels.create" session
+  api_request "channels.create"
     |> definitely_add "name" name
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
@@ -949,13 +958,13 @@ let channels_create session name =
 let channels_history session
   ?latest ?oldest ?count ?inclusive channel =
   id_of_channel session channel |-> fun channel_id ->
-    endpoint "channels.history" session
+    api_request "channels.history"
     |> definitely_add "channel" channel_id
     |> optionally_add "latest" @@ maybe Timestamp.to_string latest
     |> optionally_add "oldest" @@ maybe Timestamp.to_string oldest
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
-    |> query
+    |> query session
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
     | #history_result as res -> res
@@ -963,9 +972,9 @@ let channels_history session
 
 let channels_info session channel =
   id_of_channel session channel |-> fun channel_id ->
-    endpoint "channels.info" session
+    api_request "channels.info"
     |> definitely_add "channel" channel_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
@@ -976,10 +985,10 @@ let channels_info session channel =
 let channels_invite session channel user =
   id_of_channel session channel |-> fun channel_id ->
   id_of_user session user |+> fun user_id ->
-    endpoint "channels.invite" session
+    api_request "channels.invite"
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
@@ -995,9 +1004,9 @@ let channels_invite session channel user =
     | _ -> `Unknown_error
 
 let channels_join session name =
-  endpoint "channels.join" session
+  api_request "channels.join"
     |> definitely_add "name" @@ string_of_channel name
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_obj_of_yojson |> translate_parsing_error
@@ -1012,10 +1021,10 @@ let channels_join session name =
 let channels_kick session channel user =
   id_of_channel session channel |-> fun channel_id ->
   id_of_user session user |+> fun user_id ->
-    endpoint "channels.kick" session
+    api_request "channels.kick"
     |> definitely_add "channel" channel_id
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1030,9 +1039,9 @@ let channels_kick session channel user =
 
 let channels_leave session channel =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint "channels.leave" session
+  api_request "channels.leave"
     |> definitely_add "channel" channel_id
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> channel_leave_obj_of_yojson |> translate_parsing_error
@@ -1046,10 +1055,10 @@ let channels_leave session channel =
 
 let channels_mark session channel ts =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint "channels.mark" session
+  api_request "channels.mark"
     |> definitely_add "channel" channel_id
     |> definitely_add "ts" @@ Timestamp.to_string ts
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1060,10 +1069,10 @@ let channels_mark session channel ts =
 
 let channels_rename session channel name =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint "channels.rename" session
+  api_request "channels.rename"
     |> definitely_add "channel" channel_id
     |> definitely_add "name" name
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
         d |> channel_rename_obj_of_yojson |> translate_parsing_error
@@ -1079,10 +1088,10 @@ let channels_rename session channel name =
 
 let channels_set_purpose session channel purpose =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint "channels.setPurpose" session
+  api_request "channels.setPurpose"
     |> definitely_add "channel" channel_id
     |> definitely_add "purpose" purpose
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("purpose", `String d)]) ->
       `Success d
@@ -1091,10 +1100,10 @@ let channels_set_purpose session channel purpose =
 
 let channels_set_topic session channel topic =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint "channels.setTopic" session
+  api_request "channels.setTopic"
     |> definitely_add "channel" channel_id
     |> definitely_add "topic" topic
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("topic", `String d)]) ->
       `Success d
@@ -1103,9 +1112,9 @@ let channels_set_topic session channel topic =
 
 let channels_unarchive session channel =
   id_of_channel session channel |-> fun channel_id ->
-  endpoint "channels.unarchive" session
+  api_request "channels.unarchive"
     |> definitely_add "channel" channel_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1117,10 +1126,10 @@ let channels_unarchive session channel =
 
 let chat_delete session ts chat =
   id_of_chat session chat |-> fun chat_id ->
-  endpoint "chat.delete" session
+  api_request "chat.delete"
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ Timestamp.to_string ts
-    |> query
+    |> query session
     >|= function
     | `Json_response d -> d |> chat_obj_of_yojson |> translate_parsing_error
     | #parsed_auth_error
@@ -1137,7 +1146,7 @@ let chat_post_message session chat
   ?reply_broadcast ?thread_ts ?unfurl_links ?unfurl_media
   ?username ?parse ?icon_url ?icon_emoji ?(attachments=[]) text =
   id_of_chat session chat |-> fun chat_id ->
-  endpoint "chat.postMessage" session
+  api_request "chat.postMessage"
     |> definitely_add "channel" chat_id
     |> definitely_add "text" text
     |> optionally_add "username" username
@@ -1152,7 +1161,7 @@ let chat_post_message session chat
     |> optionally_add "thread_ts" @@ maybe Timestamp.to_string thread_ts
     |> optionally_add "unfurl_links" @@ maybe string_of_bool unfurl_links
     |> optionally_add "unfurl_media" @@ maybe string_of_bool unfurl_media
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> chat_obj_of_yojson |> translate_parsing_error
@@ -1167,7 +1176,7 @@ let chat_post_message session chat
 
 let chat_update session ts chat ?as_user ?attachments ?link_names ?parse text =
   id_of_chat session chat |-> fun chat_id ->
-  endpoint "chat.update" session
+  api_request "chat.update"
     |> definitely_add "channel" chat_id
     |> definitely_add "ts" @@ Timestamp.to_string ts
     |> definitely_add "text" text
@@ -1175,7 +1184,7 @@ let chat_update session ts chat ?as_user ?attachments ?link_names ?parse text =
     |> optionally_add "attachments" @@ maybe jsonify_attachments attachments
     |> optionally_add "link_names" @@ maybe string_of_bool link_names
     |> optionally_add "parse" parse
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> chat_obj_of_yojson |> translate_parsing_error
@@ -1187,8 +1196,8 @@ let chat_update session ts chat ?as_user ?attachments ?link_names ?parse text =
     | _ -> `Unknown_error
 
 let emoji_list session =
-  endpoint "emoji.list" session
-    |> query
+  api_request "emoji.list"
+    |> query session
     >|= function
     | `Json_response d ->
       (match d |> emoji_list_obj_of_yojson with
@@ -1198,9 +1207,9 @@ let emoji_list session =
     | _ -> `Unknown_error
 
 let files_delete session file =
-  endpoint "files.delete" session
+  api_request "files.delete"
     |> definitely_add "file" file
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1210,11 +1219,11 @@ let files_delete session file =
     | _ -> `Unknown_error
 
 let files_info session ?count ?page file =
-  endpoint "files.info" session
+  api_request "files.info"
     |> definitely_add "file" file
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> files_info_obj_of_yojson |> translate_parsing_error
@@ -1232,14 +1241,14 @@ let maybe_with_user session user f =
 
 let files_list ?user ?ts_from ?ts_to ?types ?count ?page session =
   maybe_with_user session user @@ fun user_id ->
-  endpoint "files.list" session
+  api_request "files.list"
     |> optionally_add "user" user_id
     |> optionally_add "ts_from" @@ maybe Timestamp.to_string ts_from
     |> optionally_add "ts_to" @@ maybe Timestamp.to_string ts_to
     |> optionally_add "types" types
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> files_list_obj_of_yojson |> translate_parsing_error
@@ -1251,13 +1260,13 @@ let files_list ?user ?ts_from ?ts_to ?types ?count ?page session =
 
 let files_upload session
   ?filetype ?filename ?title ?initial_comment ?channels content =
-  endpoint "files.upload" session
+  api_request "files.upload"
     |> optionally_add "filetype" filetype
     |> optionally_add "filename" filename
     |> optionally_add "title" title
     |> optionally_add "initial_comment" initial_comment
     |> optionally_add "channels" channels
-    |> query_post content
+    |> query_post session content
     >|= function
     | `Json_response `Assoc [("file", d)] ->
         d |> file_obj_of_yojson |> translate_parsing_error
@@ -1267,9 +1276,9 @@ let files_upload session
 
 let groups_archive session group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.archive" session
+  api_request "groups.archive"
     |> definitely_add "channel" group_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1284,9 +1293,9 @@ let groups_archive session group =
 
 let groups_close session group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.close" session
+  api_request "groups.close"
     |> definitely_add "channel" group_id
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> chat_close_obj_of_yojson |> translate_parsing_error
@@ -1295,9 +1304,9 @@ let groups_close session group =
     | _ -> `Unknown_error
 
 let groups_create session name =
-  endpoint "groups.create" session
+  api_request "groups.create"
     |> definitely_add "name" @@ name_of_group name
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("group", d)]) ->
       d |> group_obj_of_yojson |> translate_parsing_error
@@ -1310,9 +1319,9 @@ let groups_create session name =
 
 let groups_create_child session group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.createChild" session
+  api_request "groups.createChild"
     |> definitely_add "channel" group_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("group", d)]) ->
       d |> group_obj_of_yojson |> translate_parsing_error
@@ -1326,13 +1335,13 @@ let groups_create_child session group =
 
 let groups_history session ?latest ?oldest ?count ?inclusive group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.history" session
+  api_request "groups.history"
     |> definitely_add "channel" group_id
     |> optionally_add "latest" @@ maybe Timestamp.to_string latest
     |> optionally_add "oldest" @@ maybe Timestamp.to_string oldest
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
-    |> query
+    |> query session
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
     | #history_result as res -> res
@@ -1341,10 +1350,10 @@ let groups_history session ?latest ?oldest ?count ?inclusive group =
 let groups_invite session group user =
   id_of_group session group |-> fun group_id ->
   id_of_user session user |+> fun user_id ->
-  endpoint "groups.invite" session
+  api_request "groups.invite"
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> groups_invite_obj_of_yojson |> translate_parsing_error
@@ -1360,10 +1369,10 @@ let groups_invite session group user =
 let groups_kick session group user =
   id_of_group session group |-> fun group_id ->
   id_of_user session user |+> fun user_id ->
-  endpoint "groups.kick" session
+  api_request "groups.kick"
     |> definitely_add "channel" group_id
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1378,9 +1387,9 @@ let groups_kick session group user =
 
 let groups_leave session group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.leave" session
+  api_request "groups.leave"
     |> definitely_add "channel" group_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1394,10 +1403,10 @@ let groups_leave session group =
 
 let groups_mark session group ts =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.mark" session
+  api_request "groups.mark"
     |> definitely_add "channel" group_id
     |> definitely_add "ts" @@ Timestamp.to_string ts
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1408,9 +1417,9 @@ let groups_mark session group ts =
 
 let groups_open session group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.open" session
+  api_request "groups.open"
     |> definitely_add "channel" group_id
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> groups_open_obj_of_yojson |> translate_parsing_error
@@ -1420,10 +1429,10 @@ let groups_open session group =
 
 let groups_rename session group name =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.rename" session
+  api_request "groups.rename"
     |> definitely_add "channel" group_id
     |> definitely_add "name" name
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("channel", d)]) ->
       d |> groups_rename_obj_of_yojson |> translate_parsing_error
@@ -1437,10 +1446,10 @@ let groups_rename session group name =
 
 let groups_set_purpose session group purpose =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.setPurpose" session
+  api_request "groups.setPurpose"
     |> definitely_add "channel" group_id
     |> definitely_add "purpose" purpose
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("purpose", `String d)]) ->
       `Success d
@@ -1449,10 +1458,10 @@ let groups_set_purpose session group purpose =
 
 let groups_set_topic session group topic =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.setTopic" session
+  api_request "groups.setTopic"
     |> definitely_add "channel" group_id
     |> definitely_add "topic" topic
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("topic", `String d)]) ->
       `Success d
@@ -1461,9 +1470,9 @@ let groups_set_topic session group topic =
 
 let groups_unarchive session group =
   id_of_group session group |-> fun group_id ->
-  endpoint "groups.unarchive" session
+  api_request "groups.unarchive"
     |> definitely_add "channel" group_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1474,9 +1483,9 @@ let groups_unarchive session group =
     | _ -> `Unknown_error
 
 let im_close session channel =
-  endpoint "im.close" session
+  api_request "im.close"
     |> definitely_add "channel" channel
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> chat_close_obj_of_yojson |> translate_parsing_error
@@ -1486,21 +1495,21 @@ let im_close session channel =
     | _ -> `Unknown_error
 
 let im_history session ?latest ?oldest ?count ?inclusive channel =
-  endpoint "im.history" session
+  api_request "im.history"
     |> definitely_add "channel" channel
     |> optionally_add "latest" @@ maybe Timestamp.to_string latest
     |> optionally_add "oldest" @@ maybe Timestamp.to_string oldest
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "inclusive" @@ maybe string_of_bool inclusive
-    |> query
+    |> query session
     >|= function
     | `Json_response d -> d |> history_obj_of_yojson |> translate_parsing_error
     | #history_result as res -> res
     | _ -> `Unknown_error
 
 let im_list session =
-  endpoint "im.list" session
-    |> query
+  api_request "im.list"
+    |> query session
     >|= function
     | `Json_response d ->
       (match d |> im_list_obj_of_yojson with
@@ -1510,10 +1519,10 @@ let im_list session =
     | _ -> `Unknown_error
 
 let im_mark session channel ts =
-  endpoint "im.mark" session
+  api_request "im.mark"
     |> definitely_add "channel" channel
     |> definitely_add "ts" @@ Timestamp.to_string ts
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error
@@ -1523,9 +1532,9 @@ let im_mark session channel ts =
 
 let im_open session user =
   id_of_user session user |+> fun user_id ->
-  endpoint "im.open" session
+  api_request "im.open"
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> im_open_obj_of_yojson |> translate_parsing_error
@@ -1534,13 +1543,13 @@ let im_open session user =
     | #user_visibility_error as res -> res
     | _ -> `Unknown_error
 
-let oauth_access ?base_url client_id client_secret ?redirect_url code =
-  unauthed_endpoint ~base_url "oauth.access"
+let oauth_access ?(base_url=default_base_url) client_id client_secret ?redirect_url code =
+  api_request "oauth.access"
     |> definitely_add "client_id" client_id
     |> definitely_add "client_secret" client_secret
     |> definitely_add "code" code
     |> optionally_add "redirect_url" redirect_url
-    |> query
+    |> unauthed_query ~base_url
     >|= function
     | `Json_response d ->
       d |> oauth_obj_of_yojson |> translate_parsing_error
@@ -1548,14 +1557,14 @@ let oauth_access ?base_url client_id client_secret ?redirect_url code =
     | _ -> `Unknown_error
 
 let search method' session ?sort ?sort_dir ?highlight ?count ?page query_ =
-  endpoint method' session
+  api_request method'
     |> definitely_add "query" @@ query_
     |> optionally_add "sort" @@ maybe string_of_criterion sort
     |> optionally_add "sort_dir" @@ maybe string_of_direction sort_dir
     |> optionally_add "highlight" @@ maybe string_of_bool highlight
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> search_obj_of_yojson |> translate_parsing_error
@@ -1569,11 +1578,11 @@ let search_messages = search "search.messages"
 
 let stars_list ?user ?count ?page session =
   maybe_with_user session user @@ fun user_id ->
-  endpoint "stars.list" session
+  api_request "stars.list"
     |> optionally_add "user" user_id
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> stars_list_obj_of_yojson |> translate_parsing_error
@@ -1583,10 +1592,10 @@ let stars_list ?user ?count ?page session =
     | _ -> `Unknown_error
 
 let team_access_logs ?count ?page session =
-  endpoint "team.accessLogs" session
+  api_request "team.accessLogs"
     |> optionally_add "count" @@ maybe string_of_int count
     |> optionally_add "page" @@ maybe string_of_int page
-    |> query
+    |> query session
     >|= function
     | `Json_response d ->
       d |> team_access_log_obj_of_yojson |> translate_parsing_error
@@ -1596,8 +1605,8 @@ let team_access_logs ?count ?page session =
     | _ -> `Unknown_error
 
 let team_info session =
-  endpoint "team.info" session
-    |> query
+  api_request "team.info"
+    |> query session
     >|= function
     | `Json_response d ->
       d |> team_obj_of_yojson |> translate_parsing_error
@@ -1607,9 +1616,9 @@ let team_info session =
 
 let users_get_presence session user =
   id_of_user session user |+> fun user_id ->
-  endpoint "users.getPresence" session
+  api_request "users.getPresence"
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     (* TODO parse more out of this *)
     | `Json_response (`Assoc [("presence", `String d)]) -> (match d with
@@ -1622,9 +1631,9 @@ let users_get_presence session user =
 let users_info session user =
   id_of_user session user
   |+> fun user_id ->
-  endpoint "users.info" session
+  api_request "users.info"
     |> definitely_add "user" user_id
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc [("user", d)]) ->
         d |> user_obj_of_yojson |> translate_parsing_error
@@ -1634,8 +1643,8 @@ let users_info session user =
     | _ -> `Unknown_error
 
 let users_set_active session =
-  endpoint "users.setActive" session
-    |> query
+  api_request "users.setActive"
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #bot_error
@@ -1643,9 +1652,9 @@ let users_set_active session =
     | _ -> `Unknown_error
 
 let users_set_presence session presence =
-  endpoint "users.setPresence" session
+  api_request "users.setPresence"
     |> definitely_add "presence" @@ string_of_presence presence
-    |> query
+    |> query session
     >|= function
     | `Json_response (`Assoc []) -> `Success
     | #parsed_auth_error

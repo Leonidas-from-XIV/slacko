@@ -145,8 +145,8 @@ type abbr_user_obj_list = abbr_user_obj list
 
 let abbr_user_obj_list_of_yojson json =
   match abbr_users_list_obj_of_yojson json with
-  | Result.Ok obj -> Result.Ok obj.members
-  | (Result.Error _) as err -> err
+  | Ok obj -> Ok obj.members
+  | (Error _) as err -> err
 
 
 type abbr_file_obj = {

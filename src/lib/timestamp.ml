@@ -67,7 +67,7 @@ let of_yojson json =
     | `String x -> of_string x
     | _ -> None
   with
-  | Some ts -> Result.Ok ts
-  | None -> Result.Error "Couldn't parse timestamp"
+  | Some ts -> Ok ts
+  | None -> Error "Couldn't parse timestamp"
 
 let to_yojson ts = `String (to_string ts)

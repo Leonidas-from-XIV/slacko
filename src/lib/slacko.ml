@@ -688,8 +688,6 @@ let process request =
   >|= validate
   >|= filter_useless
 
-(* let (<<) f g x = f @@ g x *)
-
 let auth_header token =
   Cohttp.Header.init_with "Authorization" ("Bearer " ^ token)
 

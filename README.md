@@ -3,7 +3,7 @@ Slacko
 
 ![Slacko logo](slacko.png) A neat interface for [Slack](https://slack.com/)
 
-[![Build Status](https://img.shields.io/endpoint?url=https%3A%2F%2Fci.ocamllabs.io%2Fbadge%2FLeonidas-from-XIV%2Fslacko%2Fmain&logo=ocaml)](https://ci.ocamllabs.io/github/Leonidas-from-XIV/slacko) [![Build Status](https://img.shields.io/github/actions/workflow/status/Leonidas-from-XIV/slacko/ci.yaml?label=GitHub%20CI)](https://github.com/Leonidas-from-XIV/slacko/actions/workflows/ci.yaml)
+[![Build Status](https://img.shields.io/endpoint?url=https%3A%2F%2Fci.ocamllabs.io%2Fbadge%2FLeonidas-from-XIV%2Fslacko%2Fmaster&logo=ocaml)](https://ci.ocamllabs.io/github/Leonidas-from-XIV/slacko) [![Build Status](https://img.shields.io/github/actions/workflow/status/Leonidas-from-XIV/slacko/ci.yaml?label=GitHub%20CI)](https://github.com/Leonidas-from-XIV/slacko/actions/workflows/ci.yaml)
 
 Your company got you Slack and you're all like "yeah, and now I am forced to
 use a browser or what?". Fear no more, because as it turns out Slack has a REST

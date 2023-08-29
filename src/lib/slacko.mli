@@ -280,7 +280,7 @@ type message
 type channel
 
 (** A type of an IM conversation *)
-type conversation
+type im
 
 (** An user, represented by either a user name or a user id. *)
 type user
@@ -292,7 +292,7 @@ type bot
 type group
 
 (** A place one can post messages to. *)
-type chat = Channel of channel | Im of conversation | User of user | Group of group
+type chat = Channel of channel | Im of im | User of user | Group of group
 
 (** What criterion to use in search. *)
 type sort_criterion = Score | Timestamp
@@ -468,7 +468,7 @@ type groups_rename_obj = {
   created: timestamp
 }
 
-(** Information about a direct conversation with a person. *)
+(** Information about a direct im with a person. *)
 type im_obj = {
   id: string;
   is_im: bool;
@@ -483,7 +483,7 @@ type im_channel_obj = {
   id: string;
 }
 
-(** Information about an direct conversation channel. *)
+(** Information about an direct im channel. *)
 type im_open_obj = {
   no_op: bool option;
   already_open: bool option;
@@ -555,7 +555,7 @@ type file_obj = {
   (*public_url_shared: ???;*)
   channels: channel list;
   groups: group list;
-  ims: conversation list;
+  ims: im list;
   initial_comment: Yojson.Safe.t option;
   num_stars: int option;
 }
@@ -690,9 +690,9 @@ val bot_of_string : string -> bot
     id by means of an additional request. *)
 val channel_of_string: string -> channel
 
-(** Create a conversation type out of a given string. The string is usually
-    starting with a capital 'D' and represents an IM conversation channel. *)
-val conversation_of_string: string -> conversation
+(** Create a im type out of a given string. The string is usually
+    starting with a capital 'D' and represents an IM im channel. *)
+val im_of_string: string -> im
 
 (** {2 Slack API calls} *)
 
@@ -823,16 +823,16 @@ val groups_set_topic: session -> group -> topic -> topic_result Lwt.t
 val groups_unarchive: session -> group -> [ `Success | parsed_auth_error | channel_error | `Not_archived | `User_is_restricted | bot_error ] Lwt.t
 
 (** Close a direct message channel. *)
-val im_close: session -> conversation -> [ `Success of chat_close_obj | parsed_auth_error | channel_error | `User_does_not_own_channel ] Lwt.t
+val im_close: session -> im -> [ `Success of chat_close_obj | parsed_auth_error | channel_error | `User_does_not_own_channel ] Lwt.t
 
 (** Fetches history of messages and events from direct message channel. *)
-val im_history: session -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> ?inclusive:bool -> conversation -> history_result Lwt.t
+val im_history: session -> ?latest:timestamp -> ?oldest:timestamp -> ?count:int -> ?inclusive:bool -> im -> history_result Lwt.t
 
 (** Lists direct message channels for the calling user. *)
 val im_list: session -> [ `Success of im_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a direct message channel. *)
-val im_mark: session -> conversation -> timestamp -> [ `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t
+val im_mark: session -> im -> timestamp -> [ `Success | parsed_auth_error | channel_error | not_in_channel_error ] Lwt.t
 
 (** Opens a direct message channel. *)
 val im_open: session -> user -> [ `Success of im_open_obj | parsed_auth_error | user_error | user_visibility_error ] Lwt.t

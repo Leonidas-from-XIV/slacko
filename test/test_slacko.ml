@@ -292,13 +292,13 @@ let groups_list_tests = fake_slack_tests "groups_list" [
 
 let test_im_history_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
-  let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
+  let slackbot = Slacko.im_of_string Fake_slack.im_slackbot in
   Slacko.im_history session slackbot >|= fun resp ->
   assert_equal `Invalid_auth resp
 
 let test_im_history_no_params _tctx =
   let session = Slacko.start_session ?base_url token in
-  let slackbot = Slacko.conversation_of_string Fake_slack.im_slackbot in
+  let slackbot = Slacko.im_of_string Fake_slack.im_slackbot in
   Slacko.im_history session slackbot >|= get_success >|= fun history ->
   assert_equal ~printer:show_abbr_history_obj
     (abbr_json abbr_history_obj_of_yojson Fake_slack.slackbot_history_json)

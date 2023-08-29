@@ -475,6 +475,8 @@ type im_obj = {
   user: user;
   created: timestamp;
   is_user_deleted: bool;
+  is_open: bool option;
+  last_read: timestamp option;
   unread_count: int option;
   unread_count_display: int option;
 }

@@ -485,6 +485,8 @@ type im_obj = {
   user: user;
   created: Timestamp.t;
   is_user_deleted: bool;
+  is_open: bool option [@default None];
+  last_read: Timestamp.t option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
 } [@@deriving of_yojson { strict = false }]

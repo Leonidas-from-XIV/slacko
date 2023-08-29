@@ -279,6 +279,9 @@ type message
     channel id. *)
 type channel
 
+(** A channel-like container for a conversation used by the Conversations API. *)
+type conversation
+
 (** A type of an IM conversation *)
 type im
 
@@ -363,6 +366,25 @@ type channel_obj = {
   purpose: topic_obj;
   last_read: timestamp option;
   latest: Yojson.Safe.t option;
+  unread_count: int option;
+  unread_count_display: int option;
+  num_members: int option;
+}
+
+(** Object representing information about a Slack channel. *)
+type conversation_obj = {
+  id: conversation;
+  name: string;
+  is_channel: bool;
+  created: timestamp;
+  creator: user;
+  is_archived: bool;
+  is_general: bool;
+  is_member: bool;
+  topic: topic_obj;
+  purpose: topic_obj;
+  last_read: timestamp option;
+  latest: string option;
   unread_count: int option;
   unread_count_display: int option;
   num_members: int option;

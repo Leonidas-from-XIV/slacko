@@ -193,6 +193,8 @@ type message = string
 
 type channel = ChannelId of string | ChannelName of string
 
+type conversation = string
+
 type im = string
 
 type user = UserId of string | UserName of string
@@ -226,6 +228,10 @@ let channel_of_yojson = function
   | `String x -> Ok (ChannelId x)
   | _ -> Error "Couldn't parse channel type"
 
+let conversation_of_yojson = function
+  | `String x -> Ok x
+  | _ -> Error "Couldn't parse conversation type"
+
 let group_of_yojson = function
   | `String x -> Ok (GroupId x)
   | _ -> Error "Couldn't parse group type"
@@ -258,6 +264,25 @@ type channel_obj = {
   unread_count_display: int option [@default None];
   num_members: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
+
+type conversation_obj = {
+  id: conversation;
+  name: string;
+  is_channel: bool;
+  created: Timestamp.t;
+  creator: user;
+  is_archived: bool;
+  is_general: bool;
+  is_member: bool;
+  topic: topic_obj;
+  purpose: topic_obj;
+  last_read: Timestamp.t option [@default None];
+  latest: string option [@default None];
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+  num_members: int option [@default None];
+} [@@deriving of_yojson { strict = false }]
+
 
 type user_obj = {
   id: user;

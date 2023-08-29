@@ -360,6 +360,7 @@ type channel_obj = {
   creator: user;
   is_archived: bool;
   is_general: bool;
+  name_normalized: string;
   is_member: bool;
   members: user list;
   topic: topic_obj;
@@ -380,6 +381,7 @@ type conversation_obj = {
   creator: user;
   is_archived: bool;
   is_general: bool;
+  name_normalized: string;
   is_member: bool;
   topic: topic_obj;
   purpose: topic_obj;
@@ -761,7 +763,7 @@ val channels_kick: session -> channel -> user -> [ `Success | parsed_auth_error 
 val channels_leave: session -> channel -> [ `Success of channel_leave_obj | parsed_auth_error | channel_error | archive_error | leave_general_error | `User_is_restricted | bot_error ] Lwt.t
 
 (** Lists all channels in a Slack team. *)
-val channels_list: ?exclude_archived:bool -> session -> [ `Success of channel_obj list | parsed_auth_error ] Lwt.t
+val conversations_list: ?exclude_archived:bool -> session -> [ `Success of conversation_obj list | parsed_auth_error ] Lwt.t
 
 (** Sets the read cursor in a channel. *)
 val channels_mark: session -> channel -> timestamp -> [ `Success | parsed_auth_error | channel_error | archive_error | not_in_channel_error ] Lwt.t

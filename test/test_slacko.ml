@@ -177,24 +177,24 @@ let channels_history_tests = fake_slack_tests "channels_history" [
 (* channels_kick *)
 (* channels_leave *)
 
-(* channels_list *)
+(* conversations_list *)
 
-let test_channels_list_bad_auth _tctx =
+let test_conversations_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
-  Slacko.channels_list session >|= fun resp ->
+  Slacko.conversations_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_channels_list _tctx =
+let test_conversations_list _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.channels_list session >|= get_success >|=
+  Slacko.conversations_list session >|= get_success >|=
   List.map abbr_channel_obj >|= fun channels ->
   assert_equal ~printer:show_abbr_channel_obj_list
     (abbr_json abbr_channel_obj_list_of_yojson Fake_slack.channels_json)
     channels
 
-let channels_list_tests = fake_slack_tests "channels_list" [
-  "test_bad_auth", test_channels_list_bad_auth;
-  "test", test_channels_list;
+let conversations_list_tests = fake_slack_tests "conversations_list" [
+  "test_bad_auth", test_conversations_list_bad_auth;
+  "test", test_conversations_list;
 ]
 
 (* channels_mark *)
@@ -377,7 +377,7 @@ let suite = "tests" >::: [
     (* channels_join_tests; *)
     (* channels_kick_tests; *)
     (* channels_leave_tests; *)
-    channels_list_tests;
+    conversations_list_tests;
     (* channels_mark_tests; *)
     (* channels_rename_tests; *)
     (* channels_set_purpose_tests; *)

@@ -195,6 +195,8 @@ type channel = ChannelId of string | ChannelName of string
 
 type conversation = string
 
+type im = string
+
 type user = UserId of string | UserName of string
 
 type bot = BotId of string
@@ -202,7 +204,7 @@ type bot = BotId of string
 type group = GroupId of string | GroupName of string
 
 (* TODO: Sure about user? *)
-type chat = Channel of channel | Im of conversation | User of user | Group of group
+type chat = Channel of channel | Im of im | User of user | Group of group
 
 type sort_criterion = Score | Timestamp
 
@@ -226,13 +228,17 @@ let channel_of_yojson = function
   | `String x -> Ok (ChannelId x)
   | _ -> Error "Couldn't parse channel type"
 
+let conversation_of_yojson = function
+  | `String x -> Ok x
+  | _ -> Error "Couldn't parse conversation type"
+
 let group_of_yojson = function
   | `String x -> Ok (GroupId x)
   | _ -> Error "Couldn't parse group type"
 
-let conversation_of_yojson = function
+let im_of_yojson = function
   | `String x -> Ok x
-  | _ -> Error "Couldn't parse conversation type"
+  | _ -> Error "Couldn't parse im type"
 
 type topic_obj = {
   value: string;
@@ -258,6 +264,25 @@ type channel_obj = {
   unread_count_display: int option [@default None];
   num_members: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
+
+type conversation_obj = {
+  id: conversation;
+  name: string;
+  is_channel: bool;
+  created: Timestamp.t;
+  creator: user;
+  is_archived: bool;
+  is_general: bool;
+  is_member: bool;
+  topic: topic_obj;
+  purpose: topic_obj;
+  last_read: Timestamp.t option [@default None];
+  latest: string option [@default None];
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+  num_members: int option [@default None];
+} [@@deriving of_yojson { strict = false }]
+
 
 type user_obj = {
   id: user;
@@ -336,7 +361,7 @@ type file_obj = {
   (*public_url_shared: ???;*)
   channels: channel list;
   groups: group list;
-  ims: conversation list;
+  ims: im list;
   initial_comment: Yojson.Safe.t option [@default None];
   num_stars: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
@@ -485,6 +510,8 @@ type im_obj = {
   user: user;
   created: Timestamp.t;
   is_user_deleted: bool;
+  is_open: bool option [@default None];
+  last_read: Timestamp.t option [@default None];
   unread_count: int option [@default None];
   unread_count_display: int option [@default None];
 } [@@deriving of_yojson { strict = false }]
@@ -883,8 +910,8 @@ let user_of_string s =
 let group_of_string s =
   if s.[0] = 'G' then GroupId s else GroupName s
 
-(* TODO Create a conversation if conversation does not exist? *)
-let conversation_of_string s =
+(* TODO Create a im if im does not exist? *)
+let im_of_string s =
   if s.[0] = 'D' then s else failwith "Not an IM channel"
 
 let translate_parsing_error = function

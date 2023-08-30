@@ -19,6 +19,7 @@ let im_slackbot = "D3UMJU8VA"
 
 
 let channels_json = Yojson.Safe.from_file "channels.json"
+let conversations_json = Yojson.Safe.from_file "conversations.json"
 let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
 let random_history_json = Yojson.Safe.from_file "random_history.json"

@@ -72,6 +72,43 @@ let abbr_channel_obj (chan : Slacko.channel_obj) = {
 type abbr_channel_obj_list = abbr_channel_obj list
 [@@deriving show, yojson]
 
+type abbr_conversation_obj = {
+  (* id: conversation; *)
+  name: string;
+  is_channel: bool;
+  created: Timestamp.t;
+  (* creator: user; *)
+  is_archived: bool;
+  is_general: bool;
+  is_member: bool;
+  (* members: user list; *)
+  topic: abbr_topic_obj;
+  purpose: abbr_topic_obj;
+  last_read: Timestamp.t option [@default None];
+  (* latest: json option [@default None]; *)
+  unread_count: int option [@default None];
+  unread_count_display: int option [@default None];
+  num_members: int option [@default None];
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_conversation_obj (conversation : Slacko.conversation_obj) = {
+  name = conversation.Slacko.name;
+  is_channel = conversation.Slacko.is_channel;
+  created = conversation.Slacko.created;
+  is_archived = conversation.Slacko.is_archived;
+  is_general = conversation.Slacko.is_general;
+  is_member = conversation.Slacko.is_member;
+  topic = abbr_topic_obj conversation.Slacko.topic;
+  purpose = abbr_topic_obj conversation.Slacko.purpose;
+  last_read = conversation.Slacko.last_read;
+  unread_count = conversation.Slacko.unread_count;
+  unread_count_display = conversation.Slacko.unread_count_display;
+  num_members = conversation.Slacko.num_members;
+}
+
+type abbr_conversation_obj_list = abbr_conversation_obj list
+[@@deriving show, yojson]
+
 type abbr_message_obj = {
   type': string [@key "type"];
   ts: Timestamp.t;

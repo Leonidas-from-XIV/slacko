@@ -20,12 +20,17 @@
 
 let int64_pow b n =
   let rec loop b n acc =
-    if n = 0 then acc else
-    loop Int64.(mul b b) (n lsr 1)
-         (if n land 1 = 0 then acc else Int64.(mul b acc)) in
+    if n = 0 then acc
+    else
+      loop
+        Int64.(mul b b)
+        (n lsr 1)
+        (if n land 1 = 0 then acc else Int64.(mul b acc))
+  in
   loop b n 1L
 
 type t = Ptime.t
+
 let pp = Ptime.pp_human ~frac_s:6 ()
 
 let of_string x =
@@ -33,20 +38,20 @@ let of_string x =
     let sec = Int64.of_string intlit in
     let d = Int64.div sec 86_400L in
     let ps = Int64.(mul (rem sec 86_400L) 1_000_000_000_000L) in
-    (Int64.to_int d, ps) in
+    (Int64.to_int d, ps)
+  in
   match
     match String.split_on_char '.' x with
-    | [_] ->
-        Ptime.Span.of_d_ps (d_ps_of_intlit x)
-    | [sec_lit; subsec_lit] ->
-      let (d, ps_int) = d_ps_of_intlit sec_lit in
-      let ps_frac =
-        if String.length subsec_lit <= 12 then
-          let scale = int64_pow 10L (12 - String.length subsec_lit) in
-          Int64.mul scale (Int64.of_string subsec_lit)
-        else
-          Int64.of_string (String.sub subsec_lit 0 12) in
-      Ptime.Span.of_d_ps (d, Int64.add ps_int ps_frac)
+    | [ _ ] -> Ptime.Span.of_d_ps (d_ps_of_intlit x)
+    | [ sec_lit; subsec_lit ] ->
+        let d, ps_int = d_ps_of_intlit sec_lit in
+        let ps_frac =
+          if String.length subsec_lit <= 12 then
+            let scale = int64_pow 10L (12 - String.length subsec_lit) in
+            Int64.mul scale (Int64.of_string subsec_lit)
+          else Int64.of_string (String.sub subsec_lit 0 12)
+        in
+        Ptime.Span.of_d_ps (d, Int64.add ps_int ps_frac)
     | _ -> None
   with
   | exception Failure _ -> None

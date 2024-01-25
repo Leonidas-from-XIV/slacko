@@ -1,4 +1,4 @@
 (executable
-  (name slack_notify)
-  (public_name slack-notify)
-  (libraries slacko cmdliner))
+ (name slack_notify)
+ (public_name slack-notify)
+ (libraries slacko cmdliner))

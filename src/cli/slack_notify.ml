@@ -20,27 +20,35 @@
 
 let base_url =
   let doc = "The Slack API base URL" in
-  Cmdliner.Arg.(value & opt (some string) None & info ["base-url"] ~docv:"URL" ~doc)
+  Cmdliner.Arg.(
+    value & opt (some string) None & info [ "base-url" ] ~docv:"URL" ~doc)
 
 let token =
   let doc = "The Slack API access token" in
-  Cmdliner.Arg.(required & opt (some string) None & info ["t"; "token"] ~docv:"TOKEN" ~doc)
+  Cmdliner.Arg.(
+    required & opt (some string) None & info [ "t"; "token" ] ~docv:"TOKEN" ~doc)
 
 let username =
   let doc = "Name of the bot in the chat" in
-  Cmdliner.Arg.(value & opt (some string) None & info ["u"; "username"] ~docv:"USERNAME" ~doc)
+  Cmdliner.Arg.(
+    value
+    & opt (some string) None
+    & info [ "u"; "username" ] ~docv:"USERNAME" ~doc)
 
 let icon_url =
   let doc = "URL to an image to use as the icon for this message" in
-  Cmdliner.Arg.(value & opt (some string) None & info ["icon-url"] ~docv:"URL" ~doc)
+  Cmdliner.Arg.(
+    value & opt (some string) None & info [ "icon-url" ] ~docv:"URL" ~doc)
 
 let icon_emoji =
   let doc = "Emoji to use as the icon for this message. Overrides icon-url" in
-  Cmdliner.Arg.(value & opt (some string) None & info ["icon-emoji"] ~docv:"EMOJI" ~doc)
+  Cmdliner.Arg.(
+    value & opt (some string) None & info [ "icon-emoji" ] ~docv:"EMOJI" ~doc)
 
 let channel =
   let doc = "Name of the channel to post to" in
-  Cmdliner.Arg.(required & pos 0 (some string) None & info [] ~docv:"CHANNEL" ~doc)
+  Cmdliner.Arg.(
+    required & pos 0 (some string) None & info [] ~docv:"CHANNEL" ~doc)
 
 let message =
   let doc = "Message to send" in
@@ -48,16 +56,18 @@ let message =
 
 let attachment =
   let doc = "Attachment text" in
-  Cmdliner.Arg.(value & opt (some string) None & info ["attachment"] ~docv:"MSG" ~doc)
+  Cmdliner.Arg.(
+    value & opt (some string) None & info [ "attachment" ] ~docv:"MSG" ~doc)
 
 let info =
   let doc = "Posts messages to Slack" in
   Cmdliner.Cmd.info "slack-notify" ~doc
 
-let execute base_url token username channel icon_url icon_emoji attachment_text msg =
+let execute base_url token username channel icon_url icon_emoji attachment_text
+    msg =
   "Your token is " ^ token ^ ", the channel is " ^ channel
-    ^ " and the message is '" ^ msg ^ "'."
-    |> print_endline;
+  ^ " and the message is '" ^ msg ^ "'."
+  |> print_endline;
 
   let string_or_bust = function
     | `Success _ -> "Message posted"
@@ -77,21 +87,17 @@ let execute base_url token username channel icon_url icon_emoji attachment_text 
   let attachments =
     match attachment_text with
     | None -> None
-    | Some text -> Some [Slacko.attachment ~text ()]
+    | Some text -> Some [ Slacko.attachment ~text () ]
   in
-  Slacko.chat_post_message session chat
-    ?username:(username)
-    ?icon_emoji:(icon_emoji)
-    ?icon_url:(icon_url)
-    ?attachments:(attachments)
-    msg
-  >|= (fun c ->
-    print_endline @@ string_or_bust c)
+  Slacko.chat_post_message session chat ?username ?icon_emoji ?icon_url
+    ?attachments msg
+  >|= (fun c -> print_endline @@ string_or_bust c)
   |> Lwt_main.run
 
-let execute_t = Cmdliner.Term.(
-    const execute $ base_url $ token $ username $ channel $ icon_url $ icon_emoji
-    $ attachment $ message)
+let execute_t =
+  Cmdliner.Term.(
+    const execute $ base_url $ token $ username $ channel $ icon_url
+    $ icon_emoji $ attachment $ message)
 
 let () =
   let cmd = Cmdliner.Cmd.v info execute_t in

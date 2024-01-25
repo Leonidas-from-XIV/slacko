@@ -1,7 +1,8 @@
 (library
-  (name slacko)
-  (public_name slacko)
-  (synopsis "A neat interface for Slack")
-  (private_modules Timestamp)
-  (libraries lwt cohttp-lwt-unix yojson ppx_deriving_yojson.runtime ptime)
-  (preprocess (pps ppx_deriving_yojson)))
+ (name slacko)
+ (public_name slacko)
+ (synopsis "A neat interface for Slack")
+ (private_modules Timestamp)
+ (libraries lwt cohttp-lwt-unix yojson ppx_deriving_yojson.runtime ptime)
+ (preprocess
+  (pps ppx_deriving_yojson)))

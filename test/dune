@@ -1,15 +1,20 @@
 (rule
-  (targets timestamp.ml)
-  (deps ../src/lib/timestamp.ml)
-  (action (copy %{deps} %{targets})))
+ (targets timestamp.ml)
+ (deps ../src/lib/timestamp.ml)
+ (action
+  (copy %{deps} %{targets})))
 
 (executable
-  (name test_slacko)
-  (libraries slacko ounit2)
-  (preprocess (pps ppx_deriving_yojson ppx_deriving.std)))
+ (name test_slacko)
+ (libraries slacko ounit2)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.std)))
 
 (rule
-  (alias runtest)
-  (deps (:test (file test_slacko.exe))
-        (glob_files *.json))
-  (action (run %{test} -runner sequential)))
+ (alias runtest)
+ (deps
+  (:test
+   (file test_slacko.exe))
+  (glob_files *.json))
+ (action
+  (run %{test} -runner sequential)))

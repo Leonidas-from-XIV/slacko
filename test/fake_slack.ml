@@ -14,10 +14,9 @@ let ch_random = "C3TTWNCTA"
 let ch_archivable = "C3XTJPLFL"
 let ch_archived = "C3XTHDCTC"
 let gr_seekrit = "G536YKXPE"
+
 (* slacko doesn't have a lookup function for us, so we just use it directly. *)
 let im_slackbot = "D3UMJU8VA"
-
-
 let channels_json = Yojson.Safe.from_file "channels.json"
 let conversations_json = Yojson.Safe.from_file "conversations.json"
 let new_channel_json = Yojson.Safe.from_file "new_channel.json"
@@ -34,16 +33,11 @@ let json_fields = function
   | `Assoc fields -> fields
   | _ -> failwith "Can't parse test json."
 
-
 let reply_json ok fields =
-  let body =
-    `Assoc (("ok", `Bool ok) :: fields)
-    |> Yojson.Safe.to_string
-  in
+  let body = `Assoc (("ok", `Bool ok) :: fields) |> Yojson.Safe.to_string in
   Server.respond_string ~status:`OK ~body ()
 
 let reply_ok fields = reply_json true fields
-
 let reply_err err fields = reply_json false (("error", `String err) :: fields)
 
 let get_token_opt req =
@@ -52,16 +46,13 @@ let get_token_opt req =
   match header with
   | Some x ->
       let hlen = String.length "Bearer " in
-      Some (String.sub x hlen @@ String.length x - hlen)
+      Some (String.sub x hlen @@ (String.length x - hlen))
   | _ -> None
 
-let get_arg_opt arg req =
-  Uri.get_query_param (Request.uri req) arg
+let get_arg_opt arg req = Uri.get_query_param (Request.uri req) arg
 
 let get_arg_default arg default req =
-  match get_arg_opt arg req with
-  | Some x -> x
-  | None -> default
+  match get_arg_opt arg req with Some x -> x | None -> default
 
 let get_arg arg req =
   match get_arg_opt arg req with
@@ -77,21 +68,21 @@ let check_auth f req body =
 
 let bad_path req _body =
   let path = req |> Request.uri |> Uri.path in
-  reply_err "unknown_method" ["req_method", `String path]
+  reply_err "unknown_method" [ ("req_method", `String path) ]
 
 let api_test req _body =
   let args = req |> Request.uri |> Uri.query in
-  let field_of_arg (k, v) = k, `String (List.hd v) in
-  let fields = match args with
+  let field_of_arg (k, v) = (k, `String (List.hd v)) in
+  let fields =
+    match args with
     | [] -> []
-    | args -> ["args", `Assoc (List.map field_of_arg args)]
+    | args -> [ ("args", `Assoc (List.map field_of_arg args)) ]
   in
   match Uri.get_query_param (Request.uri req) "error" with
   | None -> reply_ok fields
   | Some err -> reply_err err fields
 
-let auth_test _req _body =
-  reply_ok (json_fields authed_json)
+let auth_test _req _body = reply_ok (json_fields authed_json)
 
 let channels_archive req _body =
   match get_arg "channel" req with
@@ -103,7 +94,7 @@ let channels_archive req _body =
 let channels_create req _body =
   match get_arg "name" req with
   | "general" | "random" -> reply_err "name_taken" []
-  | "new_channel" | _ -> reply_ok ["channel", new_channel_json]
+  | "new_channel" | _ -> reply_ok [ ("channel", new_channel_json) ]
 
 let channels_history req _body =
   (* TODO: Check various filtering params. *)
@@ -113,7 +104,7 @@ let channels_history req _body =
 
 let channels_list _req _body =
   (* TODO: Check exclude_archived param. *)
-  reply_ok ["channels", channels_json]
+  reply_ok [ ("channels", channels_json) ]
 
 let files_list _req _body =
   (* TODO: Check various filtering params. *)
@@ -121,7 +112,7 @@ let files_list _req _body =
 
 let groups_list _req _body =
   (* TODO: Check exclude_archived param. *)
-  reply_ok ["groups", groups_json]
+  reply_ok [ ("groups", groups_json) ]
 
 let groups_history req _body =
   (* TODO: Check various filtering params. *)
@@ -129,8 +120,7 @@ let groups_history req _body =
   | gr when gr = gr_seekrit -> reply_ok (json_fields seekrit_history_json)
   | _ -> reply_err "channel_not_found" []
 
-let im_list _req _body =
-  reply_ok ["ims", ims_json]
+let im_list _req _body = reply_ok [ ("ims", ims_json) ]
 
 let im_history req _body =
   (* TODO: Check various filtering params. *)
@@ -142,14 +132,14 @@ let users_list _req _body =
   (* TODO: Check presence param. *)
   reply_ok (json_fields users_json)
 
-let conversations_list _req _body =
-  reply_ok (json_fields conversations_json)
+let conversations_list _req _body = reply_ok (json_fields conversations_json)
 
 (* Dispatcher, etc. *)
 
-let server ?(port=7357) ~stop () =
+let server ?(port = 7357) ~stop () =
   let callback _conn req body =
-    let handler = match req |> Request.uri |> Uri.path with
+    let handler =
+      match req |> Request.uri |> Uri.path with
       | "/api/api.test" -> api_test
       | "/api/auth.test" -> check_auth auth_test
       | "/api/channels.archive" -> check_auth channels_archive

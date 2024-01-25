@@ -19,6 +19,7 @@ let im_slackbot = "D3UMJU8VA"
 
 
 let channels_json = Yojson.Safe.from_file "channels.json"
+let conversations_json = Yojson.Safe.from_file "conversations.json"
 let new_channel_json = Yojson.Safe.from_file "new_channel.json"
 let authed_json = Yojson.Safe.from_file "authed.json"
 let random_history_json = Yojson.Safe.from_file "random_history.json"
@@ -101,8 +102,8 @@ let channels_archive req _body =
 
 let channels_create req _body =
   match get_arg "name" req with
-  | "#general" | "#random" -> reply_err "name_taken" []
-  | "#new_channel" | _ -> reply_ok ["channel", new_channel_json]
+  | "general" | "random" -> reply_err "name_taken" []
+  | "new_channel" | _ -> reply_ok ["channel", new_channel_json]
 
 let channels_history req _body =
   (* TODO: Check various filtering params. *)
@@ -141,6 +142,9 @@ let users_list _req _body =
   (* TODO: Check presence param. *)
   reply_ok (json_fields users_json)
 
+let conversations_list _req _body =
+  reply_ok (json_fields conversations_json)
+
 (* Dispatcher, etc. *)
 
 let server ?(port=7357) ~stop () =
@@ -158,6 +162,7 @@ let server ?(port=7357) ~stop () =
       | "/api/im.history" -> check_auth im_history
       | "/api/im.list" -> check_auth im_list
       | "/api/users.list" -> check_auth users_list
+      | "/api/conversations.list" -> check_auth conversations_list
       | _ -> bad_path
     in
     handler req body

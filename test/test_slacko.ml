@@ -94,7 +94,7 @@ let test_channels_archive_bad_auth _tctx =
 
 let test_channels_archive_existing _tctx =
   let session = Slacko.start_session ?base_url token in
-  let new_channel = Slacko.channel_of_string "#archivable_channel" in
+  let new_channel = Slacko.channel_of_string "archivable_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Success resp
 
@@ -106,13 +106,13 @@ let test_channels_archive_missing _tctx =
 
 let test_channels_archive_archived _tctx =
   let session = Slacko.start_session ?base_url token in
-  let archived_channel = Slacko.channel_of_string "#archived_channel" in
+  let archived_channel = Slacko.channel_of_string "archived_channel" in
   Slacko.channels_archive session archived_channel >|= fun resp ->
   assert_equal `Already_archived resp
 
 let test_channels_archive_general _tctx =
   let session = Slacko.start_session ?base_url token in
-  let general = Slacko.channel_of_string "#general" in
+  let general = Slacko.channel_of_string "general" in
   Slacko.channels_archive session general >|= fun resp ->
   assert_equal `Cant_archive_general resp
 
@@ -133,7 +133,7 @@ let test_channels_create_bad_auth _tctx =
 
 let test_channels_create_new _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.channels_create session "#new_channel" >|= get_success >|=
+  Slacko.channels_create session "new_channel" >|= get_success >|=
   abbr_channel_obj >|= fun channel ->
   assert_equal ~printer:show_abbr_channel_obj
     (abbr_json abbr_channel_obj_of_yojson Fake_slack.new_channel_json)
@@ -141,7 +141,7 @@ let test_channels_create_new _tctx =
 
 let test_channels_create_existing _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.channels_create session "#general" >|= fun resp ->
+  Slacko.channels_create session "general" >|= fun resp ->
   assert_equal `Name_taken resp
 
 let channels_create_tests = fake_slack_tests "channels_create" [
@@ -160,7 +160,7 @@ let test_channels_history_bad_auth _tctx =
 
 let test_channels_history_no_params _tctx =
   let session = Slacko.start_session ?base_url token in
-  let random = Slacko.channel_of_string "#random" in
+  let random = Slacko.channel_of_string "random" in
   Slacko.channels_history session random >|= get_success >|= fun history ->
   assert_equal ~printer:show_abbr_history_obj
     (abbr_json abbr_history_obj_of_yojson Fake_slack.random_history_json)
@@ -177,24 +177,26 @@ let channels_history_tests = fake_slack_tests "channels_history" [
 (* channels_kick *)
 (* channels_leave *)
 
-(* channels_list *)
+(* conversations_list *)
 
-let test_channels_list_bad_auth _tctx =
+let test_conversations_list_bad_auth _tctx =
   let session = Slacko.start_session ?base_url badtoken in
-  Slacko.channels_list session >|= fun resp ->
+  Slacko.conversations_list session >|= fun resp ->
   assert_equal `Invalid_auth resp
 
-let test_channels_list _tctx =
+let test_conversations_list _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.channels_list session >|= get_success >|=
-  List.map abbr_channel_obj >|= fun channels ->
-  assert_equal ~printer:show_abbr_channel_obj_list
-    (abbr_json abbr_channel_obj_list_of_yojson Fake_slack.channels_json)
-    channels
+  Slacko.conversations_list session
+  >|= get_success
+  >|= List.map abbr_conversation_obj
+  >|= fun conversations ->
+  assert_equal ~printer:show_abbr_conversation_obj_list
+    (abbr_json abbr_conversation_obj_list_of_yojson Fake_slack.conversations_json)
+    conversations
 
-let channels_list_tests = fake_slack_tests "channels_list" [
-  "test_bad_auth", test_channels_list_bad_auth;
-  "test", test_channels_list;
+let conversations_list_tests = fake_slack_tests "conversations_list" [
+  "test_bad_auth", test_conversations_list_bad_auth;
+  "test", test_conversations_list;
 ]
 
 (* channels_mark *)
@@ -377,7 +379,7 @@ let suite = "tests" >::: [
     (* channels_join_tests; *)
     (* channels_kick_tests; *)
     (* channels_leave_tests; *)
-    channels_list_tests;
+    conversations_list_tests;
     (* channels_mark_tests; *)
     (* channels_rename_tests; *)
     (* channels_set_purpose_tests; *)

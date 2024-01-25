@@ -254,6 +254,7 @@ type channel_obj = {
   creator: user;
   is_archived: bool;
   is_general: bool;
+  name_normalized: string;
   is_member: bool;
   members: user list;
   topic: topic_obj;
@@ -273,6 +274,7 @@ type conversation_obj = {
   creator: user;
   is_archived: bool;
   is_general: bool;
+  name_normalized: string;
   is_member: bool;
   topic: topic_obj;
   purpose: topic_obj;
@@ -746,9 +748,9 @@ let maybe fn = function
   | None -> None
 
 (* nonpublic types for conversion in list types *)
-type channels_list_obj = {
-  channels: channel_obj list
-} [@@deriving of_yojson]
+type conversations_list_obj = {
+  channels: conversation_obj list
+} [@@deriving of_yojson { strict = false }]
 
 type users_list_obj = {
   members: user_obj list
@@ -762,15 +764,15 @@ type im_list_obj = {
   ims: im_obj list;
 } [@@deriving of_yojson]
 
-let channels_list ?exclude_archived session =
-  api_request "channels.list"
+let conversations_list ?exclude_archived session =
+  api_request "conversations.list"
     |> optionally_add "exclude_archived" @@ maybe string_of_bool @@ exclude_archived
     |> query session
     >|= function
     | `Json_response d ->
-      (match d |> channels_list_obj_of_yojson with
+      (match d |> conversations_list_obj_of_yojson with
         | Ok x -> `Success x.channels
-        | Error x -> `ParseFailure x)
+        | Error e -> `ParseFailure e)
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 
@@ -809,11 +811,9 @@ let lookupk session (listfn : 'a listfn) filterfn k =
 let id_of_channel session = function
   | ChannelId id -> Lwt.return @@ `Found id
   | ChannelName name ->
-    let base = String.sub name 1 @@ String.length name - 1 in
-    lookupk session channels_list (fun (x:channel_obj) -> x.name = base) @@ function
+    lookupk session conversations_list (fun (x:conversation_obj) -> x.name = name || x.name_normalized = name) @@ function
     | [] -> `Channel_not_found
-    | [{id = ChannelId s; _}] -> `Found s
-    | [_] -> failwith "Bad result from channel id lookup."
+    | [{id = s; _}] -> `Found s
     | _::_::_ -> failwith "Too many results from channel id lookup."
 
 (* like id_of_channel but does not resolve names to ids *)

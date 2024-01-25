@@ -160,7 +160,7 @@ let test_channels_history_bad_auth _tctx =
 
 let test_channels_history_no_params _tctx =
   let session = Slacko.start_session ?base_url token in
-  let random = Slacko.channel_of_string "#random" in
+  let random = Slacko.channel_of_string "random" in
   Slacko.channels_history session random >|= get_success >|= fun history ->
   assert_equal ~printer:show_abbr_history_obj
     (abbr_json abbr_history_obj_of_yojson Fake_slack.random_history_json)

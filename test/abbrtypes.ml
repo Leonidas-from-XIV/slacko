@@ -107,7 +107,16 @@ let abbr_conversation_obj (conversation : Slacko.conversation_obj) = {
 }
 
 type abbr_conversation_obj_list = abbr_conversation_obj list
-[@@deriving show, yojson]
+[@@deriving show]
+
+type abbr_conversation_list_obj = {
+  channels: abbr_conversation_obj list
+} [@@deriving show, yojson { strict = false }]
+
+let abbr_conversation_obj_list_of_yojson json =
+  match abbr_conversation_list_obj_of_yojson json with
+  | Ok obj -> Ok obj.channels
+  | (Error _) as err -> err
 
 type abbr_message_obj = {
   type': string [@key "type"];

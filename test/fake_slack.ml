@@ -142,6 +142,9 @@ let users_list _req _body =
   (* TODO: Check presence param. *)
   reply_ok (json_fields users_json)
 
+let conversations_list _req _body =
+  reply_ok (json_fields conversations_json)
+
 (* Dispatcher, etc. *)
 
 let server ?(port=7357) ~stop () =
@@ -159,6 +162,7 @@ let server ?(port=7357) ~stop () =
       | "/api/im.history" -> check_auth im_history
       | "/api/im.list" -> check_auth im_list
       | "/api/users.list" -> check_auth users_list
+      | "/api/conversations.list" -> check_auth conversations_list
       | _ -> bad_path
     in
     handler req body

@@ -1,7 +1,10 @@
+{
+  "channels":
 [
   {
     "id": "C3XTJPLFL",
     "name": "archivable_channel",
+    "name_normalized": "archivable_channel",
     "is_channel": true,
     "created": 1485679967,
     "creator": "U3UMJU868",
@@ -24,6 +27,7 @@
   {
     "id": "C3XTHDCTC",
     "name": "archived_channel",
+    "name_normalized": "archived_channel",
     "is_channel": true,
     "created": 1485678562,
     "creator": "U3UMJU868",
@@ -46,6 +50,7 @@
   {
     "id": "C3UK9TS3C",
     "name": "general",
+    "name_normalized": "general",
     "is_channel": true,
     "created": 1484993283,
     "creator": "U3UMJU868",
@@ -68,6 +73,7 @@
   {
     "id": "C3TTWNCTA",
     "name": "random",
+    "name_normalized": "random",
     "is_channel": true,
     "created": 1484993283,
     "creator": "U3UMJU868",
@@ -90,6 +96,7 @@
   {
     "id": "C3V9V3E9L",
     "name": "slackobot",
+    "name_normalized": "slackobot",
     "is_channel": true,
     "created": 1484993366,
     "creator": "U3UMJU868",
@@ -110,3 +117,4 @@
     "num_members": 1
   }
 ]
+}

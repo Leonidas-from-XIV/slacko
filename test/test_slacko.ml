@@ -186,8 +186,10 @@ let test_conversations_list_bad_auth _tctx =
 
 let test_conversations_list _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.conversations_list session >|= get_success >|=
-  List.map abbr_conversation_obj >|= fun conversations ->
+  Slacko.conversations_list session
+  >|= get_success
+  >|= List.map abbr_conversation_obj
+  >|= fun conversations ->
   assert_equal ~printer:show_abbr_conversation_obj_list
     (abbr_json abbr_conversation_obj_list_of_yojson Fake_slack.conversations_json)
     conversations

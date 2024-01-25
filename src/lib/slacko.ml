@@ -772,7 +772,7 @@ let conversations_list ?exclude_archived session =
     | `Json_response d ->
       (match d |> conversations_list_obj_of_yojson with
         | Ok x -> `Success x.channels
-        | Error x -> `ParseFailure x)
+        | Error e -> `ParseFailure e)
     | #parsed_auth_error as res -> res
     | _ -> `Unknown_error
 

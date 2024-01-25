@@ -11,7 +11,7 @@ license: "OCaml-LGPL-3.0-linking-exception"
 homepage: "https://github.com/Leonidas-from-XIV/slacko"
 bug-reports: "https://github.com/Leonidas-from-XIV/slacko/issues"
 depends: [
-  "dune" {>= "1.11"}
+  "dune" {>= "2.0"}
   "ocaml" {>= "4.08"}
   "cmdliner" {>= "1.1.0"}
   "yojson" {>= "1.6.0"}

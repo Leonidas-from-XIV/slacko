@@ -8,8 +8,8 @@
   (libraries slacko ounit2)
   (preprocess (pps ppx_deriving_yojson ppx_deriving.std)))
 
-(alias
-  (name runtest)
+(rule
+  (alias runtest)
   (deps (:test (file test_slacko.exe))
         (glob_files *.json))
   (action (run %{test} -runner sequential)))

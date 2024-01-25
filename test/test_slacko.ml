@@ -94,7 +94,7 @@ let test_channels_archive_bad_auth _tctx =
 
 let test_channels_archive_existing _tctx =
   let session = Slacko.start_session ?base_url token in
-  let new_channel = Slacko.channel_of_string "#archivable_channel" in
+  let new_channel = Slacko.channel_of_string "archivable_channel" in
   Slacko.channels_archive session new_channel >|= fun resp ->
   assert_equal `Success resp
 
@@ -106,13 +106,13 @@ let test_channels_archive_missing _tctx =
 
 let test_channels_archive_archived _tctx =
   let session = Slacko.start_session ?base_url token in
-  let archived_channel = Slacko.channel_of_string "#archived_channel" in
+  let archived_channel = Slacko.channel_of_string "archived_channel" in
   Slacko.channels_archive session archived_channel >|= fun resp ->
   assert_equal `Already_archived resp
 
 let test_channels_archive_general _tctx =
   let session = Slacko.start_session ?base_url token in
-  let general = Slacko.channel_of_string "#general" in
+  let general = Slacko.channel_of_string "general" in
   Slacko.channels_archive session general >|= fun resp ->
   assert_equal `Cant_archive_general resp
 
@@ -141,7 +141,7 @@ let test_channels_create_new _tctx =
 
 let test_channels_create_existing _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.channels_create session "#general" >|= fun resp ->
+  Slacko.channels_create session "general" >|= fun resp ->
   assert_equal `Name_taken resp
 
 let channels_create_tests = fake_slack_tests "channels_create" [

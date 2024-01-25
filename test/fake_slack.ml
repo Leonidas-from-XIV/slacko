@@ -102,8 +102,8 @@ let channels_archive req _body =
 
 let channels_create req _body =
   match get_arg "name" req with
-  | "#general" | "#random" -> reply_err "name_taken" []
-  | "#new_channel" | _ -> reply_ok ["channel", new_channel_json]
+  | "general" | "random" -> reply_err "name_taken" []
+  | "new_channel" | _ -> reply_ok ["channel", new_channel_json]
 
 let channels_history req _body =
   (* TODO: Check various filtering params. *)

@@ -133,7 +133,7 @@ let test_channels_create_bad_auth _tctx =
 
 let test_channels_create_new _tctx =
   let session = Slacko.start_session ?base_url token in
-  Slacko.channels_create session "#new_channel" >|= get_success >|=
+  Slacko.channels_create session "new_channel" >|= get_success >|=
   abbr_channel_obj >|= fun channel ->
   assert_equal ~printer:show_abbr_channel_obj
     (abbr_json abbr_channel_obj_of_yojson Fake_slack.new_channel_json)

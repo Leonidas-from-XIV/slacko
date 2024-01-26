@@ -3,18 +3,13 @@
    those values at all. Therefore, we copy the record type that use these and
    skip the problematic fields. *)
 
-(* Wrap Yojson.Safe.t so we don't have to keep providing printers for it. *)
-type json = Yojson.Safe.t [@@deriving yojson]
-
-let pp_json fmt json = Format.pp_print_string fmt (Yojson.Safe.to_string json)
-
 type abbr_authed_obj = {
   url : string;
   team : string;
   user : string;
   team_id : string; (* user_id: user; *)
 }
-[@@deriving make, show, yojson { strict = false }]
+[@@deriving make, show, eq, yojson { strict = false }]
 
 let abbr_authed_obj (authed : Slacko.authed_obj) =
   {
@@ -29,7 +24,7 @@ type abbr_topic_obj = {
   (* creator: user; *)
   last_set : Timestamp.t;
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_topic_obj (topic : Slacko.topic_obj) =
   { value = topic.Slacko.value; last_set = topic.Slacko.last_set }
@@ -47,12 +42,12 @@ type abbr_channel_obj = {
   topic : abbr_topic_obj;
   purpose : abbr_topic_obj;
   last_read : Timestamp.t option; [@default None]
-  latest : json option; [@default None]
+  latest : Yojson.Safe.t option; [@default None]
   unread_count : int option; [@default None]
   unread_count_display : int option; [@default None]
   num_members : int option; [@default None]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_channel_obj (chan : Slacko.channel_obj) =
   {
@@ -91,7 +86,7 @@ type abbr_conversation_obj = {
   unread_count_display : int option; [@default None]
   num_members : int option; [@default None]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_conversation_obj (conversation : Slacko.conversation_obj) =
   {
@@ -109,10 +104,11 @@ let abbr_conversation_obj (conversation : Slacko.conversation_obj) =
     num_members = conversation.Slacko.num_members;
   }
 
-type abbr_conversation_obj_list = abbr_conversation_obj list [@@deriving show]
+type abbr_conversation_obj_list = abbr_conversation_obj list
+[@@deriving show, eq]
 
 type abbr_conversation_list_obj = { channels : abbr_conversation_obj list }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_conversation_obj_list_of_yojson json =
   match abbr_conversation_list_obj_of_yojson json with
@@ -126,7 +122,7 @@ type abbr_message_obj = {
   text : string option;
   is_starred : bool option; [@default None]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_message_obj (message : Slacko.message_obj) =
   {
@@ -141,7 +137,7 @@ type abbr_history_obj = {
   messages : abbr_message_obj list;
   has_more : bool;
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_history_obj (history : Slacko.history_obj) =
   {
@@ -159,7 +155,7 @@ type abbr_user_obj = {
   tz : string option; [@default None]
   tz_label : string option; [@default None]
   tz_offset : int; [@default 0]
-  profile : json;
+  profile : Yojson.Safe.t;
   is_admin : bool; [@default false]
   is_owner : bool; [@default false]
   is_primary_owner : bool; [@default false]
@@ -168,7 +164,7 @@ type abbr_user_obj = {
   is_bot : bool;
   has_files : bool; [@default false]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_user_obj (user : Slacko.user_obj) =
   {
@@ -192,7 +188,7 @@ let abbr_user_obj (user : Slacko.user_obj) =
 type abbr_users_list_obj = { members : abbr_user_obj list }
 [@@deriving of_yojson { strict = false }]
 
-type abbr_user_obj_list = abbr_user_obj list [@@deriving show]
+type abbr_user_obj_list = abbr_user_obj list [@@deriving show, eq]
 
 let abbr_user_obj_list_of_yojson json =
   match abbr_users_list_obj_of_yojson json with
@@ -236,10 +232,10 @@ type abbr_file_obj = {
   (* channels: channel list; *)
   (* groups: group list; *)
   (* ims: conversation list; *)
-  initial_comment : json option; [@default None]
+  initial_comment : Yojson.Safe.t option; [@default None]
   num_stars : int option; [@default None]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_file_obj (file : Slacko.file_obj) =
   {
@@ -275,7 +271,7 @@ let abbr_file_obj (file : Slacko.file_obj) =
   }
 
 type abbr_paging_obj = { count : int; total : int; page : int; pages : int }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_paging_obj (paging : Slacko.paging_obj) =
   {
@@ -289,7 +285,7 @@ type abbr_files_list_obj = {
   files : abbr_file_obj list;
   paging : abbr_paging_obj;
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_files_list_obj (files : Slacko.files_list_obj) =
   {
@@ -311,9 +307,9 @@ type abbr_group_obj = {
   last_read : Timestamp.t option; [@default None]
   unread_count : int option; [@default None]
   unread_count_display : int option; [@default None]
-  latest : json option; [@default None]
+  latest : Yojson.Safe.t option; [@default None]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_group_obj (group : Slacko.group_obj) =
   {
@@ -330,7 +326,7 @@ let abbr_group_obj (group : Slacko.group_obj) =
     latest = group.Slacko.latest;
   }
 
-type abbr_group_obj_list = abbr_group_obj list [@@deriving show, yojson]
+type abbr_group_obj_list = abbr_group_obj list [@@deriving show, eq, yojson]
 
 type abbr_im_obj = {
   id : string;
@@ -341,7 +337,7 @@ type abbr_im_obj = {
   unread_count : int option; [@default None]
   unread_count_display : int option; [@default None]
 }
-[@@deriving show, yojson { strict = false }]
+[@@deriving show, eq, yojson { strict = false }]
 
 let abbr_im_obj (im : Slacko.im_obj) =
   {
@@ -353,4 +349,4 @@ let abbr_im_obj (im : Slacko.im_obj) =
     unread_count_display = im.Slacko.unread_count_display;
   }
 
-type abbr_im_obj_list = abbr_im_obj list [@@deriving show, yojson]
+type abbr_im_obj_list = abbr_im_obj list [@@deriving show, eq, yojson]

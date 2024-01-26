@@ -24,3 +24,4 @@ val to_string : t -> string
 val of_yojson : Yojson.Safe.t -> (t, string) result
 val to_yojson : t -> Yojson.Safe.t
 val pp : Format.formatter -> t -> unit
+val equal : t -> t -> bool

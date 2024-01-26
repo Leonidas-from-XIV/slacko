@@ -20,7 +20,8 @@ depends: [
   "cohttp-lwt-unix" {>= "1.0.0"}
   "ppx_deriving_yojson" {>= "3.3"}
   "ptime"
-  "ounit2" {with-test & >= "2.2"}
+  "alcotest" {with-test}
+  "alcotest-lwt" {with-test}
   "ppx_deriving" {with-test & >= "5.2.1"}
 ]
 conflicts: [

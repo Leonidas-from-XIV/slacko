@@ -6,9 +6,10 @@
 
 (executable
  (name test_slacko)
- (libraries slacko ounit2)
+ (libraries slacko alcotest-lwt)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.std)))
+  (pps ppx_deriving_yojson ppx_deriving.show ppx_deriving.make
+    ppx_deriving.eq)))
 
 (rule
  (alias runtest)
@@ -17,4 +18,4 @@
    (file test_slacko.exe))
   (glob_files *.json))
  (action
-  (run %{test} -runner sequential)))
+  (run %{test})))
